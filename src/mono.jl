@@ -27,7 +27,7 @@ macro ncpolyvar(args...)
     reduce((x,y) -> :($x; $y), :(), [buildpolyvar(PolyVar{false}, arg) for arg in args])
 end
 
-immutable PolyVar{C} <: PolyType{C}
+immutable PolyVar{C} <: DMonomialLike{C}
     id::Int
     name::AbstractString
     function PolyVar{C}(name::AbstractString) where C
@@ -45,8 +45,8 @@ copy(x::PolyVar) = x
 
 vars(x::PolyVar) = [x]
 nvars(::PolyVar) = 1
-zero{C}(::Type{PolyVar{C}}) = zero(PolyType{C})
-one{C}(::Type{PolyVar{C}}) = one(PolyType{C})
+zero{C}(::Type{PolyVar{C}}) = zero(Polynomial{C, Int})
+one{C}(::Type{PolyVar{C}}) = one(Polynomial{C, Int})
 
 function myunion{PV<:PolyVar}(varsvec::Vector{Vector{PV}})
     n = length(varsvec)
@@ -80,7 +80,7 @@ end
 # Invariant:
 # vars is increasing
 # z may contain 0's (otherwise, getindex of MonomialVector would be inefficient)
-type Monomial{C} <: PolyType{C}
+type Monomial{C} <: DMonomialLike{C}
     vars::Vector{PolyVar{C}}
     z::Vector{Int}
 
@@ -119,11 +119,11 @@ copy{M<:Monomial}(m::M) = M(m.vars, copy(m.z))
 deg(x::Monomial) = sum(x.z)
 nvars(x::Monomial) = length(x.vars)
 isconstant(x::Monomial) = deg(x) == 0
-zero{C}(::Type{Monomial{C}}) = zero(PolyType{C})
-one{C}(::Type{Monomial{C}}) = one(PolyType{C})
+zero{C}(::Type{Monomial{C}}) = zero(Polynomial{C, Int})
+one{C}(::Type{Monomial{C}}) = one(Polynomial{C, Int})
 
 # Invariant: Always sorted and no zero vector
-type MonomialVector{C} <: PolyType{C}
+type MonomialVector{C} <: DMonomialLike{C}
     vars::Vector{PolyVar{C}}
     Z::Vector{Vector{Int}}
 
