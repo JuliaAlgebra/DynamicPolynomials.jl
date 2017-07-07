@@ -1,9 +1,15 @@
 import Base.==, Base.isless, Base.isapprox
 export isapproxzero
 
-Base.iszero(t::Term) = iszero(t.α)
-Base.iszero(p::Polynomial) = isempty(p)
-Base.iszero(p::MatPolynomial) = isempty(Polynomial(p))
+# iszero is only available in Julia v0.6
+if isdefined(Base, :iszero)
+    import Base.iszero
+else
+    iszero{T}(x::T) = x == zero(T)
+end
+iszero(t::Term) = iszero(t.α)
+iszero(p::Polynomial) = isempty(p)
+iszero(p::MatPolynomial) = isempty(Polynomial(p))
 
 # TODO This should be in Base with T instead of PolyVar{C}.
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/3
@@ -114,6 +120,8 @@ end
 
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/22
 (==)(α::Void, x::TermType) = false
+(==)(α::Dict, x::TermType) = false
+(==)(x::TermType, α::Dict) = false
 (==){C}(y, p::TermType{C}) = TermContainer{C}(y) == p
 (==)(y::PolyType, p::TermContainer) = TermContainer(y) == p
 
@@ -151,6 +159,9 @@ end
 # Solve ambiguity with (::PolyType, ::Any)
 (==)(p::PolyType, q::RationalPoly) = p*q.den == q.num
 (==)(p, q::RationalPoly) = p*q.den == q.num
+# IJulia output, see https://github.com/blegat/MultivariatePolynomials.jl/issues/22
+(==)(α::Void, x::RationalPoly) = false
+(==)(α::Dict, x::RationalPoly) = false
 
 (==)(p::TermContainer, q::MatPolynomial) = p == TermContainer(q)
 (==)(p::MatPolynomial, q::MatPolynomial) = iszero(p - q)

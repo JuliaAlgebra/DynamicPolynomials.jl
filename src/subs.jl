@@ -22,7 +22,7 @@ function evalmap{C, T}(vars, x::Vector{T}, varorder::Vector{PolyVar{C}})
         vals = Vector{T}(length(vars))
         fillmap!(vals, vars, x, varorder)
         for i in 1:length(vals)
-          @assert isassigned(vals, i) "Variable $(vars[i]) was not assigned a value"
+            @assert isassigned(vals, i) "Variable $(vars[i]) was not assigned a value"
         end
         vals
     end
@@ -90,3 +90,4 @@ subs(p::MatPolynomial, x::Vector, varorder) = subs(Polynomial(p), x, varorder)
 function (q::RationalPoly)(x::Vector, varorder)
     q.num(x, varorder) / q.den(x, varorder)
 end
+subs(q::RationalPoly, x::Vector, varorder) = subs(q.num, x, varorder) / subs(q.den, x, varorder)

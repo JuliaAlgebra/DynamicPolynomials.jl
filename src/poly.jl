@@ -1,5 +1,9 @@
-export Term, Polynomial, MatPolynomial, SOSDecomposition, TermType, getmat, monomials, removemonomials
+export Term, Polynomial, MatPolynomial, SOSDecomposition, TermType
+export monomial, monomials, removeleadingterm, removemonomials
+export leadingcoef, leadingmonomial, leadingterm
+export getmat, divides
 
+@compat abstract type TermType{C, T} <: PolyType{C} end
 eltype{C, T}(::Type{TermType{C, T}}) = T
 eltype{C, T}(p::TermType{C, T}) = T
 zero{C, T}(t::TermType{C, T}) = Polynomial(T[], MonomialVector{C}(vars(t), Vector{Vector{Int}}()))
@@ -7,6 +11,7 @@ zero{C, T}(t::TermType{C, T}) = Polynomial(T[], MonomialVector{C}(vars(t), Vecto
 one{C, T}(t::TermType{C, T}) = Polynomial([one(T)], MonomialVector{C}(vars(t), [zeros(Int, length(vars(t)))]))
 #one{T<:TermType}(::Type{T}) = Polynomial([one(eltype(T))], MonomialVector{iscomm(T)}(PolyVar[], [Int[]]))
 
+@compat abstract type TermContainer{C, T} <: TermType{C, T} end
 eltype{C, T}(::Type{TermContainer{C, T}}) = T
 zero{C, T}(::Type{TermContainer{C, T}}) = zero(Polynomial{C, T})
 one{C, T}(::Type{TermContainer{C, T}}) = one(Polynomial{C, T})
@@ -63,6 +68,9 @@ done(::Term, state) = state
 next(t::Term, state) = (t, true)
 getindex(t::Term, I::Int) = t
 
+monomial(t::Term) = t.x
+divides(t1::Union{Term, Monomial}, t2::Union{Term, Monomial}) = divides(monomial(t1), monomial(t2))
+
 # Invariant:
 # a and x might be empty: meaning it is the zero polynomial
 # a does not contain any zeros
@@ -72,8 +80,7 @@ type Polynomial{C, T} <: TermContainer{C, T}
     x::MonomialVector{C}
 
     function Polynomial{C, T}(a::Vector{T}, x::MonomialVector{C}) where {C, T}
-        if length(a) != length(x)
-            throw(ArgumentError("There should be as many coefficient than monomials"))
+        if length(a) != length(x) throw(ArgumentError("There should be as many coefficient than monomials"))
         end
         zeroidx = Int[]
         for (i,α) in enumerate(a)
@@ -88,7 +95,7 @@ type Polynomial{C, T} <: TermContainer{C, T}
             a = a[nzidx]
             x = x[nzidx]
         end
-        new(a, x)
+        new{C, T}(a, x)
     end
 end
 iscomm{C, T}(::Type{Polynomial{C, T}}) = C
@@ -150,6 +157,11 @@ end
 Base.convert(::Type{Any}, p::Polynomial) = p
 
 Base.convert{C}(::Type{PolyType{C}}, p::TermContainer{C}) = p
+
+# needed to build [p Q; Q p] where p is a polynomial and Q is a matpolynomial in Julia v0.5
+Base.convert{C}(::Type{TermType{C}}, p::TermContainer{C}) = p
+Base.convert{C, T}(::Type{TermType{C, T}}, p::TermContainer{C, T}) = p
+
 function Base.convert{S}(::Type{S}, p::TermContainer)
     s = zero(S)
     for t in p
@@ -165,18 +177,26 @@ end
 vars(p::Polynomial) = vars(p.x)
 nvars(p::Polynomial) = nvars(p.x)
 
-length(p::Polynomial) = length(p.a)
-isempty(p::Polynomial) = isempty(p.a)
-start(::Polynomial) = 1
-done(p::Polynomial, state) = length(p) < state
-next(p::Polynomial, state) = (p[state], state+1)
+Base.endof(p::Polynomial) = length(p)
+Base.length(p::Polynomial) = length(p.a)
+Base.isempty(p::Polynomial) = isempty(p.a)
+Base.start(::Polynomial) = 1
+Base.done(p::Polynomial, state) = length(p) < state
+Base.next(p::Polynomial, state) = (p[state], state+1)
 
 extdeg(p::Polynomial) = extdeg(p.x)
 mindeg(p::Polynomial) = mindeg(p.x)
 maxdeg(p::Polynomial) = maxdeg(p.x)
 
+leadingcoef(p::Polynomial) = first(p.a)
+leadingmonomial(p::Polynomial) = first(p.x)
+leadingterm(p::Polynomial) = first(p)
+
 monomials(p::Polynomial) = p.x
 
+function removeleadingterm(p::Polynomial)
+    Polynomial(p.a[2:end], p.x[2:end])
+end
 function removemonomials(p::Polynomial, x::MonomialVector)
     # use the fact that monomials are sorted to do this O(n) instead of O(n^2)
     j = 1
@@ -224,6 +244,9 @@ type MatPolynomial{C, T} <: TermType{C, T}
     Q::Vector{T}
     x::MonomialVector{C}
 end
+iscomm{C, T}(::Type{MatPolynomial{C, T}}) = C
+# When taking the promotion of a MatPolynomial of JuMP.Variable with a Polynomial JuMP.Variable, it should be a Polynomial of AffExpr
+eltype{C, T}(::Type{MatPolynomial{C, T}}) = Base.promote_op(+, T, T)
 
 zero{C, T}(::Type{MatPolynomial{C, T}}) = MatPolynomial(T[], MonomialVector{C}())
 
@@ -280,6 +303,7 @@ function MatPolynomial{T}(Q::Matrix{T}, x::Vector)
     matpolyperm(Q, X, σ)
 end
 
+Base.convert{C, T}(::Type{Polynomial{C, T}}, p::MatPolynomial{C}) = convert(Polynomial{C, T}, Polynomial(p))
 function Base.convert{C, T}(::Type{Polynomial{C, T}}, p::MatPolynomial{C, T})
     if isempty(p.Q)
         zero(Polynomial{C, T})
@@ -340,10 +364,10 @@ type SOSDecomposition{C, T} <: TermType{C, T}
         new(ps)
     end
 end
-function (::Type{SOSDecomposition{C, T}}){C, T}(ps::Vector)
+function SOSDecomposition{C, T}(ps::Vector) where {C, T}
     SOSDecomposition(Vector{Polynomial{C, T}}(ps))
 end
-function (::Type{SOSDecomposition{C}}){C}(ps::Vector)
+function SOSDecomposition{C}(ps::Vector) where {C}
     T = reduce(promote_type, Int, map(eltype, ps))
     SOSDecomposition{C, T}(ps)
 end

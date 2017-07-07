@@ -1,3 +1,5 @@
+__precompile__()
+
 module DynamicPolynomials
 
 import Base: show, length, getindex, vect, isless, isempty, start, done, next, convert, dot, copy, eltype, zero, one
@@ -8,11 +10,6 @@ abstract type DMonomialLike{C} end
 
 abstract type TermType{C, T} end
 abstract type TermContainer{C, T} <: TermType{C, T} end
-
-immutable RationalPoly{C, S, T}
-    num::TermContainer{C, S}
-    den::TermContainer{C, T}
-end
 
 const PolyType{C} = Union{DMonomialLike{C}, TermType{C}, RationalPoly{C}}
 iscomm{C}(::PolyType{C}) = C
@@ -35,6 +32,9 @@ include("ncalg.jl")
 include("diff.jl")
 include("subs.jl")
 include("algebraicset.jl")
+include("norm.jl")
+
+include("div.jl")
 
 include("show.jl")
 
