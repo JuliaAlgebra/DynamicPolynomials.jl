@@ -1,10 +1,6 @@
 export RationalPoly
 import Base.+, Base.-, Base.*, Base./
 
-immutable RationalPoly{C, S, T} <: PolyType{C}
-    num::TermContainer{C, S}
-    den::TermContainer{C, T}
-end
 iscomm{C, S, T}(r::Type{RationalPoly{C, S, T}}) = C
 
 Base.convert{C, S, T}(::Type{RationalPoly{C, S, T}}, q::RationalPoly{C, S, T}) = q

@@ -1,5 +1,3 @@
-^(x::PolyVar{false}, i::Int) = Monomial{false}([x], [i])
-
 function (*)(x::PolyVar{false}, y::PolyVar{false})
     if x === y
         Monomial{false}([x], [2])

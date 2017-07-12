@@ -1,5 +1,8 @@
 using DynamicPolynomials
+using MultivariatePolynomials
 using Base.Test
 
-# write your own tests here
-@test 1 == 2
+include("mono.jl")
+include("poly.jl")
+
+include("mvp.jl")
