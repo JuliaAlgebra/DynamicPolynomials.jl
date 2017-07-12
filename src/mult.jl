@@ -34,13 +34,13 @@ MP.multconstant(α, p::Polynomial) = Polynomial(α*p.a, p.x)
 MP.multconstant(p::Polynomial, α) = Polynomial(p.a*α, p.x)
 
 # I do not want to cast x to TermContainer because that would force the promotion of eltype(q) with Int
-function *{S<:Union{PolyVar,Monomial},T}(x::S, p::Polynomial{T})
+function *(x::Union{PolyVar, Monomial}, p::Polynomial)
     # /!\ No copy of a is done
-    Polynomial{T}(p.a, x*p.x)
+    Polynomial(p.a, x*p.x)
 end
-function *{S<:Union{PolyVar,Monomial},T}(p::Polynomial{T}, x::S)
+function *(p::Polynomial, x::Union{PolyVar, Monomial})
     # /!\ No copy of a is done
-    Polynomial{T}(p.a, p.x*x)
+    Polynomial(p.a, p.x*x)
 end
 
 function _term_poly_mult(t::Term, p::Polynomial, op::Function)
@@ -91,6 +91,6 @@ function *(p::Polynomial, q::Polynomial)
                 a[i] = u.α * v.α
             end
         end
-        vecpolynomialclean(allvars, a, Z)
+        polynomialclean(allvars, a, Z)
     end
 end

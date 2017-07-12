@@ -18,6 +18,7 @@ function (*)(x::PolyVar{true}, y::Monomial{true})
     w, updatez = multiplyvar(y.vars, x)
     Monomial{true}(w, updatez(y.z))
 end
+(*)(y::MonomialVector{true}, x::PolyVar{true}) = x * y
 function (*)(x::PolyVar{true}, y::MonomialVector{true})
     w, updatez = multiplyvar(y.vars, x)
     MonomialVector{true}(w, updatez.(y.Z))
@@ -46,4 +47,5 @@ function (*)(x::Monomial{true}, y::MonomialVector{true})
     w, updatez = multdivmono(y.vars, x, +)
     MonomialVector{true}(w, updatez.(y.Z))
 end
+(*)(y::MonomialVector{true}, x::Monomial{true}) = x * y
 (*)(x::Monomial{true}, y::PolyVar{true}) = y * x

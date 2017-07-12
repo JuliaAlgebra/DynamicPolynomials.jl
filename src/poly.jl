@@ -47,7 +47,8 @@ Polynomial{C}(x::Union{PolyVar{C}, Monomial{C}}) = Polynomial(Term{C}(x))
 
 Polynomial(p::Polynomial) = p
 Polynomial{C, T}(t::Term{C, T}) = Polynomial{C, T}([t.α], [t.x])
-Base.convert{C, T}(::Type{Polynomial{C, T}}, x) = Polynomial(Term{C, T}(x))
+Base.convert{C, T}(::Type{Polynomial{C, T}}, α) = Polynomial(Term{C, T}(α))
+Base.convert{C, T}(::Type{Polynomial{C, T}}, m::DMonomialLike{C}) = Polynomial(Term{C, T}(m))
 Base.convert{C, T}(::Type{Polynomial{C, T}}, t::Term{C}) = Polynomial{C, T}([T(t.α)], [t.x])
 Base.convert{C, T}(::Type{Polynomial{C, T}}, p::Polynomial{C, T}) = p
 Base.convert{C, S, T}(::Type{Polynomial{C, T}}, p::Polynomial{C, S}) = Polynomial{C}(Vector{T}(p.a), p.x)

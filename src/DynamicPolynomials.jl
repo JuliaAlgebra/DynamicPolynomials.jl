@@ -14,6 +14,7 @@ const MP = MultivariatePolynomials
 
 include("var.jl")
 include("mono.jl")
+const DMonomialLike{C} = Union{Monomial{C}, PolyVar{C}}
 include("term.jl")
 include("monovec.jl")
 include("poly.jl")
