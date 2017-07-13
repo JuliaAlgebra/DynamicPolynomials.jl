@@ -34,7 +34,7 @@ function Base.hash(x::Monomial, u::UInt)
         hash(1, u)
     elseif nvars(cx) == 1 && cx.z[1] == 1
         hash(cx.vars[1], u)
-    else
+    else # TODO reduce power in MP
         hash(_vars(cx), hash(cx.z, u))
     end
 end
