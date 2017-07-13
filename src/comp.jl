@@ -1,5 +1,4 @@
 import Base.==, Base.isless, Base.isapprox
-export isapproxzero
 
 Base.iszero(t::Term) = iszero(t.α)
 Base.iszero(p::Polynomial) = isempty(p)
@@ -134,14 +133,6 @@ function grlex(x::Vector{Int}, y::Vector{Int})
         end
         false
     end
-end
-
-function isapproxzero(α; ztol::Real=1e-6)
-    -ztol < α < ztol
-end
-
-function isapproxzero(p::Polynomial; ztol::Real=1e-6)
-    isapprox(p, zero(p), ztol=ztol)
 end
 
 function isapprox{C, S, T}(p::Polynomial{C, S}, q::Polynomial{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6)

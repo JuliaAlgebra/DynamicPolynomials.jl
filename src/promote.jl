@@ -5,6 +5,9 @@ promote_rule{C}(::Type{Monomial{C}}, ::Type{PolyVar{C}}) = Monomial{C}
 promote_rule{C}(::Type{PolyVar{C}}, ::Type{Monomial{C}}) = Monomial{C}
 #promote_rule{S<:Union{Monomial, PolyVar}, T<:Union{Monomial, PolyVar}}(::Type{S}, ::Type{T}) = Monomial{iscomm{S}}
 
+promote_rule{S, C, T}(::Type{<:AbstractPolynomialLike{S}}, ::Type{<:TermPoly{C, T}}) = Polynomial{C, promote_type(S, T)}
+promote_rule{S, C, T}(::Type{<:TermPoly{C, T}}, ::Type{<:AbstractPolynomialLike{S}}) = Polynomial{C, promote_type(S, T)}
+
 promote_rule{S, C, T}(::Type{S}, ::Type{<:TermPoly{C, T}}) = Polynomial{C, promote_type(S, T)}
 promote_rule{S, C, T}(::Type{<:TermPoly{C, T}}, ::Type{S}) = Polynomial{C, promote_type(S, T)}
 promote_rule{C, T}(::Type{T}, ::Type{<:DMonomialLike{C}}) = Term{C, promote_type(T, Int)}

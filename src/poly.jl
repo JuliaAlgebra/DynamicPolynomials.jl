@@ -52,6 +52,7 @@ Base.convert{C, T}(::Type{Polynomial{C, T}}, m::DMonomialLike{C}) = Polynomial(T
 Base.convert{C, T}(::Type{Polynomial{C, T}}, t::Term{C}) = Polynomial{C, T}([T(t.α)], [t.x])
 Base.convert{C, T}(::Type{Polynomial{C, T}}, p::Polynomial{C, T}) = p
 Base.convert{C, S, T}(::Type{Polynomial{C, T}}, p::Polynomial{C, S}) = Polynomial{C}(Vector{T}(p.a), p.x)
+Base.convert{C, T}(::Type{Polynomial{C, T}}, p::AbstractPolynomialLike) = Polynomial{C, T}(polynomial(p, T))
 
 #Base.convert{C, T}(::Type{TermContainer{C, T}}, p::Polynomial{C}) = Polynomial{C, T}(p)
 
