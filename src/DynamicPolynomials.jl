@@ -26,6 +26,9 @@ MP.termtype{C, T}(::Type{Polynomial{C, T}}) = Term{C, T}
 MP.term(α, p::PolyType) = α * Monomial(_vars(p), zeros(Int, nvars(p)))
 MP.polynomial(p::PolyType) = Polynomial(p)
 MP.polynomial{C, T}(p::PolyType{C}, ::Type{T}) = Polynomial{C, T}(p)
+MP.polynomialtype{C}(::Type{<:DMonomialLike{C}}) = Polynomial{C, Int}
+MP.polynomialtype{T, C}(::Type{Term{C, T}}) = Polynomial{C, T}
+MP.polynomialtype{T, C}(::Type{T}, ::Type{<:DMonomialLike{C}}) = Polynomial{C, T}
 MP.vars(p::Union{PolyType, MonomialVector}) = _vars(p) # tuple(_vars(p))
 MP.nvars(p::Union{PolyType, MonomialVector}) = length(_vars(p))
 include("promote.jl")

@@ -60,7 +60,7 @@ function (::Type{Polynomial{C, T}}){C, T}(f::Function, x::MonomialVector{C})
     a = T[f(i) for i in 1:length(x)]
     Polynomial{C, T}(a, x)
 end
-function (::Type{Polynomial{C, T}}){C, T}(f::Function, x::Vector)
+function (::Type{Polynomial{C, T}}){C, T}(f::Function, x::AbstractVector)
     σ, X = sortmonovec(x)
     a = T[f(i) for i in σ]
     Polynomial{C, T}(a, X)
@@ -145,6 +145,7 @@ end
 
 MP.polynomial(a::AbstractVector, x::DMonoVec) = Polynomial(a, x)
 
+MP.polynomial(f::Function, x::AbstractVector) = Polynomial(f, x)
 #MP.polynomial{C, T}(ts::AbstractVector{Term{C, T}}) = Polynomial(coefficient.(ts), monomial.(ts)) # FIXME invalid age range update
 
 function MP.polynomial{C, T}(Q::AbstractMatrix, mv::MonomialVector{C}, ::Type{T})
