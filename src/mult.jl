@@ -49,8 +49,9 @@ function _term_poly_mult(t::Term, p::Polynomial, op::Function)
     else
         n = nterms(p)
         allvars, maps = myunion([t.x.vars, p.x.vars])
-        nvars = length(allvars)
-        Z = [zeros(Int, nvars) for i in 1:n]
+        nv = length(allvars)
+        # Necessary to annotate the type in case it is empty
+        Z = Vector{Int}[zeros(Int, nv) for i in 1:n]
         for i in 1:n
             Z[i][maps[1]] = t.x.z
             Z[i][maps[2]] += p.x.Z[i]
