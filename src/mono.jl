@@ -39,8 +39,8 @@ function Base.hash(x::Monomial, u::UInt)
     end
 end
 
-# /!\ vars not copied, do not mess with vars
 MP.exponents(m::Monomial) = m.z
+# /!\ vars not copied, do not mess with vars
 _vars(m::Union{Monomial}) = m.vars
 
 MP.monomial(m::Monomial) = m

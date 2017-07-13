@@ -10,16 +10,16 @@
         @test zero(PolyVar{true}) == 0
         @test one(PolyVar{false}) == 1
         @polyvar x
-        @test typeof(zero(x)) == Term{true, Int}
-        @test typeof(one(x)) == Term{true, Int}
+        @test zero(x) isa Term{true, Int}
+        @test one(x) isa Term{true, Int}
     end
     @testset "Monomial" begin
         @test zero(Monomial{false}) == 0
         @test one(Monomial{true}) == 1
         @polyvar x
         @test_throws ArgumentError Monomial{true}([x], [1,0])
-        @test typeof(zero(x^2)) == Term{true, Int}
-        @test typeof(one(x^2)) == Term{true, Int}
+        @test zero(x^2) isa Term{true, Int}
+        @test one(x^2) isa Term{true, Int}
     end
     @testset "MonomialVector" begin
         @polyvar x y
@@ -29,9 +29,5 @@
         @test X.Z == [[1, 1], [1, 0], [0, 0]]
         @test isa(MonomialVector{true}([1]), MonomialVector{true})
         @test isa(MonomialVector{false}([1]), MonomialVector{false})
-        @test X[2:3][1] == x
-        @test X[2:3][2] == 1
-        @test X[[3, 2]][1] == x
-        @test X[[3, 2]][2] == 1
     end
 end

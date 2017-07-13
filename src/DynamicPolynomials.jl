@@ -20,6 +20,9 @@ include("monovec.jl")
 include("poly.jl")
 const TermPoly{C, T} = Union{Term{C, T}, Polynomial{C, T}}
 const PolyType{C} = Union{Polynomial{C}, Term{C}, Monomial{C}, PolyVar{C}}
+MP.termtype{C}(::Type{<:DMonomialLike{C}}) = Term{C, Int}
+MP.termtype{TT<:Term}(::Type{TT}) = TT
+MP.termtype{C, T}(::Type{Polynomial{C, T}}) = Term{C, T}
 MP.term(α, p::PolyType) = α * Monomial(_vars(p), zeros(Int, nvars(p)))
 MP.polynomial(p::PolyType) = Polynomial(p)
 MP.polynomial{C, T}(p::PolyType{C}, ::Type{T}) = Polynomial{C, T}(p)

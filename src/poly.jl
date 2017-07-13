@@ -85,7 +85,10 @@ Base.next(p::Polynomial, state) = (p[state], state+1)
 #eltype{C, T}(::Type{Polynomial{C, T}}) = T
 Base.getindex(p::Polynomial, I::Int) = Term(p.a[I[1]], p.x[I[1]])
 
+#Base.transpose(p::Polynomial) = Polynomial(map(transpose, p.a), p.x) # FIXME invalid age range update
+
 MP.terms(p::Polynomial) = p
+MP.coefficients(p::Polynomial) = p.a
 MP.monomials(p::Polynomial) = p.x
 _vars(p::Polynomial) = _vars(p.x)
 
@@ -141,6 +144,8 @@ function polynomialclean{C, T}(vars::Vector{PolyVar{C}}, adup::Vector{T}, Zdup::
 end
 
 MP.polynomial(a::AbstractVector, x::DMonoVec) = Polynomial(a, x)
+
+#MP.polynomial{C, T}(ts::AbstractVector{Term{C, T}}) = Polynomial(coefficient.(ts), monomial.(ts)) # FIXME invalid age range update
 
 function MP.polynomial{C, T}(Q::AbstractMatrix, mv::MonomialVector{C}, ::Type{T})
     if isempty(Q)
