@@ -15,8 +15,8 @@
         @test typeof(one(1.0x)) == Term{true, Float64}
         @test typeof(zero(1.0x)) == Term{true, Float64}
 
-        @test typeof(term(1, x)) == Term{true, Int}
-        @inferred term(1, x)
+        @test typeof(constantterm(1, x)) == Term{true, Int}
+        @inferred constantterm(1, x)
 
         @test !isempty(1x)
     end

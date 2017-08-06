@@ -34,8 +34,6 @@ Base.convert{C, T}(::Type{Term{C, T}}, α) = Term{C}(T(α))
 Base.convert(::Type{Any}, t::Term) = t
 Base.copy{T<:Term}(t::T) = T(copy(t.α), copy(t.x))
 
-MP.constantmonomial{C, TT<:Union{Term{C}, Monomial{C}, PolyVar{C}}}(::Type{TT}) = Monomial{C}()
-MP.constantmonomial(t::Union{Term, Monomial, PolyVar}) = Monomial(_vars(t), zeros(Int, nvars(t)))
 MP.coefficient(t::Term) = t.α
 MP.monomial(t::Term) = t.x
 _vars(t) = _vars(t.x)

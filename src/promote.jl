@@ -10,7 +10,7 @@ Base.promote_rule{S, C, T}(::Type{<:DMonomialLike{S}}, ::Type{Polynomial{C, T}})
 Base.promote_rule{S, C, T}(::Type{Polynomial{C, T}}, ::Type{<:DMonomialLike{S}}) = Polynomial{C, promote_type(T, Int)}
 
 MP.promote_rule_constant{C, T}(::Type{T}, ::Type{<:DMonomialLike{C}}) = Term{C, promote_type(T, Int)}
-MP.promote_rule_constant{S,C,T}(::Type{S}, ::Type{Term{C, T}}) = Term{C, promote_type(S, T)}
+MP.promote_rule_constant{S, C, T}(::Type{S}, ::Type{Term{C, T}}) = Term{C, promote_type(S, T)}
 MP.promote_rule_constant{S, C, T}(::Type{S}, ::Type{<:TermPoly{C, T}}) = Polynomial{C, promote_type(S, T)}
 
 # Promotion with Term
