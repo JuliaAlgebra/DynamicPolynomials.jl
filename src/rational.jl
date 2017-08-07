@@ -1,31 +1,31 @@
 export RationalPoly
 import Base.+, Base.-, Base.*, Base./
 
-iscomm{C, S, T}(r::Type{RationalPoly{C, S, T}}) = C
+iscomm(r::Type{RationalPoly{C, S, T}}) where {C, S, T} = C
 
-Base.convert{C, S, T}(::Type{RationalPoly{C, S, T}}, q::RationalPoly{C, S, T}) = q
-Base.convert{C, S, T, U, V}(::Type{RationalPoly{C, S, T}}, q::RationalPoly{C, U, V}) = TermContainer{C, S}(q.num) / TermContainer{C, T}(q.den)
-function Base.convert{C, S, T}(::Type{RationalPoly{C, S, T}}, p::TermContainer{C, S})
+Base.convert(::Type{RationalPoly{C, S, T}}, q::RationalPoly{C, S, T}) where {C, S, T} = q
+Base.convert(::Type{RationalPoly{C, S, T}}, q::RationalPoly{C, U, V}) where {C, S, T, U, V} = TermContainer{C, S}(q.num) / TermContainer{C, T}(q.den)
+function Base.convert(::Type{RationalPoly{C, S, T}}, p::TermContainer{C, S}) where {C, S, T}
     p / one(TermContainer{C, T})
 end
-function Base.convert{C, S, T}(::Type{RationalPoly{C, S, T}}, p::TermContainer)
+function Base.convert(::Type{RationalPoly{C, S, T}}, p::TermContainer) where {C, S, T}
     convert(RationalPoly{C, S, T}, TermContainer{C, S}(p))
 end
-function Base.convert{C, S, T}(::Type{RationalPoly{C, S, T}}, p)
+function Base.convert(::Type{RationalPoly{C, S, T}}, p) where {C, S, T}
     Base.convert(RationalPoly{C, S, T}, TermContainer{C, S}(p))
 end
 
 (/)(r::RationalPoly, p::TermContainer) = r.num / (r.den * p)
-function (/){C, S, T}(num::TermContainer{C, S}, den::TermContainer{C, T})
+function (/)(num::TermContainer{C, S}, den::TermContainer{C, T}) where {C, S, T}
     RationalPoly{C, S, T}(num, den)
 end
-function (/){C}(num, den::PolyType{C})
+function (/)(num, den::PolyType{C}) where {C}
     TermContainer{C}(num) / den
 end
-(/){C}(num::PolyType{C}, den::PolyType{C}) = TermContainer{C}(num) / TermContainer{C}(den)
+(/)(num::PolyType{C}, den::PolyType{C}) where {C} = TermContainer{C}(num) / TermContainer{C}(den)
 
 # Polynomial divided by coefficient is a polynomial not a rational polynomial
-(/){C}(num::PolyType{C}, den) = num * (1 / den)
+(/)(num::PolyType{C}, den) where {C} = num * (1 / den)
 
 function (+)(r::RationalPoly, s::RationalPoly)
     (r.num*s.den + r.den*s.num) / (r.den * s.den)
@@ -48,8 +48,8 @@ end
 (*)(p::PolyType, r::RationalPoly) = TermContainer(p) * r
 (*)(r::RationalPoly, p::Monomial) = r * TermContainer(p)
 (*)(r::RationalPoly, p::PolyVar)  = r * TermContainer(p)
-(*){C}(α, r::RationalPoly{C}) = TermContainer{C}(α) * r
-(*){C}(r::RationalPoly{C}, α) = r * TermContainer{C}(α)
+(*)(α, r::RationalPoly{C}) where {C} = TermContainer{C}(α) * r
+(*)(r::RationalPoly{C}, α) where {C} = r * TermContainer{C}(α)
 
 zero(r::RationalPoly) = zero(r.num)
-zero{C, S, T}(::Type{RationalPoly{C, S, T}}) = zero(Polynomial{C, S})
+zero(::Type{RationalPoly{C, S, T}}) where {C, S, T} = zero(Polynomial{C, S})

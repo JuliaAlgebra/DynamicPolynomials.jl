@@ -1,6 +1,6 @@
 export expectation
 
-function _dot{C}(m::Measure{C}, p::TermContainer{C}, f)
+function _dot(m::Measure{C}, p::TermContainer{C}, f) where {C}
     i = 1
     s = 0
     for t in p

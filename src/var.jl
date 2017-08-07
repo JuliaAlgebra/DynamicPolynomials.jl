@@ -1,11 +1,11 @@
 export PolyVar, @polyvar, @ncpolyvar
 export polyvecvar
 
-function polyvecvar{PV}(::Type{PV}, prefix, idxset)
+function polyvecvar(::Type{PV}, prefix, idxset) where {PV}
     [PV("$(prefix * string(i))") for i in idxset]
 end
 
-function buildpolyvar{PV}(::Type{PV}, var)
+function buildpolyvar(::Type{PV}, var) where {PV}
     if isa(var, Symbol)
         :($(esc(var)) = $PV($"$var"))
     else
@@ -27,7 +27,7 @@ macro ncpolyvar(args...)
     reduce((x,y) -> :($x; $y), :(), [buildpolyvar(PolyVar{false}, arg) for arg in args])
 end
 
-immutable PolyVar{C} <: AbstractVariable
+struct PolyVar{C} <: AbstractVariable
     id::Int
     name::AbstractString
     function PolyVar{C}(name::AbstractString) where {C}
@@ -47,11 +47,11 @@ MP.vars(v::PolyVar) = [v]
 MP.nvars(v::PolyVar) = 1
 _vars(v::PolyVar) = [v]
 
-iscomm{C}(::Type{PolyVar{C}}) = C
+iscomm(::Type{PolyVar{C}}) where {C} = C
 
 const VarVec{C} = Union{AbstractVector{PolyVar{C}}, NTuple{<:Integer, PolyVar{C}}}
 
-function myunion{PV<:PolyVar}(varsvec::Vector{Vector{PV}})
+function myunion(varsvec::Vector{Vector{PV}}) where {PV<:PolyVar}
     n = length(varsvec)
     is = ones(Int, n)
     maps = [ zeros(Int, length(vars)) for vars in varsvec ]

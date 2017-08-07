@@ -8,10 +8,10 @@ abstract type AbstractAlgebraicSet <: AbstractBasicSemialgebraicSet end
 
 addinequality!(S::AbstractAlgebraicSet, p) = throw(ArgumentError("Cannot add inequality to an algebraic set"))
 
-immutable FullSpace <: AbstractAlgebraicSet
+struct FullSpace <: AbstractAlgebraicSet
 end
 
-type AlgebraicSet <: AbstractAlgebraicSet
+struct AlgebraicSet <: AbstractAlgebraicSet
     p::Vector
 end
 function (::Type{AlgebraicSet})()
@@ -21,7 +21,7 @@ end
 addequality!(V::AlgebraicSet, p) = push!(V.p, p)
 Base.intersect(S::AlgebraicSet, T::AlgebraicSet) = AlgebraicSet([S.p; T.p])
 
-type BasicSemialgebraicSet <: AbstractBasicSemialgebraicSet
+struct BasicSemialgebraicSet <: AbstractBasicSemialgebraicSet
     V::AlgebraicSet
     p::Vector
 end

@@ -5,16 +5,16 @@ import Base.(^), Base.(+)
 # a PolyVar and a Monomial, this results in type instability
 # Defining the specific methods solve this problem and also make
 # them a lot faster
-^{C}(x::PolyVar{C}, i::Int) = Monomial{C}([x], [i])
+^(x::PolyVar{C}, i::Int) where {C} = Monomial{C}([x], [i])
 ^(x::Monomial{true}, i::Int) = Monomial{true}(x.vars, i*x.z)
 
-myminivect{T}(x::T, y::T) = [x, y]
-function myminivect{S,T}(x::S, y::T)
+myminivect(x::T, y::T) where {T} = [x, y]
+function myminivect(x::S, y::T) where {S,T}
     U = promote_type(S, T)
     [U(x), U(y)]
 end
 
-function (+){C}(x::Term{C}, y::Term{C})
+function (+)(x::Term{C}, y::Term{C}) where {C}
     if x.x == y.x
         Polynomial{C}([x.α+y.α], [x.x])
     elseif x.x > y.x
@@ -24,7 +24,7 @@ function (+){C}(x::Term{C}, y::Term{C})
     end
 end
 
-function (-){C}(x::Term{C}, y::Term{C})
+function (-)(x::Term{C}, y::Term{C}) where {C}
     if x.x == y.x
         Polynomial{C}([x.α-y.α], [x.x])
     elseif x.x > y.x
@@ -34,11 +34,11 @@ function (-){C}(x::Term{C}, y::Term{C})
     end
 end
 
-(+){S<:Union{PolyVar,Monomial},T<:Union{PolyVar,Monomial}}(x::S, y::T) = Term(x) + Term(y)
-(-){S<:Union{PolyVar,Monomial},T<:Union{PolyVar,Monomial}}(x::S, y::T) = Term(x) - Term(y)
+(+)(x::DMonomialLike, y::DMonomialLike) = Term(x) + Term(y)
+(-)(x::DMonomialLike, y::DMonomialLike) = Term(x) - Term(y)
 
 
-function plusorminus{C, S, T}(p::TermPoly{C, S}, q::TermPoly{C, T}, isplus)
+function plusorminus(p::TermPoly{C, S}, q::TermPoly{C, T}, isplus) where {C, S, T}
     varsvec = [_vars(p), _vars(q)]
     allvars, maps = myunion(varsvec)
     nvars = length(allvars)
@@ -75,13 +75,13 @@ function plusorminus{C, S, T}(p::TermPoly{C, S}, q::TermPoly{C, T}, isplus)
 end
 
 
-(+){C}(x::TermPoly{C}, y::TermPoly{C}) = plusorminus(x, y, true)
-(-){C}(x::TermPoly{C}, y::TermPoly{C}) = plusorminus(x, y, false)
-(+){C, T, S<:Union{Monomial,PolyVar}}(x::TermPoly{C, T}, y::S) = x + Term{C, T}(y)
-(+){C, T, S<:Union{Monomial,PolyVar}}(x::S, y::TermPoly{C, T}) = Term{C, T}(x) + y
+(+)(x::TermPoly{C}, y::TermPoly{C}) where C = plusorminus(x, y, true)
+(-)(x::TermPoly{C}, y::TermPoly{C}) where C = plusorminus(x, y, false)
+(+)(x::TermPoly{C, T}, y::Union{Monomial,PolyVar}) where {C, T} = x + Term{C, T}(y)
+(+)(x::Union{Monomial,PolyVar}, y::TermPoly{C, T}) where {C, T} = Term{C, T}(x) + y
 
-(-){S<:Union{Monomial,PolyVar},T}(x::TermPoly{T}, y::S) = x - Term{T}(y)
-(-){S<:Union{Monomial,PolyVar},T}(x::S, y::TermPoly{T}) = Term{T}(x) - y
+(-)(x::TermPoly{T}, y::DMonomialLike) where T = x - Term{T}(y)
+(-)(x::DMonomialLike, y::TermPoly{T}) where T = Term{T}(x) - y
 
 (-)(p::Polynomial) = Polynomial(-p.a, p.x)
 

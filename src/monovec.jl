@@ -1,7 +1,7 @@
 export MonomialVector
 
 # Invariant: Always sorted and no zero vector
-type MonomialVector{C} <: AbstractVector{Monomial{C}}
+struct MonomialVector{C} <: AbstractVector{Monomial{C}}
     vars::Vector{PolyVar{C}}
     Z::Vector{Vector{Int}}
 
@@ -15,9 +15,9 @@ type MonomialVector{C} <: AbstractVector{Monomial{C}}
         new(vars, Z)
     end
 end
-MonomialVector{C}(vars::Vector{PolyVar{C}}, Z::Vector{Vector{Int}}) = MonomialVector{C}(vars, Z)
-(::Type{MonomialVector{C}}){C}() = MonomialVector{C}(PolyVar{C}[], Vector{Int}[])
-emptymonovec{C}(vars::VarVec{C}) = MonomialVector{C}(vars, Vector{Int}[])
+MonomialVector(vars::Vector{PolyVar{C}}, Z::Vector{Vector{Int}}) where {C} = MonomialVector{C}(vars, Z)
+(::Type{MonomialVector{C}})() where {C} = MonomialVector{C}(PolyVar{C}[], Vector{Int}[])
+emptymonovec(vars::VarVec{C}) where {C} = MonomialVector{C}(vars, Vector{Int}[])
 
 # Generate canonical reperesentation by removing variables that are not used
 function canonical(m::MonomialVector)
@@ -40,8 +40,8 @@ function Base.hash(m::MonomialVector, u::UInt)
 end
 
 # /!\ vars not copied, do not mess with vars
-Base.copy{MV<:MonomialVector}(m::MV) = MV(m.vars, copy(m.Z))
-function Base.getindex{MV<:MonomialVector}(x::MV, I)
+Base.copy(m::MV) where {MV<:MonomialVector} = MV(m.vars, copy(m.Z))
+function Base.getindex(x::MV, I) where {MV<:MonomialVector}
     MV(x.vars, x.Z[sort(I)])
 end
 Base.getindex(x::MonomialVector, i::Integer) = Monomial(x.vars, x.Z[i])
@@ -123,7 +123,7 @@ function MonomialVector(vars::Vector{PolyVar{false}}, degs::AbstractVector{Int},
     v = isempty(Z) ? vars : getvarsforlength(vars, length(first(Z)))
     MonomialVector{false}(v, Z)
 end
-MonomialVector{C}(vars::Vector{PolyVar{C}}, degs::Int, filter::Function = x->true) = MonomialVector(vars, [degs], filter)
+MonomialVector(vars::Vector{PolyVar{C}}, degs::Int, filter::Function = x->true) where {C} = MonomialVector(vars, [degs], filter)
 function MP.monomials(vars::Vector{PolyVar{true}}, degs::AbstractVector{Int}, filter::Function = x->true)
     Z = getZfordegs(length(vars), degs, true, filter)
     [Monomial{true}(vars, z) for z in Z]
@@ -133,7 +133,7 @@ function MP.monomials(vars::Vector{PolyVar{false}}, degs::AbstractVector{Int}, f
     v = isempty(Z) ? vars : getvarsforlength(vars, length(first(Z)))
     [Monomial{false}(v, z) for z in Z]
 end
-MP.monomials{PV<:PolyVar}(vars::Vector{PV}, degs::Int, filter::Function = x->true) = monomials(vars, [degs], filter)
+MP.monomials(vars::Vector{PV}, degs::Int, filter::Function = x->true) where {PV<:PolyVar} = monomials(vars, [degs], filter)
 
 # Recognize arrays of monomials of this module
 # [x, y] -> Vector{PolyVar}
@@ -144,7 +144,7 @@ const DMonoVecElemNonConstant{C} = Union{PolyVar{C}, Monomial{C}, Term{C}}
 const DMonoVecElem{C} = Union{Int, DMonoVecElemNonConstant{C}}
 const DMonoVec{C} = AbstractVector{<:DMonoVecElem{C}}
 
-function buildZvarsvec{PV<:PolyVar}(::Type{PV}, X::DMonoVec)
+function buildZvarsvec(::Type{PV}, X::DMonoVec) where {PV<:PolyVar}
     varsvec = Vector{PV}[ (isa(x, DMonoVecElemNonConstant) ? _vars(x) : PolyVar[]) for x in X ]
     allvars, maps = myunion(varsvec)
     nvars = length(allvars)
@@ -168,7 +168,7 @@ function buildZvarsvec{PV<:PolyVar}(::Type{PV}, X::DMonoVec)
 end
 
 MP.sortmonovec(X::MonomialVector) = (1:length(X), X)
-function MP.sortmonovec{C}(X::DMonoVec{C})
+function MP.sortmonovec(X::DMonoVec{C}) where {C}
     if isempty(X)
         Int[], MonomialVector{C}()
     else
@@ -187,9 +187,9 @@ function MonomialVector(X)
     monovectype(X)(X)
 end
 
-MP.monovectype{C}(::Type{<:DMonoVecElemNonConstant{C}}) = MonomialVector{C}
-MP.monovectype{C}(X::DMonoVec{C}) = MonomialVector{C}
-MP.monovec{C}(::Type{<:DMonoVecElemNonConstant{C}}) = MonomialVector{C}()
+MP.monovectype(::Type{<:DMonoVecElemNonConstant{C}}) where {C} = MonomialVector{C}
+MP.monovectype(X::DMonoVec{C}) where {C} = MonomialVector{C}
+MP.monovec(::Type{<:DMonoVecElemNonConstant{C}}) where {C} = MonomialVector{C}()
 function MP.monovec(X::DMonoVec)
     MonomialVector(X)
 end
@@ -202,7 +202,7 @@ function MP.monovec(a, x::DMonoVec)
     (a[σ], X)
 end
 
-function MP.mergemonovec{C}(ms::Vector{MonomialVector{C}})
+function MP.mergemonovec(ms::Vector{MonomialVector{C}}) where {C}
     m = length(ms)
     I = ones(Int, length(ms))
     L = length.(ms)

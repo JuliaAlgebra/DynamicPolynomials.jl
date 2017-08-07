@@ -1,4 +1,4 @@
-function multiplyexistingvar{C}(v::Vector{PolyVar{C}}, x::PolyVar{C}, i::Int)
+function multiplyexistingvar(v::Vector{PolyVar{C}}, x::PolyVar{C}, i::Int) where {C}
     updatez = z -> begin
         newz = copy(z)
         newz[i] += 1
@@ -7,7 +7,7 @@ function multiplyexistingvar{C}(v::Vector{PolyVar{C}}, x::PolyVar{C}, i::Int)
     # /!\ v not copied for efficiency, do not mess up with vars
     v, updatez
 end
-function insertvar{C}(v::Vector{PolyVar{C}}, x::PolyVar{C}, i::Int)
+function insertvar(v::Vector{PolyVar{C}}, x::PolyVar{C}, i::Int) where {C}
     n = length(v)
     I = 1:i-1
     J = i:n

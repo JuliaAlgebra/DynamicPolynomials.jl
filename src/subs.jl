@@ -17,10 +17,10 @@ function fillmap!(vals, vars, s1::MP.AbstractSubstitution, s2::MP.AbstractSubsti
     fillmap!(vals, vars, s2...)
 end
 
-_eltype{T}(::T) = T
+_eltype(::T) where {T} = T
 _eltype(t::Tuple) = Base.promote_typeof(t...)
-_eltype{T}(::Tuple{Vararg{T}}) = T
-_eltype{T}(::AbstractVector{T}) = T
+_eltype(::Tuple{Vararg{T}}) where {T} = T
+_eltype(::AbstractVector{T}) where {T} = T
 _substype(s::MP.AbstractSubstitution) = _eltype(s.second)
 _substype(s1::MP.AbstractSubstitution, s2::MP.AbstractSubstitution...) = promote_type(_substype(s1), _substype(s2...))
 _substype(s::MP.Substitutions) = _substype(s...)
@@ -34,7 +34,7 @@ function _subsmap(::MP.Eval, vars, s::MP.Substitutions)
     end
     vals
 end
-function _subsmap{C}(::MP.Subs, vars::Vector{PolyVar{C}}, s::MP.Substitutions)
+function _subsmap(::MP.Subs, vars::Vector{PolyVar{C}}, s::MP.Substitutions) where {C}
     # Some variable may not be replaced
     vals = Vector{promote_type(_substype(s), PolyVar{C})}(length(vars))
     copy!(vals, vars)
@@ -68,7 +68,7 @@ end
 _subs(st, ::PolyVar, vals) = monoeval([1], vals::AbstractVector)
 _subs(st, m::Monomial, vals) = monoeval(m.z, vals::AbstractVector)
 _subs(st, t::Term, vals) = t.α * monoeval(t.x.z, vals::AbstractVector)
-function _subs{C, T, S}(::MP.Eval, p::Polynomial{C, T}, vals::AbstractVector{S})
+function _subs(::MP.Eval, p::Polynomial{C, T}, vals::AbstractVector{S}) where {C, T, S}
     # I need to check for iszero otherwise I get : ArgumentError: reducing over an empty collection is not allowed
     if iszero(p)
         zero(Base.promote_op(*, S, T))
@@ -76,7 +76,7 @@ function _subs{C, T, S}(::MP.Eval, p::Polynomial{C, T}, vals::AbstractVector{S})
         sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), 1:length(p))
     end
 end
-function _subs{C, T, S}(::MP.Subs, p::Polynomial{C, T}, vals::AbstractVector{S})
+function _subs(::MP.Subs, p::Polynomial{C, T}, vals::AbstractVector{S}) where {C, T, S}
     Tout = Base.promote_op(*, T, MP.coefficienttype(S))
     # I need to check for iszero otherwise I get : ArgumentError: reducing over an empty collection is not allowed
     if iszero(p)

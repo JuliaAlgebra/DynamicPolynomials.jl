@@ -3,7 +3,7 @@ export Monomial
 # Invariant:
 # vars is increasing
 # z may contain 0's (otherwise, getindex of MonomialVector would be inefficient)
-type Monomial{C} <: AbstractMonomial
+struct Monomial{C} <: AbstractMonomial
     vars::Vector{PolyVar{C}}
     z::Vector{Int}
 
@@ -15,13 +15,13 @@ type Monomial{C} <: AbstractMonomial
     end
 end
 
-iscomm{C}(::Type{Monomial{C}}) = C
-(::Type{Monomial{C}}){C}() = Monomial{C}(PolyVar{C}[], Int[])
-Monomial{C}(vars::Vector{PolyVar{C}}, z::Vector{Int}) = Monomial{C}(vars, z)
-Monomial{C}(x::PolyVar{C}) = Monomial{C}(x)
+iscomm(::Type{Monomial{C}}) where {C} = C
+Monomial{C}() where {C} = Monomial{C}(PolyVar{C}[], Int[])
+Monomial(vars::Vector{PolyVar{C}}, z::Vector{Int}) where {C} = Monomial{C}(vars, z)
+Monomial(x::PolyVar{C}) where {C} = Monomial{C}(x)
 
-Base.copy{M<:Monomial}(m::M) = M(m.vars, copy(m.z))
-Base.convert{C}(::Type{Monomial{C}}, x::PolyVar{C}) = Monomial{C}([x], [1])
+Base.copy(m::M) where {M<:Monomial} = M(m.vars, copy(m.z))
+Base.convert(::Type{Monomial{C}}, x::PolyVar{C}) where {C} = Monomial{C}([x], [1])
 
 # Generate canonical reperesentation by removing variables that are not used
 function canonical(m::Monomial)

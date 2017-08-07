@@ -1,21 +1,15 @@
-import MultivariatePolynomials.differentiate
-
-differentiate(p::PolyVar, x)  = differentiate(term(p), x)
-differentiate(p::Monomial, x) = differentiate(term(p), x)
-
-function differentiate{C, T}(t::Term{C, T}, x::PolyVar{C})
-    i = findfirst(_vars(t), x)
-    if i == 0 || t.x.z[i] == 0
-        S = Base.promote_op(*, T, Int)
-        zero(Term{C, S})
+function MP.differentiate(m::Monomial{C}, x::PolyVar{C}) where C
+    i = findfirst(_vars(m), x)
+    if i == 0 || m.z[i] == 0
+        zero(Term{C, Int})
     else
-        z = copy(t.x.z)
+        z = copy(m.z)
         z[i] -= 1
-        Term(t.α * t.x.z[i], Monomial(_vars(t), z))
+        m.z[i] * Monomial(_vars(m), z)
     end
 end
 
-function differentiate{C, T}(p::Polynomial{C, T}, x::PolyVar{C})
+function MP.differentiate(p::Polynomial{C, T}, x::PolyVar{C}) where {C, T}
     # grlex order preserved
     i = findfirst(_vars(p), x)
     S = Base.promote_op(*, T, Int)

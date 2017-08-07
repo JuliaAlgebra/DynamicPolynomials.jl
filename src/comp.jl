@@ -5,7 +5,7 @@ Base.iszero(p::Polynomial) = isempty(p)
 
 # TODO This should be in Base with T instead of PolyVar{C}.
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/3
-function (==){C}(x::Vector{PolyVar{C}}, y::Vector{PolyVar{C}})
+function (==)(x::Vector{PolyVar{C}}, y::Vector{PolyVar{C}}) where C
     if length(x) != length(y)
         false
     else
@@ -21,16 +21,16 @@ end
 
 # Comparison of PolyVar
 
-function (==){C}(x::PolyVar{C}, y::PolyVar{C})
+function (==)(x::PolyVar{C}, y::PolyVar{C}) where C
     x.id == y.id
 end
 
-isless{C}(x::PolyVar{C}, y::PolyVar{C}) = isless(y.id, x.id)
+isless(x::PolyVar{C}, y::PolyVar{C}) where C = isless(y.id, x.id)
 
 # Comparison of Monomial
 
 # graded lex ordering
-function mycomp{C}(x::Monomial{C}, y::Monomial{C})
+function mycomp(x::Monomial{C}, y::Monomial{C}) where C
     degx = deg(x)
     degy = deg(y)
     if degx != degy
@@ -63,20 +63,20 @@ function mycomp{C}(x::Monomial{C}, y::Monomial{C})
     end
 end
 
-function (==){C}(x::Monomial{C}, y::Monomial{C})
+function (==)(x::Monomial{C}, y::Monomial{C}) where C
     mycomp(x, y) == 0
 end
-(==){C}(x::PolyVar{C}, y::Monomial{C}) = Monomial{C}(x) == y
+(==)(x::PolyVar{C}, y::Monomial{C}) where C = Monomial{C}(x) == y
 
 # graded lex ordering
-function isless{C}(x::Monomial{C}, y::Monomial{C})
+function isless(x::Monomial{C}, y::Monomial{C}) where C
     mycomp(x, y) < 0
 end
-isless{C}(x::Monomial{C}, y::PolyVar{C}) = isless(x, Monomial{C}(y))
-isless{C}(x::PolyVar{C}, y::Monomial{C}) = isless(Monomial{C}(x), y)
+isless(x::Monomial{C}, y::PolyVar{C}) where C = isless(x, Monomial{C}(y))
+isless(x::PolyVar{C}, y::Monomial{C}) where C = isless(Monomial{C}(x), y)
 
 # Comparison of MonomialVector
-function (==){C}(x::MonomialVector{C}, y::MonomialVector{C})
+function (==)(x::MonomialVector{C}, y::MonomialVector{C}) where C
     if length(x.Z) != length(y.Z)
         return false
     end
@@ -98,7 +98,7 @@ end
 (==)(x::MonomialVector, mv::AbstractVector) = x == sortmonovec(mv)
 
 # Comparison of Term
-function (==){C}(p::Polynomial{C}, q::Polynomial{C})
+function (==)(p::Polynomial{C}, q::Polynomial{C}) where {C}
     # terms should be sorted and without zeros
     if length(p) != length(q)
         return false
@@ -135,7 +135,7 @@ function grlex(x::Vector{Int}, y::Vector{Int})
     end
 end
 
-function isapprox{C, S, T}(p::Polynomial{C, S}, q::Polynomial{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6)
+function isapprox(p::Polynomial{C, S}, q::Polynomial{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6) where {C, S, T}
     i = j = 1
     while i <= length(p.x) || j <= length(q.x)
         lhs, rhs = 0, 0

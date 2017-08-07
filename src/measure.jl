@@ -10,7 +10,7 @@ type Measure{C, T}
     a::Vector{T}
     x::MonomialVector{C}
 
-    function Measure{C, T}(a::Vector{T}, x::MonomialVector{C}) where {C, T}
+    function Measure(a::Vector{T}, x::MonomialVector{C}) where {C, T} where {C, T}
         if length(a) != length(x)
             error("There should be as many coefficient than monomials")
         end
@@ -18,8 +18,8 @@ type Measure{C, T}
     end
 end
 
-Measure{C, T}(a::Vector{T}, x::MonomialVector{C}) = Measure{C, T}(a, x)
-function (::Type{Measure{C}}){C}(a::Vector, x::Vector)
+Measure(a::Vector{T}, x::MonomialVector{C}) where {C, T} = Measure{C, T}(a, x)
+function (::Type{Measure{C}})(a::Vector, x::Vector) where {C}
     if length(a) != length(x)
         error("There should be as many coefficient than monomials")
     end
@@ -29,7 +29,7 @@ end
 Measure{T<:VectorOfPolyType{true}}(a::Vector, X::Vector{T}) = Measure{true}(a, X)
 Measure{T<:VectorOfPolyType{false}}(a::Vector, X::Vector{T}) = Measure{false}(a, X)
 
-function ζ{C, T}(v::Vector{T}, x::MonomialVector{C}, varorder::Vector{PolyVar{C}})
+function ζ(v::Vector{T}, x::MonomialVector{C}, varorder::Vector{PolyVar{C}}) where {C, T}
     Measure(T[m(v, varorder) for m in x], x)
 end
 
