@@ -17,4 +17,6 @@ module newmodule
     end
 end
 
+const Mod = DynamicPolynomials
+
 include("mvp.jl")

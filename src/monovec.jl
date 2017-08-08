@@ -124,16 +124,17 @@ function MonomialVector(vars::Vector{PolyVar{false}}, degs::AbstractVector{Int},
     MonomialVector{false}(v, Z)
 end
 MonomialVector(vars::Vector{PolyVar{C}}, degs::Int, filter::Function = x->true) where {C} = MonomialVector(vars, [degs], filter)
-function MP.monomials(vars::Vector{PolyVar{true}}, degs::AbstractVector{Int}, filter::Function = x->true)
+
+function MP.monomials(vars::TupOrVec{PolyVar{true}}, degs::AbstractVector{Int}, filter::Function = x->true)
     Z = getZfordegs(length(vars), degs, true, filter)
     [Monomial{true}(vars, z) for z in Z]
 end
-function MP.monomials(vars::Vector{PolyVar{false}}, degs::AbstractVector{Int}, filter::Function = x->true)
+function MP.monomials(vars::TupOrVec{PolyVar{false}}, degs::AbstractVector{Int}, filter::Function = x->true)
     Z = getZfordegs(length(vars), degs, false, filter)
     v = isempty(Z) ? vars : getvarsforlength(vars, length(first(Z)))
     [Monomial{false}(v, z) for z in Z]
 end
-MP.monomials(vars::Vector{PV}, degs::Int, filter::Function = x->true) where {PV<:PolyVar} = monomials(vars, [degs], filter)
+MP.monomials(vars::TupOrVec{PV}, degs::Int, filter::Function = x->true) where {PV<:PolyVar} = monomials(vars, [degs], filter)
 
 # Recognize arrays of monomials of this module
 # [x, y] -> Vector{PolyVar}

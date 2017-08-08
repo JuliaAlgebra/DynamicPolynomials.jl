@@ -5,6 +5,9 @@
         @test isa(x, Vector{PolyVar{true}})
         @test isa(y, PolyVar{true})
         @test isa(z, Vector{PolyVar{true}})
+        @test length(x) == 3
+        @test length(z) == 2
+        @test x[1] > x[2] > x[3] > y > z[1] > z[2]
     end
     @testset "PolyVar" begin
         @test zero(PolyVar{true}) == 0
