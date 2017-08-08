@@ -21,7 +21,7 @@ include("poly.jl")
 const TermPoly{C, T} = Union{Term{C, T}, Polynomial{C, T}}
 const PolyType{C} = Union{Polynomial{C}, Term{C}, Monomial{C}, PolyVar{C}}
 MP.constantmonomial(::Type{<:PolyType{C}}) where {C} = Monomial{C}()
-MP.constantmonomial(p::PolyType) = Monomial(_vars(p), zeros(Int, nvars(p)))
+MP.constantmonomial(p::PolyType) = Monomial(_vars(p), zeros(Int, nvariables(p)))
 MP.termtype(::Type{<:DMonomialLike{C}}) where {C} = Term{C, Int}
 MP.termtype(::Type{<:TermPoly{C, T}}) where {C, T} = Term{C, T}
 MP.termtype(::Type{<:PolyType{C}}, ::Type{T}) where {C, T} = Term{C, T}
@@ -31,8 +31,8 @@ MP.polynomialtype(::Type{<:DMonomialLike{C}}) where {C} = Polynomial{C, Int}
 MP.polynomialtype(::Type{Term{C, T}}) where {T, C} = Polynomial{C, T}
 MP.polynomialtype(::Type{T}, ::Type{<:DMonomialLike{C}}) where {T, C} = Polynomial{C, T}
 MP.polynomialtype(::Type{<:PolyType{C}}, ::Type{T}) where {C, T} = Polynomial{C, T}
-MP.vars(p::Union{PolyType, MonomialVector}) = _vars(p) # tuple(_vars(p))
-MP.nvars(p::Union{PolyType, MonomialVector}) = length(_vars(p))
+MP.variables(p::Union{PolyType, MonomialVector}) = _vars(p) # tuple(_vars(p))
+MP.nvariables(p::Union{PolyType, MonomialVector}) = length(_vars(p))
 include("promote.jl")
 
 include("operators.jl")

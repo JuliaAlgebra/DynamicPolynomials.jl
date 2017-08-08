@@ -43,8 +43,7 @@ Base.copy(x::PolyVar) = x
 
 MP.name(v::PolyVar) = v.name
 MP.monomial(v::PolyVar) = Monomial(v)
-MP.vars(v::PolyVar) = [v]
-MP.nvars(v::PolyVar) = 1
+MP.nvariables(v::PolyVar) = 1
 _vars(v::PolyVar) = [v]
 
 iscomm(::Type{PolyVar{C}}) where {C} = C

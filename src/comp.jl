@@ -38,8 +38,8 @@ function mycomp(x::Monomial{C}, y::Monomial{C}) where C
     else
         i = j = 1
         # since they have the same degree,
-        # if we get j > nvars(y), the rest in x.z should be zeros
-        while i <= nvars(x) && j <= nvars(y)
+        # if we get j > nvariables(y), the rest in x.z should be zeros
+        while i <= nvariables(x) && j <= nvariables(y)
             if x.vars[i] > y.vars[j]
                 if x.z[i] == 0
                     i += 1

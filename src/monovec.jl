@@ -21,7 +21,7 @@ emptymonovec(vars::VarVec{C}) where {C} = MonomialVector{C}(vars, Vector{Int}[])
 
 # Generate canonical reperesentation by removing variables that are not used
 function canonical(m::MonomialVector)
-    v = zeros(Bool, nvars(m))
+    v = zeros(Bool, nvariables(m))
     for z in m.Z
         v = [v[i] || z[i] > 0 for i in eachindex(v)]
     end

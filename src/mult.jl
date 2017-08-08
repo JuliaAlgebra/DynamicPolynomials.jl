@@ -67,11 +67,11 @@ function *(p::Polynomial, q::Polynomial)
     elseif iszero(q)
         zero(p)
     else
-        samevars = vars(p) == vars(q)
+        samevars = _vars(p) == _vars(q)
         if samevars
-            allvars = vars(p)
+            allvars = _vars(p)
         else
-            allvars, maps = myunion([vars(p), vars(q)])
+            allvars, maps = myunion([_vars(p), _vars(q)])
         end
         N = length(p)*length(q)
         Z = Vector{Vector{Int}}(N)

@@ -30,9 +30,9 @@ function canonical(m::Monomial)
 end
 function Base.hash(x::Monomial, u::UInt)
     cx = canonical(x)
-    if nvars(cx) == 0
+    if nvariables(cx) == 0
         hash(1, u)
-    elseif nvars(cx) == 1 && cx.z[1] == 1
+    elseif nvariables(cx) == 1 && cx.z[1] == 1
         hash(cx.vars[1], u)
     else # TODO reduce power in MP
         hash(_vars(cx), hash(cx.z, u))

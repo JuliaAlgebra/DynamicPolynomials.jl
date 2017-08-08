@@ -25,7 +25,7 @@
         @polyvar x y
         @test_throws ArgumentError MonomialVector{true}([x], [[1], [1,0]])
         X = MonomialVector([x, 1, x*y])
-        @test vars(X) == [x, y]
+        @test variables(X) == [x, y]
         @test X.Z == [[1, 1], [1, 0], [0, 0]]
         @test isa(MonomialVector{true}([1]), MonomialVector{true})
         @test isa(MonomialVector{false}([1]), MonomialVector{false})
