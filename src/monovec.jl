@@ -169,12 +169,21 @@ function buildZvarsvec(::Type{PV}, X::DMonoVec) where {PV<:PolyVar}
 end
 
 MP.sortmonovec(X::MonomialVector) = (1:length(X), X)
+function _sortmonovec(X::DMonoVec{C}) where {C}
+    allvars, Z = buildZvarsvec(PolyVar{C}, X)
+    σ = sortperm(Z, rev=true, lt=grlex)
+    allvars, Z, σ
+end
+function _removedups!(Z::Vector{Vector{Int}}, σ::Vector{Int})
+    dups = find(i -> Z[σ[i]] == Z[σ[i-1]], 2:length(σ))
+    deleteat!(σ, dups)
+end
 function MP.sortmonovec(X::DMonoVec{C}) where {C}
     if isempty(X)
         Int[], MonomialVector{C}()
     else
-        allvars, Z = buildZvarsvec(PolyVar{C}, X)
-        σ = sortperm(Z, rev=true, lt=grlex)
+        allvars, Z, σ = _sortmonovec(X)
+        _removedups!(Z, σ)
         σ, MonomialVector{C}(allvars, Z[σ])
     end
 end
@@ -182,6 +191,8 @@ end
 function MonomialVector{C}(X::DMonoVec{C}) where C
     allvars, Z = buildZvarsvec(PolyVar{C}, X)
     sort!(Z, rev=true, lt=grlex)
+    dups = find(i -> Z[i] == Z[i-1], 2:length(Z))
+    deleteat!(Z, dups)
     MonomialVector{C}(allvars, Z)
 end
 function MonomialVector(X)

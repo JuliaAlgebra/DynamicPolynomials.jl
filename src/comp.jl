@@ -94,8 +94,8 @@ function (==)(x::MonomialVector{C}, y::MonomialVector{C}) where C
     end
     return true
 end
-(==)(mv::AbstractVector, x::MonomialVector) = sortmonovec(mv) == x
-(==)(x::MonomialVector, mv::AbstractVector) = x == sortmonovec(mv)
+(==)(mv::AbstractVector, x::MonomialVector) = monovec(mv) == x
+(==)(x::MonomialVector, mv::AbstractVector) = x == monovec(mv)
 
 # Comparison of Term
 function (==)(p::Polynomial{C}, q::Polynomial{C}) where {C}
