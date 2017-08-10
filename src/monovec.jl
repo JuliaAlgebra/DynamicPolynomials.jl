@@ -17,7 +17,6 @@ struct MonomialVector{C} <: AbstractVector{Monomial{C}}
 end
 MonomialVector(vars::Vector{PolyVar{C}}, Z::Vector{Vector{Int}}) where {C} = MonomialVector{C}(vars, Z)
 (::Type{MonomialVector{C}})() where {C} = MonomialVector{C}(PolyVar{C}[], Vector{Int}[])
-emptymonovec(vars::VarVec{C}) where {C} = MonomialVector{C}(vars, Vector{Int}[])
 
 # Generate canonical reperesentation by removing variables that are not used
 function canonical(m::MonomialVector)
@@ -59,6 +58,18 @@ MultivariatePolynomials.mindeg(x::MonomialVector) = minimum(sum.(x.Z))
 MultivariatePolynomials.maxdeg(x::MonomialVector) = maximum(sum.(x.Z))
 
 _vars(m::Union{Monomial, MonomialVector}) = m.vars
+
+# Recognize arrays of monomials of this module
+# [x, y] -> Vector{PolyVar}
+# [x, x*y] -> Vector{Monomial}
+# [1, x] -> Vector{Term{Int}}
+const DMonoVecElemNonConstant{C} = Union{PolyVar{C}, Monomial{C}, Term{C}}
+# [1] -> Vector{Int}
+const DMonoVecElem{C} = Union{Int, DMonoVecElemNonConstant{C}}
+const DMonoVec{C} = AbstractVector{<:DMonoVecElem{C}}
+
+MP.emptymonovec(vars::VarVec{C}) where {C} = MonomialVector{C}(vars, Vector{Int}[])
+MP.emptymonovec(::Type{<:DMonoVecElemNonConstant{C}}) where {C} = MonomialVector{C}()
 
 function fillZfordeg!(Z, n, deg, ::Type{Val{true}}, filter::Function)
     z = zeros(Int, n)
@@ -136,15 +147,6 @@ function MP.monomials(vars::TupOrVec{PolyVar{false}}, degs::AbstractVector{Int},
 end
 MP.monomials(vars::TupOrVec{PV}, degs::Int, filter::Function = x->true) where {PV<:PolyVar} = monomials(vars, [degs], filter)
 
-# Recognize arrays of monomials of this module
-# [x, y] -> Vector{PolyVar}
-# [x, x*y] -> Vector{Monomial}
-# [1, x] -> Vector{Term{Int}}
-const DMonoVecElemNonConstant{C} = Union{PolyVar{C}, Monomial{C}, Term{C}}
-# [1] -> Vector{Int}
-const DMonoVecElem{C} = Union{Int, DMonoVecElemNonConstant{C}}
-const DMonoVec{C} = AbstractVector{<:DMonoVecElem{C}}
-
 function buildZvarsvec(::Type{PV}, X::DMonoVec) where {PV<:PolyVar}
     varsvec = Vector{PV}[ (isa(x, DMonoVecElemNonConstant) ? _vars(x) : PolyVar[]) for x in X ]
     allvars, maps = myunion(varsvec)
@@ -201,7 +203,6 @@ end
 
 MP.monovectype(::Type{<:DMonoVecElemNonConstant{C}}) where {C} = MonomialVector{C}
 MP.monovectype(X::DMonoVec{C}) where {C} = MonomialVector{C}
-MP.monovec(::Type{<:DMonoVecElemNonConstant{C}}) where {C} = MonomialVector{C}()
 function MP.monovec(X::DMonoVec)
     MonomialVector(X)
 end
