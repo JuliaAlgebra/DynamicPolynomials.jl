@@ -1,6 +1,6 @@
-import Base.==, Base.isless, Base.isapprox
+import Base.==
 
-Base.iszero(t::Term) = iszero(t.α)
+#Base.iszero(t::Term) = iszero(t.α)
 Base.iszero(p::Polynomial) = isempty(p)
 
 # TODO This should be in Base with T instead of PolyVar{C}.
@@ -25,7 +25,7 @@ function (==)(x::PolyVar{C}, y::PolyVar{C}) where C
     x.id == y.id
 end
 
-isless(x::PolyVar{C}, y::PolyVar{C}) where C = isless(y.id, x.id)
+Base.isless(x::PolyVar{C}, y::PolyVar{C}) where C = isless(y.id, x.id)
 
 # Comparison of Monomial
 
@@ -69,11 +69,11 @@ end
 (==)(x::PolyVar{C}, y::Monomial{C}) where C = Monomial{C}(x) == y
 
 # graded lex ordering
-function isless(x::Monomial{C}, y::Monomial{C}) where C
+function Base.isless(x::Monomial{C}, y::Monomial{C}) where C
     mycomp(x, y) < 0
 end
-isless(x::Monomial{C}, y::PolyVar{C}) where C = isless(x, Monomial{C}(y))
-isless(x::PolyVar{C}, y::Monomial{C}) where C = isless(Monomial{C}(x), y)
+Base.isless(x::Monomial{C}, y::PolyVar{C}) where C = isless(x, Monomial{C}(y))
+Base.isless(x::PolyVar{C}, y::Monomial{C}) where C = isless(Monomial{C}(x), y)
 
 # Comparison of MonomialVector
 function (==)(x::MonomialVector{C}, y::MonomialVector{C}) where C
@@ -135,7 +135,7 @@ function grlex(x::Vector{Int}, y::Vector{Int})
     end
 end
 
-function isapprox(p::Polynomial{C, S}, q::Polynomial{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6) where {C, S, T}
+function Base.isapprox(p::Polynomial{C, S}, q::Polynomial{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6) where {C, S, T}
     i = j = 1
     while i <= length(p.x) || j <= length(q.x)
         lhs, rhs = 0, 0

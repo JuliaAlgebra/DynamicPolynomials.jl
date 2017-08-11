@@ -34,7 +34,7 @@ function canonical(m::Monomial)
 end
 function Base.hash(x::Monomial, u::UInt)
     cx = canonical(x)
-    if nvariables(cx) == 0
+    if iszero(nvariables(cx))
         hash(1, u)
     elseif nvariables(cx) == 1 && cx.z[1] == 1
         hash(cx.vars[1], u)
@@ -49,23 +49,23 @@ _vars(m::Union{Monomial}) = m.vars
 
 MP.monomial(m::Monomial) = m
 # Does m1 divides m2 ?
-function MP.divides(m1::Monomial, m2::Monomial)
-    i = j = 1
-    while i <= length(m1.z) && j <= length(m2.z)
-        if m1.vars[i] == m2.vars[j]
-            if m1.z[i] > m2.z[j]
-                return false
-            end
-            i += 1
-            j += 1
-        elseif m1.vars[i] > m2.vars[j]
-            if !iszero(m1.z[i])
-                return false
-            end
-            i += 1
-        else
-            j += 1
-        end
-    end
-    i > length(m1.z)
-end
+#function MP.divides(m1::Monomial, m2::Monomial)
+#    i = j = 1
+#    while i <= length(m1.z) && j <= length(m2.z)
+#        if m1.vars[i] == m2.vars[j]
+#            if m1.z[i] > m2.z[j]
+#                return false
+#            end
+#            i += 1
+#            j += 1
+#        elseif m1.vars[i] > m2.vars[j]
+#            if !iszero(m1.z[i])
+#                return false
+#            end
+#            i += 1
+#        else
+#            j += 1
+#        end
+#    end
+#    i > length(m1.z)
+#end

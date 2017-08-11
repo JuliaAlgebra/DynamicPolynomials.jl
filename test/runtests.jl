@@ -4,6 +4,7 @@ using Base.Test
 
 include("mono.jl")
 include("poly.jl")
+include("comp.jl")
 
 module newmodule
     using Base.Test

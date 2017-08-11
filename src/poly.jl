@@ -87,7 +87,19 @@ Base.getindex(p::Polynomial, I::Int) = Term(p.a[I[1]], p.x[I[1]])
 
 #Base.transpose(p::Polynomial) = Polynomial(map(transpose, p.a), p.x) # FIXME invalid age range update
 
-MP.terms(p::Polynomial) = p
+struct TermIterator{C, T} <: AbstractVector{Term{C, T}}
+    p::Polynomial{C, T}
+end
+Base.endof(p::TermIterator) = length(p.p)
+Base.length(p::TermIterator) = length(p.p.a)
+Base.size(p::TermIterator) = (length(p),)
+Base.isempty(p::TermIterator) = isempty(p.p.a)
+Base.start(::TermIterator) = 1
+Base.done(p::TermIterator, state) = length(p.p) < state
+Base.next(p::TermIterator, state) = (p.p[state], state+1)
+Base.getindex(p::TermIterator, I::Int) = Term(p.p.a[I[1]], p.p.x[I[1]])
+
+MP.terms(p::Polynomial) = TermIterator(p)
 MP.coefficients(p::Polynomial) = p.a
 MP.monomials(p::Polynomial) = p.x
 _vars(p::Polynomial) = _vars(p.x)
@@ -143,7 +155,7 @@ function polynomialclean(vars::Vector{PolyVar{C}}, adup::Vector{T}, Zdup::Vector
     Polynomial{C, T}(a, MonomialVector{C}(vars, Z))
 end
 
-MP.polynomial(a::AbstractVector, x::DMonoVec) = Polynomial(a, x)
+MP.polynomial(a::AbstractVector, x::DMonoVec, s::MP.ListState) = Polynomial(a, x)
 
 MP.polynomial(f::Function, x::AbstractVector) = Polynomial(f, x)
 #MP.polynomial(ts::AbstractVector{Term{C, T}}) where {C, T} = Polynomial(coefficient.(ts), monomial.(ts)) # FIXME invalid age range update
@@ -153,11 +165,10 @@ function MP.polynomial(Q::AbstractMatrix, mv::MonomialVector{C}, ::Type{T}) wher
         zero(Polynomial{C, T})
     else
         n = length(mv)
-        U = typeof(2*Q[1, 1] + Q[1, 1])
         if C
             N = MP.trimap(n, n, n)
             Z = Vector{Vector{Int}}(N)
-            a = Vector{U}(N)
+            a = Vector{T}(N)
             for i in 1:n
                 for j in i:n
                     k = MP.trimap(i, j, n)
@@ -173,7 +184,7 @@ function MP.polynomial(Q::AbstractMatrix, mv::MonomialVector{C}, ::Type{T}) wher
         else
             N = n^2
             x = Vector{Monomial{C}}(N)
-            a = Vector{U}(N)
+            a = Vector{T}(N)
             offset = 0
             for i in 1:n
                 # for j in 1:n wouldn't be cache friendly for Q

@@ -207,13 +207,6 @@ function MP.monovec(X::DMonoVec)
     MonomialVector(X)
 end
 MP.monovec(a, mv::MonomialVector) = (a, mv)
-function MP.monovec(a, x::DMonoVec)
-    if length(a) != length(x)
-        throw(ArgumentError("There should be as many coefficient than monomials"))
-    end
-    σ, X = sortmonovec(x)
-    (a[σ], X)
-end
 
 function MP.mergemonovec(ms::Vector{MonomialVector{C}}) where {C}
     m = length(ms)
