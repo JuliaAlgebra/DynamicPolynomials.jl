@@ -160,23 +160,28 @@ MP.polynomial(a::AbstractVector, x::DMonoVec, s::MP.ListState) = Polynomial(a, x
 MP.polynomial(f::Function, x::AbstractVector) = Polynomial(f, x)
 #MP.polynomial(ts::AbstractVector{Term{C, T}}) where {C, T} = Polynomial(coefficient.(ts), monomial.(ts)) # FIXME invalid age range update
 
+# i < j
+function trimap(i, j, n)
+    div(n*(n+1), 2) - div((n-i+1)*(n-i+2), 2) + j-i+1
+end
+MP.polynomial(Q::AbstractMatrix{T}, mv::MonomialVector) where T = MP.polynomial(Q, mv, Base.promote_op(+, T, T))
 function MP.polynomial(Q::AbstractMatrix, mv::MonomialVector{C}, ::Type{T}) where {C, T}
     if isempty(Q)
         zero(Polynomial{C, T})
     else
         n = length(mv)
         if C
-            N = MP.trimap(n, n, n)
+            N = trimap(n, n, n)
             Z = Vector{Vector{Int}}(N)
             a = Vector{T}(N)
             for i in 1:n
                 for j in i:n
-                    k = MP.trimap(i, j, n)
+                    k = trimap(i, j, n)
                     Z[k] = mv.Z[i] + mv.Z[j]
                     if i == j
                         a[k] = Q[i, j]
                     else
-                        a[k] = 2*Q[i, j]
+                        a[k] = Q[i, j] + Q[j, i]
                     end
                 end
             end
@@ -189,7 +194,7 @@ function MP.polynomial(Q::AbstractMatrix, mv::MonomialVector{C}, ::Type{T}) wher
             for i in 1:n
                 # for j in 1:n wouldn't be cache friendly for Q
                 for j in i:n
-                    k = MP.trimap(i, j, n)
+                    k = trimap(i, j, n)
                     q = Q[i, j]
                     x[offset+k] = mv[i] * mv[j]
                     a[offset+k] = q

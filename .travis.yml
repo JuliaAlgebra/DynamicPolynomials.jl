@@ -8,7 +8,9 @@ julia:
   - nightly
 notifications:
   email: false
-# uncomment the following lines to override the default test script
+matrix:
+  allow_failures:
+    - julia: nightly
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia -e 'Pkg.init(); Pkg.add("MultivariatePolynomials"); Pkg.checkout("MultivariatePolynomials", "typed"); Pkg.clone(pwd()); Pkg.build("DynamicPolynomials"); Pkg.test("DynamicPolynomials"; coverage=true)'
