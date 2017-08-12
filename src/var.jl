@@ -39,11 +39,9 @@ struct PolyVar{C} <: AbstractVariable
 end
 
 Base.hash(x::PolyVar, u::UInt) = hash(x.id, u)
-Base.copy(x::PolyVar) = x
 
 MP.name(v::PolyVar) = v.name
 MP.monomial(v::PolyVar) = Monomial(v)
-MP.nvariables(v::PolyVar) = 1
 _vars(v::PolyVar) = [v]
 
 iscomm(::Type{PolyVar{C}}) where {C} = C
