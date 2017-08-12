@@ -32,7 +32,7 @@ function multdivmono(v::Vector{PolyVar{true}}, x::Monomial{true}, op)
         w, maps = myunion([v, x.vars])
         updatez = z -> begin
             newz = zeros(Int, length(w))
-            newz[maps[1]] = op(newz[maps[1]], z)
+            newz[maps[1]] += z
             newz[maps[2]] = op(newz[maps[2]], x.z)
             newz
         end
