@@ -1,9 +1,3 @@
-# _div(a, b) assumes that b divides a
-function MP._div(m1::Monomial{true}, m2::Monomial{true})
-    w, updatez = multdivmono(m1.vars, m2, -)
-    Monomial{true}(w, updatez(m1.z))
-end
-
 function MP.divides(m1::Monomial, m2::Monomial)
     e1 = exponents(m1)
     v1 = variables(m1)

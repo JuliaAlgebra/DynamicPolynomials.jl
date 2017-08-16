@@ -10,18 +10,22 @@
         @test x[1] > x[2] > x[3] > y > z[1] > z[2]
     end
     @testset "PolyVar" begin
+        @test zeroterm(PolyVar{true}) == 0
         @test zero(PolyVar{true}) == 0
         @test one(PolyVar{false}) == 1
         @polyvar x
-        @test zero(x) isa Term{true, Int}
+        @test zeroterm(x) isa Term{true, Int}
+        @test zero(x) isa Polynomial{true, Int}
         @test one(x) isa Monomial{true}
     end
     @testset "Monomial" begin
+        @test zeroterm(Monomial{false}) == 0
         @test zero(Monomial{false}) == 0
         @test one(Monomial{true}) == 1
         @polyvar x
         @test_throws ArgumentError Monomial{true}([x], [1,0])
-        @test zero(x^2) isa Term{true, Int}
+        @test zeroterm(x^2) isa Term{true, Int}
+        @test zero(x^2) isa Polynomial{true, Int}
         @test one(x^2) isa Monomial{true}
     end
     @testset "MonomialVector" begin

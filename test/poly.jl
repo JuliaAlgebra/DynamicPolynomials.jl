@@ -4,16 +4,18 @@
 #       @test coefficienttype(1x) == Int
 #       @test coefficienttype(1.0x^2) == Float64
 #       @test coefficienttype(Term{true, Int}) == Int
-        @test zero(Term{false, Int}).α == 0
+        @test zeroterm(Term{false, Int}).α == 0
         @test one(Term{true, Int}).α == 1
         @polyvar x
         @test typeof(Term(1x)) == Term{true, Int}
         @test Term(1x) == 1x
         @test typeof(Any(1x)) == Term{true, Int}
         @test typeof(one(1x)) == Term{true, Int}
-        @test typeof(zero(1x)) == Term{true, Int}
+        @test typeof(zeroterm(1x)) == Term{true, Int}
+        @test typeof(zero(1x)) == Polynomial{true, Int}
         @test typeof(one(1.0x)) == Term{true, Float64}
-        @test typeof(zero(1.0x)) == Term{true, Float64}
+        @test typeof(zeroterm(1.0x)) == Term{true, Float64}
+        @test typeof(zero(1.0x)) == Polynomial{true, Float64}
 
         @test typeof(constantterm(1, x)) == Term{true, Int}
         @inferred constantterm(1, x)
@@ -29,8 +31,10 @@
         @test_throws InexactError Polynomial{true, Int}([1.5], [x])
         @test Polynomial(1 + x) == 1 + x
         @test typeof(one(1 + x)) == Polynomial{true, Int}
+        @test typeof(zeroterm(1 + x)) == Term{true, Int}
         @test typeof(zero(1 + x)) == Polynomial{true, Int}
         @test typeof(one(1.0 + x)) == Polynomial{true, Float64}
+        @test typeof(zeroterm(1.0 + x)) == Term{true, Float64}
         @test typeof(zero(1.0 + x)) == Polynomial{true, Float64}
 
         p = Polynomial([4, 9], [x, x*x])

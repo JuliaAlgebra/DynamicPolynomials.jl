@@ -27,21 +27,35 @@ function multdivmono(v::Vector{PolyVar{true}}, x::Monomial{true}, op)
     if v == x.vars
         # /!\ no copy done here for efficiency, do not mess up with vars
         w = v
-        updatez = z -> op(z, x.z)
+        updatez = z -> op.(z, x.z)
     else
         w, maps = myunion([v, x.vars])
         updatez = z -> begin
             newz = zeros(Int, length(w))
-            newz[maps[1]] += z
-            newz[maps[2]] = op(newz[maps[2]], x.z)
+            I = maps[1]; i = 1; lI = length(I)
+            J = maps[2]; j = 1; lJ = length(J)
+            while i <= lI || j <= lJ
+                if i > lI || (j <= lJ && J[j] < I[i])
+                    newz[J[j]] = op(0, x.z[j])
+                    j += 1
+                elseif j > lJ || (i <= lI && I[i] < J[j])
+                    newz[I[i]] = op(z[i], 0)
+                    i += 1
+                else
+                    @assert I[i] == J[j]
+                    newz[I[i]] = op(z[i], x.z[j])
+                    i += 1
+                    j += 1
+                end
+            end
             newz
         end
     end
     w, updatez
 end
-function (*)(x::Monomial{true}, y::Monomial{true})
-    w, updatez = multdivmono(y.vars, x, +)
-    Monomial{true}(w, updatez(y.z))
+function MP.mapexponents(f, x::Monomial{true}, y::Monomial{true})
+    w, updatez = multdivmono(x.vars, y, f)
+    Monomial{true}(w, updatez(x.z))
 end
 function (*)(x::Monomial{true}, y::MonomialVector{true})
     w, updatez = multdivmono(y.vars, x, +)
