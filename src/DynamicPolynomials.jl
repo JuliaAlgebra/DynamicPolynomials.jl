@@ -35,6 +35,7 @@ MP.polynomialtype(::Type{T}, ::Type{<:DMonomialLike{C}}) where {T, C} = Polynomi
 MP.polynomialtype(::Type{<:PolyType{C}}, ::Type{T}) where {C, T} = Polynomial{C, T}
 MP.variables(p::Union{PolyType, MonomialVector}) = _vars(p) # tuple(_vars(p))
 MP.nvariables(p::Union{PolyType, MonomialVector}) = length(_vars(p))
+MP.similarvariable(p::PolyType{C}, ::Type{Val{V}}) where {C, V} = PolyVar{C}(string(V))
 include("promote.jl")
 
 include("operators.jl")
