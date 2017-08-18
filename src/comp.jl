@@ -135,10 +135,9 @@ function grlex(x::Vector{Int}, y::Vector{Int})
     end
 end
 
-function Base.isapprox(p::Polynomial{C, S}, q::Polynomial{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=1e-6) where {C, S, T}
+function Base.isapprox(p::Polynomial{C, S}, q::Polynomial{C, T}; rtol::Real=Base.rtoldefault(S, T), atol::Real=0, ztol::Real=Base.rtoldefault(S, T)) where {C, S, T}
     i = j = 1
     while i <= length(p.x) || j <= length(q.x)
-        lhs, rhs = 0, 0
         if i > length(p.x) || (j <= length(q.x) && q.x[j] > p.x[i])
             if !isapproxzero(q.a[j], ztol=ztol)
                 return false
