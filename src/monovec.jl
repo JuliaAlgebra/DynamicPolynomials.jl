@@ -130,26 +130,29 @@ function getvarsforlength(vars::Vector{PolyVar{false}}, len::Int)
 end
 
 function MonomialVector(vars::Vector{PolyVar{false}}, degs::AbstractVector{Int}, filter::Function = x->true)
-    Z = getZfordegs(length(vars), degs, false, filter)
+    Z = getZfordegs(length(vars), degs, false, z -> filter(Monomial(vars, z)))
     v = isempty(Z) ? vars : getvarsforlength(vars, length(first(Z)))
     MonomialVector{false}(v, Z)
 end
 MonomialVector(vars::Vector{PolyVar{C}}, degs::Int, filter::Function = x->true) where {C} = MonomialVector(vars, [degs], filter)
 
-function MP.monomials(vars::TupOrVec{PolyVar{true}}, degs::AbstractVector{Int}, filter::Function = x->true)
-    Z = getZfordegs(length(vars), degs, true, filter)
-    [Monomial{true}(vars, z) for z in Z]
-end
-function MP.monomials(vars::TupOrVec{PolyVar{false}}, degs::AbstractVector{Int}, filter::Function = x->true)
-    Z = getZfordegs(length(vars), degs, false, filter)
-    v = isempty(Z) ? vars : getvarsforlength(vars, length(first(Z)))
-    [Monomial{false}(v, z) for z in Z]
-end
-MP.monomials(vars::TupOrVec{PV}, degs::Int, filter::Function = x->true) where {PV<:PolyVar} = monomials(vars, [degs], filter)
+MP.monomials(vars::AbstractVector{PolyVar{true}}, args...) = MonomialVector(vars, args...)
+MP.monomials(vars::Tuple{Vararg{PolyVar}}, args...) = monomials([vars...], args...)
+
+#function MP.monomials(vars::TupOrVec{PolyVar{true}}, degs::AbstractVector{Int}, filter::Function = x->true)
+#    Z = getZfordegs(length(vars), degs, true, z -> filter(Monomial(vars, z)))
+#    [Monomial{true}(vars, z) for z in Z]
+#end
+#function MP.monomials(vars::TupOrVec{PolyVar{false}}, degs::AbstractVector{Int}, filter::Function = x->true)
+#    Z = getZfordegs(length(vars), degs, false, z -> filter(Monomial(vars, z)))
+#    v = isempty(Z) ? vars : getvarsforlength(vars, length(first(Z)))
+#    [Monomial{false}(v, z) for z in Z]
+#end
+#MP.monomials(vars::TupOrVec{PV}, degs::Int, filter::Function = x->true) where {PV<:PolyVar} = monomials(vars, [degs], filter)
 
 function buildZvarsvec(::Type{PV}, X::DMonoVec) where {PV<:PolyVar}
     varsvec = Vector{PV}[ (isa(x, DMonoVecElemNonConstant) ? _vars(x) : PolyVar[]) for x in X ]
-    allvars, maps = myunion(varsvec)
+    allvars, maps = mergevars(varsvec)
     nvars = length(allvars)
     Z = [zeros(Int, nvars) for i in 1:length(X)]
     offset = 0

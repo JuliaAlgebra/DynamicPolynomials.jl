@@ -29,7 +29,7 @@ function multdivmono(v::Vector{PolyVar{true}}, x::Monomial{true}, op)
         w = v
         updatez = z -> op.(z, x.z)
     else
-        w, maps = myunion([v, x.vars])
+        w, maps = mergevars([v, x.vars])
         updatez = z -> begin
             newz = zeros(Int, length(w))
             I = maps[1]; i = 1; lI = length(I)

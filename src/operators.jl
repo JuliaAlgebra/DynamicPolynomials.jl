@@ -40,7 +40,7 @@ end
 
 function plusorminus(p::TermPoly{C, S}, q::TermPoly{C, T}, isplus) where {C, S, T}
     varsvec = [_vars(p), _vars(q)]
-    allvars, maps = myunion(varsvec)
+    allvars, maps = mergevars(varsvec)
     nvars = length(allvars)
     U = promote_type(S, T)
     a = Vector{U}()

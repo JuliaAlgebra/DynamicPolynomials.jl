@@ -48,7 +48,7 @@ function _term_poly_mult(t::Term, p::Polynomial, op::Function)
         zero(p)
     else
         n = nterms(p)
-        allvars, maps = myunion([t.x.vars, p.x.vars])
+        allvars, maps = mergevars([t.x.vars, p.x.vars])
         nv = length(allvars)
         # Necessary to annotate the type in case it is empty
         Z = Vector{Int}[zeros(Int, nv) for i in 1:n]
@@ -71,7 +71,7 @@ function *(p::Polynomial, q::Polynomial)
         if samevars
             allvars = _vars(p)
         else
-            allvars, maps = myunion([_vars(p), _vars(q)])
+            allvars, maps = mergevars([_vars(p), _vars(q)])
         end
         N = length(p)*length(q)
         Z = Vector{Vector{Int}}(N)

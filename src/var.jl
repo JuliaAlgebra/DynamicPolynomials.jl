@@ -48,7 +48,7 @@ iscomm(::Type{PolyVar{C}}) where {C} = C
 
 const VarVec{C} = Union{AbstractVector{PolyVar{C}}, NTuple{<:Integer, PolyVar{C}}}
 
-function myunion(varsvec::Vector{Vector{PV}}) where {PV<:PolyVar}
+function mergevars(varsvec::Vector{Vector{PV}}) where {PV<:PolyVar}
     n = length(varsvec)
     is = ones(Int, n)
     maps = [ zeros(Int, length(vars)) for vars in varsvec ]

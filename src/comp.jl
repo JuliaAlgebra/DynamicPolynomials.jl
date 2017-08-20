@@ -80,7 +80,7 @@ function (==)(x::MonomialVector{C}, y::MonomialVector{C}) where C
     if length(x.Z) != length(y.Z)
         return false
     end
-    allvars, maps = myunion([_vars(x), _vars(y)])
+    allvars, maps = mergevars([_vars(x), _vars(y)])
     # Should be sorted in the same order since the non-common
     # polyvar should have exponent 0
     for (a, b) in zip(x.Z, y.Z)
