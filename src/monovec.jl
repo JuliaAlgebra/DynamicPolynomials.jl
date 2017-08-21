@@ -122,7 +122,7 @@ function getZfordegs(n, degs::AbstractVector{Int}, C::Bool, filter::Function)
     Z
 end
 function MonomialVector(vars::Vector{PolyVar{true}}, degs::AbstractVector{Int}, filter::Function = x->true)
-    MonomialVector{true}(vars, getZfordegs(length(vars), degs, true, filter))
+    MonomialVector{true}(vars, getZfordegs(length(vars), degs, true, z -> filter(Monomial(vars, z))))
 end
 function getvarsforlength(vars::Vector{PolyVar{false}}, len::Int)
     n = length(vars)
