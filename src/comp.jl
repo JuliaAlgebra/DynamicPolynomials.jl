@@ -31,8 +31,8 @@ Base.isless(x::PolyVar{C}, y::PolyVar{C}) where C = isless(y.id, x.id)
 
 # graded lex ordering
 function mycomp(x::Monomial{C}, y::Monomial{C}) where C
-    degx = deg(x)
-    degy = deg(y)
+    degx = degree(x)
+    degy = degree(y)
     if degx != degy
         degx - degy
     else

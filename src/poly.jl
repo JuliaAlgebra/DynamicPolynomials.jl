@@ -104,9 +104,9 @@ MP.coefficients(p::Polynomial) = p.a
 MP.monomials(p::Polynomial) = p.x
 _vars(p::Polynomial) = _vars(p.x)
 
-MP.extdeg(p::Polynomial) = extdeg(p.x)
-MP.mindeg(p::Polynomial) = mindeg(p.x)
-MP.maxdeg(p::Polynomial) = maxdeg(p.x)
+MP.extdegree(p::Polynomial) = extdegree(p.x)
+MP.mindegree(p::Polynomial) = mindegree(p.x)
+MP.maxdegree(p::Polynomial) = maxdegree(p.x)
 
 MP.leadingcoefficient(p::Polynomial) = first(p.a)
 MP.leadingmonomial(p::Polynomial) = first(p.x)
