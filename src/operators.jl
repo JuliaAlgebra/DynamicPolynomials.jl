@@ -38,11 +38,11 @@ end
 (-)(x::DMonomialLike, y::DMonomialLike) = Term(x) - Term(y)
 
 
-function plusorminus(p::TermPoly{C, S}, q::TermPoly{C, T}, isplus) where {C, S, T}
+function plusorminus(p::TermPoly{C, S}, q::TermPoly{C, T}, op) where {C, S, T}
     varsvec = [_vars(p), _vars(q)]
     allvars, maps = mergevars(varsvec)
     nvars = length(allvars)
-    U = promote_type(S, T)
+    U = Base.promote_op(op, S, T)
     a = Vector{U}()
     Z = Vector{Vector{Int}}()
     i = j = 1
@@ -51,19 +51,18 @@ function plusorminus(p::TermPoly{C, S}, q::TermPoly{C, T}, isplus) where {C, S, 
         if j > length(q) || (i <= length(p) && p[i].x > q[j].x)
             t = p[i]
             z[maps[1]] = t.x.z
-            α = t.α
+            α = U(t.α)
             i += 1
         elseif i > length(p) || q[j].x > p[i].x
             t = q[j]
             z[maps[2]] = t.x.z
-            α = isplus ? t.α : -t.α
+            α = U(op(t.α))
             j += 1
         else
             t = p[i]
             z[maps[1]] = t.x.z
-            α = t.α
             s = q[j]
-            α += isplus ? s.α : -s.α
+            α = op(t.α, s.α)
             i += 1
             j += 1
         end
@@ -75,8 +74,8 @@ function plusorminus(p::TermPoly{C, S}, q::TermPoly{C, T}, isplus) where {C, S, 
 end
 
 
-(+)(x::TermPoly{C}, y::TermPoly{C}) where C = plusorminus(x, y, true)
-(-)(x::TermPoly{C}, y::TermPoly{C}) where C = plusorminus(x, y, false)
+(+)(x::TermPoly{C}, y::TermPoly{C}) where C = plusorminus(x, y, +)
+(-)(x::TermPoly{C}, y::TermPoly{C}) where C = plusorminus(x, y, -)
 (+)(x::TermPoly{C, T}, y::Union{Monomial,PolyVar}) where {C, T} = x + Term{C, T}(y)
 (+)(x::Union{Monomial,PolyVar}, y::TermPoly{C, T}) where {C, T} = Term{C, T}(x) + y
 
