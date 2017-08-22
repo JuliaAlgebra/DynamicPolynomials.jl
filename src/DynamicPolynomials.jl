@@ -36,7 +36,7 @@ MP.polynomialtype(::Type{<:PolyType{C}}, ::Type{T}) where {C, T} = Polynomial{C,
 _vars(p::AbstractArray{<:PolyType}) = mergevars(_vars.(p))[1]
 MP.variables(p::Union{PolyType, MonomialVector, AbstractArray{<:PolyType}}) = _vars(p) # tuple(_vars(p))
 MP.nvariables(p::Union{PolyType, MonomialVector, AbstractArray{<:PolyType}}) = length(_vars(p))
-MP.similarvariable(p::PolyType{C}, ::Type{Val{V}}) where {C, V} = PolyVar{C}(string(V))
+MP.similarvariable(p::Union{PolyType{C}, Type{<:PolyType{C}}}, ::Type{Val{V}}) where {C, V} = PolyVar{C}(string(V))
 include("promote.jl")
 
 include("operators.jl")
