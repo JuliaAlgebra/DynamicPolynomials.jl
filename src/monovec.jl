@@ -53,9 +53,9 @@ Base.start(::MonomialVector) = 1
 Base.done(x::MonomialVector, state) = length(x) < state
 Base.next(x::MonomialVector, state) = (x[state], state+1)
 
-MultivariatePolynomials.extdegree(x::MonomialVector) = extrema(sum.(x.Z))
-MultivariatePolynomials.mindegree(x::MonomialVector) = minimum(sum.(x.Z))
-MultivariatePolynomials.maxdegree(x::MonomialVector) = maximum(sum.(x.Z))
+MultivariatePolynomials.extdegree(x::MonomialVector) = isempty(x) ? (0, 0) : extrema(sum.(x.Z))
+MultivariatePolynomials.mindegree(x::MonomialVector) = isempty(x) ? 0 : minimum(sum.(x.Z))
+MultivariatePolynomials.maxdegree(x::MonomialVector) = isempty(x) ? 0 : maximum(sum.(x.Z))
 
 _vars(m::Union{Monomial, MonomialVector}) = m.vars
 
