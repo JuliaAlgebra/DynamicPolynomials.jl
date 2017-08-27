@@ -46,7 +46,7 @@ subsmap(st, vars, s::MP.Substitutions) = _subsmap(st, vars, s)
 _vec(a::AbstractVector) = a
 _vec(a::Tuple) = [a...]
 function subsmap(st, vars, s::Tuple{MP.VectorMultiSubstitution})
-    if vars == s[1].first # shortcut
+    if vars === s[1].first || vars == s[1].first # shortcut, === happens when the user do p(variables(p) => ...)
         _vec(s[1].second)
     else
         _subsmap(st, vars, s)
