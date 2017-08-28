@@ -16,7 +16,7 @@ struct MonomialVector{C} <: AbstractVector{Monomial{C}}
     end
 end
 MonomialVector(vars::Vector{PolyVar{C}}, Z::Vector{Vector{Int}}) where {C} = MonomialVector{C}(vars, Z)
-(::Type{MonomialVector{C}})() where {C} = MonomialVector{C}(PolyVar{C}[], Vector{Int}[])
+MonomialVector{C}() where {C} = MonomialVector{C}(PolyVar{C}[], Vector{Int}[])
 
 # Generate canonical reperesentation by removing variables that are not used
 function canonical(m::MonomialVector)
