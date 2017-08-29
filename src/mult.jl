@@ -43,9 +43,10 @@ function *(p::Polynomial, x::Union{PolyVar, Monomial})
     Polynomial(p.a, p.x*x)
 end
 
-function _term_poly_mult(t::Term, p::Polynomial, op::Function)
+function _term_poly_mult(t::Term{C, S}, p::Polynomial{C, T}, op::Function) where {C, S, T}
+    U = Base.promote_op(op, S, T)
     if iszero(t)
-        zero(p)
+        zero(Polynomial{C, U})
     else
         n = nterms(p)
         allvars, maps = mergevars([t.x.vars, p.x.vars])
