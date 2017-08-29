@@ -36,5 +36,18 @@
         @test X.Z == [[1, 1], [1, 0], [0, 0]]
         @test MonomialVector{true}([1]) isa MonomialVector{true}
         @test MonomialVector{false}([1]) isa MonomialVector{false}
+        a = [1, 5, 3]
+        b, Y = monovec(a, X)
+        @test b === a
+        @test Y === X
+        σ, Y = sortmonovec(X)
+        @test σ == 1:length(X)
+        @test Y === X
+        @test mergemonovec([X, X]) == X
+    end
+    @testset "Non-commutative" begin
+        @ncpolyvar x
+        @test_throws ArgumentError Monomial{false}([x], [1,0])
+        @test_throws ArgumentError MonomialVector{false}([x], [[1], [1,0]])
     end
 end
