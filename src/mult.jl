@@ -61,11 +61,11 @@ function _term_poly_mult(t::Term, p::Polynomial, op::Function)
 end
 *(p::Polynomial, t::Term) = _term_poly_mult(t, p, (α, β) -> β * α)
 *(t::Term, p::Polynomial) = _term_poly_mult(t, p, *)
-function *(p::Polynomial, q::Polynomial)
-    if iszero(p)
-        zero(q)
-    elseif iszero(q)
-        zero(p)
+_sumprod(a, b) = a * b + a * b
+function *(p::Polynomial{C, S}, q::Polynomial{C, T}) where {C, S, T}
+    U = Base.promote_op(_sumprod, S, T)
+    if iszero(p) || iszero(q)
+        zero(Polynomial{C, U})
     else
         samevars = _vars(p) == _vars(q)
         if samevars
@@ -75,8 +75,7 @@ function *(p::Polynomial, q::Polynomial)
         end
         N = length(p)*length(q)
         Z = Vector{Vector{Int}}(N)
-        T = typeof(p.a[1]*q.a[1])
-        a = Vector{T}(N)
+        a = Vector{U}(N)
         i = 0
         for u in p
             for v in q
