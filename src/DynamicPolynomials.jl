@@ -2,7 +2,7 @@ __precompile__()
 
 module DynamicPolynomials
 
-import Base: show, length, getindex, vect, isless, isempty, start, done, next, convert, dot, copy, eltype, zero, one, *, +, -
+import Base: length, getindex, vect, isless, isempty, start, done, next, convert, dot, copy, eltype, zero, one, *, +, -
 
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
@@ -47,6 +47,5 @@ include("subs.jl")
 
 include("div.jl")
 
-include("show.jl")
 
 end # module
