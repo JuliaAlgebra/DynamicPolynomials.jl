@@ -69,6 +69,7 @@ const DMonoVecElem{C} = Union{Int, DMonoVecElemNonConstant{C}}
 const DMonoVec{C} = AbstractVector{<:DMonoVecElem{C}}
 
 MP.emptymonovec(vars::VarVec{C}) where {C} = MonomialVector{C}(vars, Vector{Int}[])
+MP.emptymonovec(t::DMonoVecElemNonConstant) = emptymonovec(_vars(t))
 MP.emptymonovec(::Type{<:DMonoVecElemNonConstant{C}}) where {C} = MonomialVector{C}()
 
 function fillZfordeg!(Z, n, deg, ::Type{Val{true}}, filter::Function)
@@ -113,7 +114,7 @@ function fillZfordeg!(Z, n, deg, ::Type{Val{false}}, filter::Function)
     fillZrec!(Z, z, 1, n, deg, filter)
 end
 # List exponents in decreasing Graded Lexicographic Order
-function getZfordegs(n, degs::AbstractVector{Int}, C::Bool, filter::Function)
+function getZfordegs(n, degs::AbstractVector{Int}, ::Type{Val{C}}, filter::Function) where C
     Z = Vector{Vector{Int}}()
     for deg in sort(degs, rev=true)
         fillZfordeg!(Z, n, deg, Val{C}, filter)
@@ -121,22 +122,23 @@ function getZfordegs(n, degs::AbstractVector{Int}, C::Bool, filter::Function)
     @assert issorted(Z, rev=true, lt=grlex)
     Z
 end
+
 function MonomialVector(vars::Vector{PolyVar{true}}, degs::AbstractVector{Int}, filter::Function = x->true)
-    MonomialVector{true}(vars, getZfordegs(length(vars), degs, true, z -> filter(Monomial(vars, z))))
+    MonomialVector{true}(vars, getZfordegs(length(vars), degs, Val{true}, z -> filter(Monomial(vars, z))))
 end
+
 function getvarsforlength(vars::Vector{PolyVar{false}}, len::Int)
     n = length(vars)
     map(i -> vars[((i-1) % n) + 1], 1:len)
 end
-
 function MonomialVector(vars::Vector{PolyVar{false}}, degs::AbstractVector{Int}, filter::Function = x->true)
-    Z = getZfordegs(length(vars), degs, false, z -> filter(Monomial(vars, z)))
+    Z = getZfordegs(length(vars), degs, Val{false}, z -> filter(Monomial(getvarsforlength(vars, length(z)), z)))
     v = isempty(Z) ? vars : getvarsforlength(vars, length(first(Z)))
     MonomialVector{false}(v, Z)
 end
-MonomialVector(vars::Vector{PolyVar{C}}, degs::Int, filter::Function = x->true) where {C} = MonomialVector(vars, [degs], filter)
+MonomialVector(vars::Vector{<:PolyVar}, degs::Int, filter::Function = x->true) = MonomialVector(vars, [degs], filter)
 
-MP.monomials(vars::AbstractVector{PolyVar{true}}, args...) = MonomialVector(vars, args...)
+MP.monomials(vars::AbstractVector{<:PolyVar}, args...) = MonomialVector(vars, args...)
 MP.monomials(vars::Tuple{Vararg{PolyVar}}, args...) = monomials([vars...], args...)
 
 #function MP.monomials(vars::TupOrVec{PolyVar{true}}, degs::AbstractVector{Int}, filter::Function = x->true)
