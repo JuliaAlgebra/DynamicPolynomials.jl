@@ -24,13 +24,13 @@ function canonical(m::MonomialVector)
     for z in m.Z
         v = [v[i] || z[i] > 0 for i in eachindex(v)]
     end
-    MonomialVector(_vars(m)[v], [z[v] for z in m.Z])
+    MonomialVector(_vars(m)[v], Vector{Int}[z[v] for z in m.Z])
 end
 
 function Base.hash(m::MonomialVector, u::UInt)
     cm = canonical(m)
     if length(cm.Z) == 0
-        hash(0, u)
+        hash([], u)
     elseif length(cm.Z) == 1
         hash(Monomial(_vars(cm), cm.Z[1]), u)
     else

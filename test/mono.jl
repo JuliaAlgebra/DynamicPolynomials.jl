@@ -27,6 +27,10 @@
         @test zeroterm(x^2) isa Term{true, Int}
         @test zero(x^2) isa Polynomial{true, Int}
         @test one(x^2) isa Monomial{true}
+
+        @polyvar y
+        @test Monomial([x, y], [1, 0]) == x
+        @test x != Monomial([x, y], [0, 1])
     end
     @testset "MonomialVector" begin
         @polyvar x y
@@ -44,6 +48,10 @@
         @test σ == 1:length(X)
         @test Y === X
         @test mergemonovec([X, X]) == X
+
+        @test 2 != MonomialVector([x, y], 1)
+        @test x != MonomialVector([x, y], 1)
+        @test MonomialVector([x, y], [[1, 0], [0, 0]]) == MonomialVector([x], [[1], [0]])
     end
     @testset "Non-commutative" begin
         @ncpolyvar x

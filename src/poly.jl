@@ -67,16 +67,12 @@ function Polynomial{C, T}(f::Function, x::AbstractVector) where {C, T}
 end
 Polynomial{C}(f::Function, x) where {C} = Polynomial{C, Base.promote_op(f, Int)}(f, x)
 
-# FIXME why did I need it ?
-Base.convert(::Type{Any}, p::Polynomial) = p
-
 #Base.convert(::Type{PolyType{C}}, p::TermContainer{C}) where {C} = p
 
 # needed to build [p Q; Q p] where p is a polynomial and Q is a matpolynomial in Julia v0.5
 #Base.convert(::Type{TermType{C}}, p::TermContainer{C}) where {C} = p
 #Base.convert(::Type{TermType{C, T}}, p::TermContainer{C, T}) where {C, T} = p
 
-Base.endof(p::Polynomial) = length(p)
 Base.length(p::Polynomial) = length(p.a)
 Base.isempty(p::Polynomial) = isempty(p.a)
 Base.start(::Polynomial) = 1
@@ -157,7 +153,7 @@ end
 
 MP.polynomial(a::AbstractVector, x::DMonoVec, s::MP.ListState) = Polynomial(a, x)
 
-MP.polynomial(f::Function, x::AbstractVector) = Polynomial(f, x)
+#MP.polynomial(f::Function, x::AbstractVector) = Polynomial(f, x)
 #MP.polynomial(ts::AbstractVector{Term{C, T}}) where {C, T} = Polynomial(coefficient.(ts), monomial.(ts)) # FIXME invalid age range update
 
 # i < j

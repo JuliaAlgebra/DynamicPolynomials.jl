@@ -31,7 +31,6 @@ Base.convert(::Type{Term{C, T}}, α) where {C, T} = Term{C}(T(α))
 
 #Base.convert{C, T}(::Type{TermContainer{C, T}}, t::Term{C}) = Term{C, T}(t)
 
-Base.convert(::Type{Any}, t::Term) = t
 Base.copy(t::T) where {T<:Term} = T(copy(t.α), copy(t.x))
 
 MP.coefficient(t::Term) = t.α
