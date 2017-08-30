@@ -37,11 +37,3 @@ Base.copy(t::T) where {T<:Term} = T(copy(t.α), copy(t.x))
 MP.coefficient(t::Term) = t.α
 MP.monomial(t::Term) = t.x
 _vars(t) = _vars(t.x)
-
-#eltype(t::Term) = T
-Base.length(::Term) = 1
-Base.isempty(::Term) = false
-Base.start(::Term) = false
-Base.done(::Term, state) = state
-Base.next(t::Term, state) = (t, true)
-Base.getindex(t::Term, I::Int) = t

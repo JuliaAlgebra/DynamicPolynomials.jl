@@ -19,8 +19,6 @@
 
         @test typeof(constantterm(1, x)) == Term{true, Int}
         @inferred constantterm(1, x)
-
-        @test !isempty(1x)
     end
 
     @testset "Polynomial" begin

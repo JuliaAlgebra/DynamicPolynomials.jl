@@ -37,7 +37,8 @@ end
 (+)(x::DMonomialLike, y::DMonomialLike) = Term(x) + Term(y)
 (-)(x::DMonomialLike, y::DMonomialLike) = Term(x) - Term(y)
 
-
+_getindex(p::Polynomial, i) = p[i]
+_getindex(t::Term, i) = t
 function plusorminus(p::TermPoly{C, S}, q::TermPoly{C, T}, op) where {C, S, T}
     varsvec = [_vars(p), _vars(q)]
     allvars, maps = mergevars(varsvec)
@@ -46,22 +47,22 @@ function plusorminus(p::TermPoly{C, S}, q::TermPoly{C, T}, op) where {C, S, T}
     a = Vector{U}()
     Z = Vector{Vector{Int}}()
     i = j = 1
-    while i <= length(p) || j <= length(q)
+    while i <= nterms(p) || j <= nterms(q)
         z = zeros(Int, nvars)
-        if j > length(q) || (i <= length(p) && p[i].x > q[j].x)
-            t = p[i]
+        if j > nterms(q) || (i <= nterms(p) && _getindex(p, i).x > _getindex(q, j).x)
+            t = _getindex(p, i)
             z[maps[1]] = t.x.z
             α = U(t.α)
             i += 1
-        elseif i > length(p) || q[j].x > p[i].x
-            t = q[j]
+        elseif i > nterms(p) || _getindex(q, j).x > _getindex(p, i).x
+            t = _getindex(q, j)
             z[maps[2]] = t.x.z
             α = U(op(t.α))
             j += 1
         else
-            t = p[i]
+            t = _getindex(p, i)
             z[maps[1]] = t.x.z
-            s = q[j]
+            s = _getindex(q, j)
             α = op(t.α, s.α)
             i += 1
             j += 1
