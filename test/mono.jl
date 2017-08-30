@@ -50,4 +50,28 @@
         @test_throws ArgumentError Monomial{false}([x], [1,0])
         @test_throws ArgumentError MonomialVector{false}([x], [[1], [1,0]])
     end
+    @testset "NC PolyVar * Monomial" begin
+        @ncpolyvar x y z
+        m = y * Monomial([y, z, x, z], [0, 0, 2, 1])
+        @test variables(m) == [y, z, x, z]
+        @test m.z == [1, 0, 2, 1]
+        m = x * Monomial([z, y, y, z], [0, 0, 2, 1])
+        @test variables(m) == [z, x, y, y, z]
+        @test m.z == [0, 1, 0, 2, 1]
+        m = x * Monomial([y, z, y, z], [0, 0, 2, 1])
+        @test variables(m) == [y, z, x, y, z]
+        @test m.z == [0, 0, 1, 2, 1]
+    end
+    @testset "NC Monomial * PolyVar" begin
+        @ncpolyvar x y z
+        m = Monomial([x, z, x, y], [2, 1, 0, 0]) * y
+        @test variables(m) == [x, z, x, y]
+        @test m.z == [2, 1, 0, 1]
+        m = Monomial([x, y, y, x], [2, 1, 0, 0]) * z
+        @test variables(m) == [x, y, y, z, x]
+        @test m.z == [2, 1, 0, 1, 0]
+        m = Monomial([x, y, x, y], [2, 1, 0, 0]) * z
+        @test variables(m) == [x, y, z, x, y]
+        @test m.z == [2, 1, 1, 0, 0]
+    end
 end
