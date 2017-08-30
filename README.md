@@ -1,4 +1,4 @@
-# Multivariate Polynomials
+# Dynamic Polynomials
 
 | **PackageEvaluator** | **Build Status** |
 |:--------------------:|:----------------:|
