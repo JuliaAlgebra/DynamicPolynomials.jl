@@ -113,15 +113,11 @@ function (*)(x::Monomial{false}, y::Monomial{false})
     return Monomial{false}(w, z)
 end
 
-function (*)(x::PolyVar{false}, y::MonomialVector{false})
-    MonomialVector{false}([x * yi for yi in y])
-end
-function (*)(y::MonomialVector{false}, x::PolyVar{false})
+function (*)(y::MonomialVector{false}, x::DMonomialLike{false})
     MonomialVector{false}([yi * x for yi in y])
 end
-function (*)(x::Monomial{false}, y::MonomialVector{false})
+function (*)(x::DMonomialLike{false}, y::MonomialVector{false})
+    # The order may change
+    # Example: y * [x^2, y^2] == [y^3, yx^2]
     MonomialVector{false}([x * yi for yi in y])
-end
-function (*)(y::MonomialVector{false}, x::Monomial{false})
-    MonomialVector{false}([yi * x for yi in y])
 end

@@ -34,11 +34,16 @@ MP.multconstant(α, p::Polynomial) = Polynomial(α*p.a, p.x)
 MP.multconstant(p::Polynomial, α) = Polynomial(p.a*α, p.x)
 
 # I do not want to cast x to TermContainer because that would force the promotion of eltype(q) with Int
-function *(x::Union{PolyVar, Monomial}, p::Polynomial)
+function *(x::DMonomialLike, p::Polynomial)
     # /!\ No copy of a is done
     Polynomial(p.a, x*p.x)
 end
-function *(p::Polynomial, x::Union{PolyVar, Monomial})
+function *(x::DMonomialLike{false}, p::Polynomial)
+    # /!\ No copy of a is done
+    # Order may change, e.g. y * (x + y) = y^2 + yx
+    Polynomial(monovec(p.a, [x*m for m in p.x])...)
+end
+function *(p::Polynomial, x::DMonomialLike)
     # /!\ No copy of a is done
     Polynomial(p.a, p.x*x)
 end
