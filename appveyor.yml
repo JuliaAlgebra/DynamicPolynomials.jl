@@ -29,7 +29,7 @@ build_script:
 # Need to convert from shallow to complete for Pkg.clone to work
   - IF EXIST .git\shallow (git fetch --unshallow)
   - C:\projects\julia\bin\julia -e "versioninfo();
-      Pkg.add(\"MultivariatePolynomials\"); Pkg.checkout(\"MultivariatePolynomials\", \"typed\");
+      Pkg.add(\"MultivariatePolynomials\"); Pkg.checkout(\"MultivariatePolynomials\");
       Pkg.clone(pwd(), \"DynamicPolynomials\"); Pkg.build(\"DynamicPolynomials\")"
 
 test_script:
