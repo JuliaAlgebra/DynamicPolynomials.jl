@@ -206,8 +206,7 @@ function MonomialVector(X)
     monovectype(X)(X)
 end
 
-MP.monovectype(::Type{<:DMonoVecElemNonConstant{C}}) where {C} = MonomialVector{C}
-MP.monovectype(X::DMonoVec{C}) where {C} = MonomialVector{C}
+MP.monovectype(X::Union{DMonoVecElemNonConstant{C}, Type{<:DMonoVecElemNonConstant{C}}, DMonoVec{C}, Type{<:DMonoVec{C}}}) where {C} = MonomialVector{C}
 function MP.monovec(X::DMonoVec)
     MonomialVector(X)
 end
