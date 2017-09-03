@@ -104,9 +104,9 @@ MP.extdegree(p::Polynomial) = extdegree(p.x)
 MP.mindegree(p::Polynomial) = mindegree(p.x)
 MP.maxdegree(p::Polynomial) = maxdegree(p.x)
 
-MP.leadingcoefficient(p::Polynomial) = first(p.a)
-MP.leadingmonomial(p::Polynomial) = first(p.x)
-MP.leadingterm(p::Polynomial) = first(p)
+MP.leadingcoefficient(p::Polynomial{C, T}) where {C, T} = iszero(p) ? zero(T) : first(p.a)
+MP.leadingmonomial(p::Polynomial) = iszero(p) ? constantmonomial(p) : first(p.x)
+MP.leadingterm(p::Polynomial) = iszero(p) ? zeroterm(p) : first(terms(p))
 
 function MP.removeleadingterm(p::Polynomial)
     Polynomial(p.a[2:end], p.x[2:end])
