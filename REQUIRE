@@ -1,2 +1,2 @@
-julia 0.5
-MultivariatePolynomials
+julia 0.6
+MultivariatePolynomials 0.1.0
