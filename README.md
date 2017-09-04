@@ -23,7 +23,6 @@ This allows to keep the terms sorted (Graded Lexicographic order is used) in pol
 
 Below is a simple usage example
 ```julia
-using TypedPolynomials
 @polyvar x y # assigns x (resp. y) to a variable of name x (resp. y)
 p = 2x + 3.0x*y^2 + y
 @test differentiate(p, x) # compute the derivative of p with respect to x
