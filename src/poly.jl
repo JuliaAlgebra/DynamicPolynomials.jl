@@ -151,7 +151,7 @@ function polynomialclean(vars::Vector{PolyVar{C}}, adup::Vector{T}, Zdup::Vector
     Polynomial{C, T}(a, MonomialVector{C}(vars, Z))
 end
 
-MP.polynomial(a::AbstractVector, x::DMonoVec, s::MP.ListState) = Polynomial(a, x)
+MP.polynomial(a::AbstractVector, x::DMonoVec, s::MP.ListState) = Polynomial(collect(a), x)
 
 #MP.polynomial(f::Function, x::AbstractVector) = Polynomial(f, x)
 #MP.polynomial(ts::AbstractVector{Term{C, T}}) where {C, T} = Polynomial(coefficient.(ts), monomial.(ts)) # FIXME invalid age range update

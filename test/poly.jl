@@ -19,6 +19,7 @@
 
         @test typeof(constantterm(1, x)) == Term{true, Int}
         @inferred constantterm(1, x)
+        @test typeof(polynomial(1:2, monomials([x], 1:2))) == Polynomial{true, Int}
     end
 
     @testset "Polynomial" begin
