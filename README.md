@@ -5,7 +5,7 @@
 | [![][pkg-0.6-img]][pkg-0.6-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] |
 | [![][pkg-0.7-img]][pkg-0.7-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] |
 
-Sparse dynamic representation of multivariate polynomials that can be used with [MultivariatePolynomials](https://github.com/blegat/MultivariatePolynomials.jl) (see the documentation there for more information).
+Sparse dynamic representation of multivariate polynomials that can be used with [MultivariatePolynomials](https://github.com/JuliaAlgebra/MultivariatePolynomials.jl) (see the documentation there for more information).
 Both commutative and non-commutative variables are supported.
 The following types are defined:
 
@@ -43,18 +43,18 @@ p(x=>A*vec(x)) # corresponds to dot(A*x, A*x), need vec to convert the tuple to 
 Note that, when doing substitution, it is required to give the `PolyVar` ordering that is meant.
 Indeed, the ordering between the `PolyVar` is not alphabetical but rather by order of creation
 which can be undeterministic with parallel computing.
-Therefore, this order cannot be used for substitution, even as a default (see [here](https://github.com/blegat/MultivariatePolynomials.jl/issues/3) for a discussion about this).
+Therefore, this order cannot be used for substitution, even as a default (see [here](https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/3) for a discussion about this).
 
 [pkg-0.6-img]: http://pkg.julialang.org/badges/DynamicPolynomials_0.6.svg
 [pkg-0.6-url]: http://pkg.julialang.org/?pkg=DynamicPolynomials
 [pkg-0.7-img]: http://pkg.julialang.org/badges/DynamicPolynomials_0.7.svg
 [pkg-0.7-url]: http://pkg.julialang.org/?pkg=DynamicPolynomials
 
-[build-img]: https://travis-ci.org/blegat/DynamicPolynomials.jl.svg?branch=master
-[build-url]: https://travis-ci.org/blegat/DynamicPolynomials.jl
+[build-img]: https://travis-ci.org/JuliaAlgebra/DynamicPolynomials.jl.svg?branch=master
+[build-url]: https://travis-ci.org/JuliaAlgebra/DynamicPolynomials.jl
 [winbuild-img]: https://ci.appveyor.com/api/projects/status/wu5dnoq4x3jvjft8?svg=true
 [winbuild-url]: https://ci.appveyor.com/project/blegat/dynamicpolynomials-jl
-[coveralls-img]: https://coveralls.io/repos/github/blegat/DynamicPolynomials.jl/badge.svg?branch=master
-[coveralls-url]: https://coveralls.io/github/blegat/DynamicPolynomials.jl?branch=master
-[codecov-img]: http://codecov.io/github/blegat/DynamicPolynomials.jl/coverage.svg?branch=master
-[codecov-url]: http://codecov.io/github/blegat/DynamicPolynomials.jl?branch=master
+[coveralls-img]: https://coveralls.io/repos/github/JuliaAlgebra/DynamicPolynomials.jl/badge.svg?branch=master
+[coveralls-url]: https://coveralls.io/github/JuliaAlgebra/DynamicPolynomials.jl?branch=master
+[codecov-img]: http://codecov.io/github/JuliaAlgebra/DynamicPolynomials.jl/coverage.svg?branch=master
+[codecov-url]: http://codecov.io/github/JuliaAlgebra/DynamicPolynomials.jl?branch=master
