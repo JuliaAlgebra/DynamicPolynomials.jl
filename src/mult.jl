@@ -30,8 +30,7 @@ include("cmult.jl")
 include("ncmult.jl")
 
 MP.multconstant(α, x::Monomial)   = Term(α, x)
-MP.multconstant(α, p::Polynomial) = Polynomial(α*p.a, p.x)
-MP.multconstant(p::Polynomial, α) = Polynomial(p.a*α, p.x)
+MP.mapcoefficientsnz(f, p::Polynomial) = Polynomial(f(p.a), p.x)
 
 # I do not want to cast x to TermContainer because that would force the promotion of eltype(q) with Int
 function *(x::DMonomialLike, p::Polynomial)
