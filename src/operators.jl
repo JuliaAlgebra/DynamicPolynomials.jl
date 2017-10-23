@@ -14,26 +14,6 @@ function myminivect(x::S, y::T) where {S,T}
     [U(x), U(y)]
 end
 
-function (+)(x::Term{C}, y::Term{C}) where {C}
-    if x.x == y.x
-        Polynomial{C}([x.α+y.α], [x.x])
-    elseif x.x > y.x
-        Polynomial{C}(myminivect(x.α,y.α), [x.x,y.x])
-    else
-        Polynomial{C}(myminivect(y.α,x.α), [y.x,x.x])
-    end
-end
-
-function (-)(x::Term{C}, y::Term{C}) where {C}
-    if x.x == y.x
-        Polynomial{C}([x.α-y.α], [x.x])
-    elseif x.x > y.x
-        Polynomial{C}(myminivect(x.α,-y.α), [x.x,y.x])
-    else
-        Polynomial{C}(myminivect(-y.α,x.α), [y.x,x.x])
-    end
-end
-
 (+)(x::DMonomialLike, y::DMonomialLike) = Term(x) + Term(y)
 (-)(x::DMonomialLike, y::DMonomialLike) = Term(x) - Term(y)
 
