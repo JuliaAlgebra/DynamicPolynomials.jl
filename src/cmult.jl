@@ -11,7 +11,7 @@ function multiplyvar(v::Vector{PolyVar{true}}, x::PolyVar{true})
     if (i != nothing && i > 0) && v[i] == x
         multiplyexistingvar(v, x, i)
     else
-        insertvar(v, x, i == 0 ? length(v)+1 : i)
+        insertvar(v, x, (i == nothing || i == 0) ? length(v)+1 : i)
     end
 end
 function (*)(x::PolyVar{true}, y::Monomial{true})
