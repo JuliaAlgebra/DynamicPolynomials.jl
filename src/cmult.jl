@@ -8,7 +8,7 @@ function (*)(x::PolyVar{true}, y::PolyVar{true})
 end
 function multiplyvar(v::Vector{PolyVar{true}}, x::PolyVar{true})
     i = findfirst(w->w <= x, v)
-    if i > 0 && v[i] == x
+    if (i != nothing && i > 0) && v[i] == x
         multiplyexistingvar(v, x, i)
     else
         insertvar(v, x, i == 0 ? length(v)+1 : i)

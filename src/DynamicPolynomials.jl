@@ -7,6 +7,8 @@ import Base: length, getindex, vect, isless, isempty, start, done, next, convert
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
 
+using Nullables
+
 #const PolyType{C} = Union{DMonomialLike{C}, RationalPoly{C}}
 #iscomm(::PolyType{C}) where {C} = C
 #zero(p::PolyType{C}) where {C} = zero(typeof(p))

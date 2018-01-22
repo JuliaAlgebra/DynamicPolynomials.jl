@@ -96,11 +96,11 @@ end
 
 function (*)(x::Monomial{false}, y::Monomial{false})
     i = findlast(z -> z > 0, x.z)
-    if i == 0
+    if i == nothing || i == 0
         return y
     end
     j = findfirst(z -> z > 0, y.z)
-    if j == 0
+    if j == nothing || j == 0
         return x
     end
     if x.vars[i] == y.vars[j]
