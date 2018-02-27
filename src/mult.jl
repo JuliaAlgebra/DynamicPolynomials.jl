@@ -30,8 +30,7 @@ include("cmult.jl")
 include("ncmult.jl")
 
 MP.multconstant(α, x::Monomial)   = Term(α, x)
-MP.multconstant(α, p::Polynomial) = Polynomial(α*p.a, p.x)
-MP.multconstant(p::Polynomial, α) = Polynomial(p.a*α, p.x)
+MP.mapcoefficientsnz(f::Function, p::Polynomial) = Polynomial(f.(p.a), p.x)
 
 # I do not want to cast x to TermContainer because that would force the promotion of eltype(q) with Int
 function *(x::DMonomialLike, p::Polynomial)
@@ -62,7 +61,7 @@ function _term_poly_mult(t::Term{C, S}, p::Polynomial{C, T}, op::Function) where
             Z[i][maps[1]] = t.x.z
             Z[i][maps[2]] += p.x.Z[i]
         end
-        Polynomial(op(t.α, p.a), MonomialVector(allvars, Z))
+        Polynomial(op.(t.α, p.a), MonomialVector(allvars, Z))
     end
 end
 *(p::Polynomial, t::Term) = _term_poly_mult(t, p, (α, β) -> β * α)
