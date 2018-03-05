@@ -182,7 +182,7 @@ function _sortmonovec(X::DMonoVec{C}) where {C}
     allvars, Z, σ
 end
 function _removedups!(Z::Vector{Vector{Int}}, σ::Vector{Int})
-    dups = find(i -> Z[σ[i]] == Z[σ[i-1]], 2:length(σ))
+    dups = findall(i -> Z[σ[i]] == Z[σ[i-1]], 2:length(σ))
     deleteat!(σ, dups)
 end
 function MP.sortmonovec(X::DMonoVec{C}) where {C}
@@ -198,7 +198,7 @@ end
 function MonomialVector{C}(X::DMonoVec{C}) where C
     allvars, Z = buildZvarsvec(PolyVar{C}, X)
     sort!(Z, rev=true, lt=grlex)
-    dups = find(i -> Z[i] == Z[i-1], 2:length(Z))
+    dups = findall(i -> Z[i] == Z[i-1], 2:length(Z))
     deleteat!(Z, dups)
     MonomialVector{C}(allvars, Z)
 end

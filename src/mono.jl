@@ -19,13 +19,13 @@ end
 
 Monomial{C}(vars::Tuple{Vararg{PolyVar{C}}}, z::Vector{Int}) where C = Monomial{C}([vars...], z)
 
-iscomm(::Type{Monomial{C}}) where {C} = C
-Monomial{C}() where {C} = Monomial{C}(PolyVar{C}[], Int[])
+iscomm(::Type{Monomial{C}}) where C = C
+Monomial{C}() where C = Monomial{C}(PolyVar{C}[], Int[])
 Monomial(vars::TupOrVec{PolyVar{C}}, z::Vector{Int}) where C = Monomial{C}(vars, z)
-Monomial(x::PolyVar{C}) where {C} = Monomial{C}(x)
+Monomial{C}(x::PolyVar{C}) where C = Monomial{C}([x], [1])
+Monomial(x::PolyVar{C}) where C = Monomial{C}(x)
 
 Base.copy(m::M) where {M<:Monomial} = M(m.vars, copy(m.z))
-Base.convert(::Type{Monomial{C}}, x::PolyVar{C}) where C = Monomial{C}([x], [1])
 
 # Generate canonical reperesentation by removing variables that are not used
 function canonical(m::Monomial)

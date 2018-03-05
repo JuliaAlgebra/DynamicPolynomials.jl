@@ -2,7 +2,9 @@ __precompile__()
 
 module DynamicPolynomials
 
-import Base: length, getindex, vect, isless, isempty, start, done, next, convert, dot, copy, eltype, zero, one, *, +, -
+import Base: length, getindex, vect, isless, isempty, start, done, next, zero, one, *, +, -
+
+using Compat
 
 using MultivariatePolynomials
 const MP = MultivariatePolynomials

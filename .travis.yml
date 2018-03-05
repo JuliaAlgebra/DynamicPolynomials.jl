@@ -11,6 +11,11 @@ notifications:
 matrix:
   allow_failures:
     - julia: nightly
+
+before_script:
+  - julia -e 'Pkg.add("MultivariatePolynomials")'
+  - julia -e 'Pkg.checkout("MultivariatePolynomials", "bl/fix-0.7bis")'
+
 after_success:
   # push coverage results to Coveralls
   - julia -e 'cd(Pkg.dir("DynamicPolynomials")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
