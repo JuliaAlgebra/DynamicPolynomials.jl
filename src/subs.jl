@@ -1,5 +1,5 @@
 function fillmap!(vals, vars, s::MP.Substitution)
-    j = findfirst(vars, s.first)
+    j = findfirst(equalto(s.first), vars)
     # 0.6 behaviour:
     # If j == 0, that means that the variable is not present
     # so it is ignored
@@ -28,7 +28,7 @@ _substype(s::MP.Substitutions) = _substype(s...)
 
 function _subsmap(::MP.Eval, vars, s::MP.Substitutions)
     # Every variable will be replaced by some value of type T
-    vals = Vector{_substype(s)}(length(vars))
+    vals = Vector{_substype(s)}(uninitialized, length(vars))
     fillmap!(vals, vars, s...)
     for i in 1:length(vals)
         @assert isassigned(vals, i) "Variable $(vars[i]) was not assigned a value"
@@ -37,8 +37,8 @@ function _subsmap(::MP.Eval, vars, s::MP.Substitutions)
 end
 function _subsmap(::MP.Subs, vars::Vector{PolyVar{C}}, s::MP.Substitutions) where {C}
     # Some variable may not be replaced
-    vals = Vector{promote_type(_substype(s), PolyVar{C})}(length(vars))
-    copy!(vals, vars)
+    vals = Vector{promote_type(_substype(s), PolyVar{C})}(uninitialized, length(vars))
+    copyto!(vals, vars)
     fillmap!(vals, vars, s...)
     vals
 end

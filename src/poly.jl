@@ -9,8 +9,7 @@ struct Polynomial{C, T} <: AbstractPolynomial{T}
     x::MonomialVector{C}
 
     function Polynomial{C, T}(a::Vector{T}, x::MonomialVector{C}) where {C, T}
-        if length(a) != length(x) throw(ArgumentError("There should be as many coefficient than monomials"))
-        end
+        length(a) == length(x) || throw(ArgumentError("There should be as many coefficient than monomials"))
         zeroidx = Int[]
         for (i,α) in enumerate(a)
             if iszero(α)
@@ -20,7 +19,7 @@ struct Polynomial{C, T} <: AbstractPolynomial{T}
         if !isempty(zeroidx)
             isnz = ones(Bool, length(a))
             isnz[zeroidx] = false
-            nzidx = find(isnz)
+            nzidx = findall(isnz)
             a = a[nzidx]
             x = x[nzidx]
         end
@@ -41,18 +40,19 @@ Polynomial{C, T}(a::AbstractVector, X::DMonoVec) where {C, T} = Polynomial{C, T}
 Polynomial{C}(a::Vector{T}, x) where {C, T} = Polynomial{C, T}(a, x)
 Polynomial(af::Union{Function, Vector}, x::DMonoVec{C}) where {C} = Polynomial{C}(af, x)
 
-Polynomial{C}(α) where {C} = Polynomial(Term{C}(α))
-Polynomial(x::Union{PolyVar{C}, Monomial{C}}) where {C} = Polynomial(Term{C}(x))
+Polynomial{C, T}(p::Polynomial{C, T}) where {C, T} = p
+Polynomial{C, T}(p::Polynomial{C, S}) where {C, S, T} = Polynomial{C}(Vector{T}(p.a), p.x)
+Polynomial{C, T}(p::AbstractPolynomialLike) where {C, T} = Polynomial{C, T}(polynomial(p, T))
+Polynomial{C, T}(t::Term{C}) where {C, T} = Polynomial{C, T}([T(t.α)], [t.x])
+Polynomial{C, T}(m::DMonomialLike{C}) where {C, T} = Polynomial(Term{C, T}(m))
+Polynomial{C, T}(α) where {C, T} = Polynomial(Term{C, T}(α))
+
 Polynomial{C}(p::Union{Polynomial{C}, Term{C}, Monomial{C}, PolyVar{C}}) where {C} = Polynomial(p)
+Polynomial{C}(α) where {C} = Polynomial(Term{C}(α))
 
 Polynomial(p::Polynomial) = p
 Polynomial(t::Term{C, T}) where {C, T} = Polynomial{C, T}([t.α], [t.x])
-Base.convert(::Type{Polynomial{C, T}}, α) where {C, T} = Polynomial(Term{C, T}(α))
-Base.convert(::Type{Polynomial{C, T}}, m::DMonomialLike{C}) where {C, T} = Polynomial(Term{C, T}(m))
-Base.convert(::Type{Polynomial{C, T}}, t::Term{C}) where {C, T} = Polynomial{C, T}([T(t.α)], [t.x])
-Base.convert(::Type{Polynomial{C, T}}, p::Polynomial{C, T}) where {C, T} = p
-Base.convert(::Type{Polynomial{C, T}}, p::Polynomial{C, S}) where {C, S, T} = Polynomial{C}(Vector{T}(p.a), p.x)
-Base.convert(::Type{Polynomial{C, T}}, p::AbstractPolynomialLike) where {C, T} = Polynomial{C, T}(polynomial(p, T))
+Polynomial(x::Union{PolyVar{C}, Monomial{C}}) where {C} = Polynomial(Term{C}(x))
 
 #Base.convert(::Type{TermContainer{C, T}}, p::Polynomial{C}) where {C, T} = Polynomial{C, T}(p)
 
@@ -168,8 +168,8 @@ function MP.polynomial(Q::AbstractMatrix, mv::MonomialVector{C}, ::Type{T}) wher
         n = length(mv)
         if C
             N = trimap(n, n, n)
-            Z = Vector{Vector{Int}}(N)
-            a = Vector{T}(N)
+            Z = Vector{Vector{Int}}(uninitialized, N)
+            a = Vector{T}(uninitialized, N)
             for i in 1:n
                 for j in i:n
                     k = trimap(i, j, n)
@@ -184,8 +184,8 @@ function MP.polynomial(Q::AbstractMatrix, mv::MonomialVector{C}, ::Type{T}) wher
             v = _vars(mv)
         else
             N = n^2
-            x = Vector{Monomial{C}}(N)
-            a = Vector{T}(N)
+            x = Vector{Monomial{C}}(uninitialized, N)
+            a = Vector{T}(uninitialized, N)
             offset = 0
             for i in 1:n
                 # for j in 1:n wouldn't be cache friendly for Q

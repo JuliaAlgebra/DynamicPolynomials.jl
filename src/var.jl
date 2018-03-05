@@ -51,8 +51,8 @@ const VarVec{C} = Union{AbstractVector{PolyVar{C}}, NTuple{<:Integer, PolyVar{C}
 function mergevars(varsvec::Vector{Vector{PV}}) where {PV<:PolyVar}
     n = length(varsvec)
     is = ones(Int, n)
-    maps = [ zeros(Int, length(vars)) for vars in varsvec ]
-    nonempty = IntSet(find([!isempty(vars) for vars in varsvec]))
+    maps = zeros.(Int, length.(varsvec))
+    nonempty = BitSet(findall(!isempty, varsvec))
     vars = Vector{PV}()
     while !isempty(nonempty)
         imin = 0

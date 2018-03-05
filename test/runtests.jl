@@ -1,13 +1,15 @@
 using DynamicPolynomials
 using MultivariatePolynomials
-using Base.Test
+using Compat
+using Compat.Test
 
 include("mono.jl")
 include("poly.jl")
 include("comp.jl")
 
 module newmodule
-    using Base.Test
+    using Compat
+    using Compat.Test
     import DynamicPolynomials
     @testset "Polyvar macro hygiene" begin
         # Verify that the @polyvar macro works when the package has been activated

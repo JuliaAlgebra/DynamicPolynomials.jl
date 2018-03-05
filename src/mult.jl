@@ -11,13 +11,13 @@ function insertvar(v::Vector{PolyVar{C}}, x::PolyVar{C}, i::Int) where {C}
     n = length(v)
     I = 1:i-1
     J = i:n
-    K = J+1
-    w = Vector{PolyVar{C}}(n+1)
+    K = J.+1
+    w = Vector{PolyVar{C}}(uninitialized, n+1)
     w[I] = v[I]
     w[i] = x
     w[K] = v[J]
     updatez = z -> begin
-        newz = Vector{Int}(n+1)
+        newz = Vector{Int}(uninitialized, n+1)
         newz[I] = z[I]
         newz[i] = 1
         newz[K] = z[J]
@@ -79,8 +79,8 @@ function *(p::Polynomial{C, S}, q::Polynomial{C, T}) where {C, S, T}
             allvars, maps = mergevars([_vars(p), _vars(q)])
         end
         N = length(p)*length(q)
-        Z = Vector{Vector{Int}}(N)
-        a = Vector{U}(N)
+        Z = Vector{Vector{Int}}(uninitialized, N)
+        a = Vector{U}(uninitialized, N)
         i = 0
         for u in p
             for v in q
