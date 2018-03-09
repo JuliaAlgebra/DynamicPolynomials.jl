@@ -8,9 +8,6 @@ julia:
   - nightly
 notifications:
   email: false
-matrix:
-  allow_failures:
-    - julia: nightly
 
 before_script:
   - julia -e 'Pkg.add("MultivariatePolynomials")'
