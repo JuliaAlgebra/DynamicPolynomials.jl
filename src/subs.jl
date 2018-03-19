@@ -1,5 +1,5 @@
 function fillmap!(vals, vars, s::MP.Substitution)
-    j = findfirst(equalto(s.first), vars)
+    j = findfirst(isequal(s.first), vars)
     # 0.6 behaviour:
     # If j == 0, that means that the variable is not present
     # so it is ignored

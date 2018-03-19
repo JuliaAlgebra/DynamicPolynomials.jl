@@ -1,5 +1,5 @@
 function MP.differentiate(m::Monomial{C}, x::PolyVar{C}) where C
-    i = findfirst(equalto(x), _vars(m))
+    i = findfirst(isequal(x), _vars(m))
     if (i == nothing || i == 0) || m.z[i] == 0
         zeroterm(m)
     else
@@ -11,7 +11,7 @@ end
 
 function MP.differentiate(p::Polynomial{C, T}, x::PolyVar{C}) where {C, T}
     # grlex order preserved
-    i = findfirst(equalto(x), _vars(p))
+    i = findfirst(isequal(x), _vars(p))
     S = Base.promote_op(*, T, Int)
     if i === nothing || i == 0
         zero(Polynomial{C, S})
