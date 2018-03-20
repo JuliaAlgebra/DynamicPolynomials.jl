@@ -2,7 +2,7 @@
 
 | **PackageEvaluator** | **Build Status** | **References to cite** |
 |:--------------------:|:----------------:|:----------------------:|
-| [![][pkg-0.6-img]][pkg-0.6-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] | [![DOI](zenodo-img)](zenodo-url) |
+| [![][pkg-0.6-img]][pkg-0.6-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] | [![DOI][zenodo-img]][zenodo-url] |
 | [![][pkg-0.7-img]][pkg-0.7-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] | |
 
 Sparse dynamic representation of multivariate polynomials that can be used with [MultivariatePolynomials](https://github.com/JuliaAlgebra/MultivariatePolynomials.jl) (see the documentation there for more information).
