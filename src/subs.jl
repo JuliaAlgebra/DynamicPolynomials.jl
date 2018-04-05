@@ -28,7 +28,7 @@ _substype(s::MP.Substitutions) = _substype(s...)
 
 function _subsmap(::MP.Eval, vars, s::MP.Substitutions)
     # Every variable will be replaced by some value of type T
-    vals = Vector{_substype(s)}(uninitialized, length(vars))
+    vals = Vector{_substype(s)}(undef, length(vars))
     fillmap!(vals, vars, s...)
     for i in 1:length(vals)
         @assert isassigned(vals, i) "Variable $(vars[i]) was not assigned a value"
@@ -37,7 +37,7 @@ function _subsmap(::MP.Eval, vars, s::MP.Substitutions)
 end
 function _subsmap(::MP.Subs, vars::Vector{PolyVar{C}}, s::MP.Substitutions) where {C}
     # Some variable may not be replaced
-    vals = Vector{promote_type(_substype(s), PolyVar{C})}(uninitialized, length(vars))
+    vals = Vector{promote_type(_substype(s), PolyVar{C})}(undef, length(vars))
     copyto!(vals, vars)
     fillmap!(vals, vars, s...)
     vals

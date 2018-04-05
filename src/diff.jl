@@ -18,7 +18,7 @@ function MP.differentiate(p::Polynomial{C, T}, x::PolyVar{C}) where {C, T}
     else
         keep = findall(z -> z[i] > 0, p.x.Z)
         Z = copy.(p.x.Z[keep])
-        a = Vector{S}(uninitialized, length(keep))
+        a = Vector{S}(undef, length(keep))
         for j in 1:length(Z)
             a[j] = p.a[keep[j]] * Z[j][i]
             Z[j][i] -= 1
