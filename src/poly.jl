@@ -168,8 +168,8 @@ function MP.polynomial(Q::AbstractMatrix, mv::MonomialVector{C}, ::Type{T}) wher
         n = length(mv)
         if C
             N = trimap(n, n, n)
-            Z = Vector{Vector{Int}}(uninitialized, N)
-            a = Vector{T}(uninitialized, N)
+            Z = Vector{Vector{Int}}(undef, N)
+            a = Vector{T}(undef, N)
             for i in 1:n
                 for j in i:n
                     k = trimap(i, j, n)
@@ -184,8 +184,8 @@ function MP.polynomial(Q::AbstractMatrix, mv::MonomialVector{C}, ::Type{T}) wher
             v = _vars(mv)
         else
             N = n^2
-            x = Vector{Monomial{C}}(uninitialized, N)
-            a = Vector{T}(uninitialized, N)
+            x = Vector{Monomial{C}}(undef, N)
+            a = Vector{T}(undef, N)
             offset = 0
             for i in 1:n
                 # for j in 1:n wouldn't be cache friendly for Q
