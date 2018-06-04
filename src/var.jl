@@ -5,17 +5,27 @@ function polyvecvar(::Type{PV}, prefix, idxset) where {PV}
     [PV("$(prefix * string(i))") for i in idxset]
 end
 
+function polymatrixvar(::Type{PV}, prefix, rowidxset, colidxset) where {PV}
+    [PV("$(prefix * string(i) * "_" * string(j))") for i in rowidxset, j in colidxset]
+end
+
 function buildpolyvar(::Type{PV}, var) where {PV}
     if isa(var, Symbol)
         :($(esc(var)) = $PV($"$var"))
     else
         isa(var, Expr) || error("Expected $var to be a variable name")
         Base.Meta.isexpr(var, :ref) || error("Expected $var to be of the form varname[idxset]")
-        length(var.args) == 2 || error("Expected $var to have one index set")
+        (2 ≤ length(var.args) ≤ 3) || error("Expected $var to have one or two index sets")
         varname = var.args[1]
         prefix = string(var.args[1])
-        idxset = esc(var.args[2])
-        :($(esc(varname)) = polyvecvar($PV, $prefix, $idxset))
+        if length(var.args) == 2
+            idxset = esc(var.args[2])
+            :($(esc(varname)) = polyvecvar($PV, $prefix, $idxset))
+        else
+            rowidxset = esc(var.args[2])
+            colidxset = esc(var.args[3])
+            :($(esc(varname)) = polymatrixvar($PV, $prefix, $rowidxset, $colidxset))
+        end
     end
 end
 
