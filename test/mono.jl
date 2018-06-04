@@ -1,13 +1,16 @@
 @testset "PolyVar and Monomial tests" begin
     @testset "polyvar macro index set" begin
         n = 3
-        @polyvar x[1:n] y z[1:n-1]
+        @polyvar x[1:n] y z[1:n-1] u[1:n,1:n-1]
         @test x isa Vector{PolyVar{true}}
         @test y isa PolyVar{true}
         @test z isa Vector{PolyVar{true}}
+        @test u isa Matrix{PolyVar{true}}
         @test length(x) == 3
         @test length(z) == 2
+        @test size(u) == (3, 2)
         @test x[1] > x[2] > x[3] > y > z[1] > z[2]
+        @test u[1, 1] > u[2, 1] > u[2, 2]
     end
     @testset "PolyVar" begin
         @test zeroterm(PolyVar{true}) == 0
