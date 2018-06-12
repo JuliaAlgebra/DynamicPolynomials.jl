@@ -18,7 +18,7 @@ struct Polynomial{C, T} <: AbstractPolynomial{T}
         end
         if !isempty(zeroidx)
             isnz = ones(Bool, length(a))
-            isnz[zeroidx] = false
+            isnz[zeroidx] .= false
             nzidx = findall(isnz)
             a = a[nzidx]
             x = x[nzidx]
