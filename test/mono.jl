@@ -25,6 +25,15 @@
         @test zeroterm(Monomial{false}) == 0
         @test zero(Monomial{false}) == 0
         @test one(Monomial{true}) == 1
+        @test_throws ErrorException Monomial(2)
+        @test (@inferred Monomial(1)) isa Monomial{true}
+        @test Monomial(1) == 1
+        @test_throws ErrorException Monomial{true}(2)
+        @test (@inferred Monomial{true}(1)) isa Monomial{true}
+        @test Monomial{true}(1) == 1
+        @test_throws ErrorException Monomial{false}(2)
+        @test (@inferred Monomial{false}(1)) isa Monomial{false}
+        @test Monomial{false}(1) == 1
         @polyvar x
         @test_throws ArgumentError Monomial{true}([x], [1,0])
         @test zeroterm(x^2) isa Term{true, Int}

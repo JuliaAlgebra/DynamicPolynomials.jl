@@ -24,6 +24,12 @@ Monomial{C}() where C = Monomial{C}(PolyVar{C}[], Int[])
 Monomial(vars::TupOrVec{PolyVar{C}}, z::Vector{Int}) where C = Monomial{C}(vars, z)
 Monomial{C}(x::PolyVar{C}) where C = Monomial{C}([x], [1])
 Monomial(x::PolyVar{C}) where C = Monomial{C}(x)
+function Monomial{C}(α) where C
+    α == 1 || error("Cannot convert $α to a Monomial{$C} as it is not one")
+    Monomial{C}(PolyVar{C}[], Int[])
+end
+# defaults to commutative so that `Monomial(1)` is consistent with TypedPolynomials
+Monomial(α) = Monomial{true}(α)
 
 Base.copy(m::M) where {M<:Monomial} = M(m.vars, copy(m.z))
 
