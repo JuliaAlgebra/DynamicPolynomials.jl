@@ -9,7 +9,7 @@
         @polyvar x
         @test typeof(Term(1x)) == Term{true, Int}
         @test Term(1x) == 1x
-        @test typeof(Any(1x)) == Term{true, Int}
+        @test typeof(convert(Any, 1x)) == Term{true, Int}
         @test typeof(one(1x)) == Term{true, Int}
         @test typeof(zeroterm(1x)) == Term{true, Int}
         @test typeof(zero(1x)) == Polynomial{true, Int}
