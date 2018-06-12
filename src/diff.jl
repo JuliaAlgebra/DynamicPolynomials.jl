@@ -11,9 +11,9 @@ end
 
 function MP.differentiate(p::Polynomial{C, T}, x::PolyVar{C}) where {C, T}
     # grlex order preserved
-    i = findfirst(isequal(x), _vars(p))
-    S = Base.promote_op(*, T, Int)
-    if i === nothing || i == 0
+    i = something(findfirst(isequal(x), _vars(p)), 0)
+    S = typeof(zero(T) * 0)
+    if iszero(i)
         zero(Polynomial{C, S})
     else
         keep = findall(z -> z[i] > 0, p.x.Z)
