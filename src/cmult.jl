@@ -1,5 +1,5 @@
 # Product between PolyVar and Monomial -> Monomial
-function (*)(x::PolyVar{true}, y::PolyVar{true})
+function Base.:(*)(x::PolyVar{true}, y::PolyVar{true})
     if x === y
         Monomial{true}([x], [2])
     else
@@ -14,12 +14,12 @@ function multiplyvar(v::Vector{PolyVar{true}}, x::PolyVar{true})
         insertvar(v, x, (i == nothing || i == 0) ? length(v)+1 : i)
     end
 end
-function (*)(x::PolyVar{true}, y::Monomial{true})
+function Base.:(*)(x::PolyVar{true}, y::Monomial{true})
     w, updatez = multiplyvar(y.vars, x)
     Monomial{true}(w, updatez(y.z))
 end
-(*)(y::MonomialVector{true}, x::PolyVar{true}) = x * y
-function (*)(x::PolyVar{true}, y::MonomialVector{true})
+Base.:(*)(y::MonomialVector{true}, x::PolyVar{true}) = x * y
+function Base.:(*)(x::PolyVar{true}, y::MonomialVector{true})
     w, updatez = multiplyvar(y.vars, x)
     MonomialVector{true}(w, updatez.(y.Z))
 end
@@ -57,9 +57,9 @@ function MP.mapexponents(f, x::Monomial{true}, y::Monomial{true})
     w, updatez = multdivmono(x.vars, y, f)
     Monomial{true}(w, updatez(x.z))
 end
-function (*)(x::Monomial{true}, y::MonomialVector{true})
+function Base.:(*)(x::Monomial{true}, y::MonomialVector{true})
     w, updatez = multdivmono(y.vars, x, +)
     MonomialVector{true}(w, updatez.(y.Z))
 end
-(*)(y::MonomialVector{true}, x::Monomial{true}) = x * y
-(*)(x::Monomial{true}, y::PolyVar{true}) = y * x
+Base.:(*)(y::MonomialVector{true}, x::Monomial{true}) = x * y
+Base.:(*)(x::Monomial{true}, y::PolyVar{true}) = y * x

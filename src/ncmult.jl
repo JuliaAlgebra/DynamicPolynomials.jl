@@ -1,4 +1,4 @@
-function (*)(x::PolyVar{false}, y::PolyVar{false})
+function Base.:(*)(x::PolyVar{false}, y::PolyVar{false})
     if x === y
         Monomial{false}([x], [2])
     else
@@ -85,16 +85,16 @@ function multiplyvar(x::PolyVar{false}, v::Vector{PolyVar{false}}, z::Vector{Int
         end
     end
 end
-function (*)(x::PolyVar{false}, y::Monomial{false})
+function Base.:(*)(x::PolyVar{false}, y::Monomial{false})
     w, updatez = multiplyvar(x, y.vars, y.z)
     Monomial{false}(w, updatez(y.z))
 end
-function (*)(y::Monomial{false}, x::PolyVar{false})
+function Base.:(*)(y::Monomial{false}, x::PolyVar{false})
     w, updatez = multiplyvar(y.vars, y.z, x)
     Monomial{false}(w, updatez(y.z))
 end
 
-function (*)(x::Monomial{false}, y::Monomial{false})
+function Base.:(*)(x::Monomial{false}, y::Monomial{false})
     i = findlast(z -> z > 0, x.z)
     if i == nothing || i == 0
         return y
@@ -113,10 +113,10 @@ function (*)(x::Monomial{false}, y::Monomial{false})
     return Monomial{false}(w, z)
 end
 
-function (*)(y::MonomialVector{false}, x::DMonomialLike{false})
+function Base.:(*)(y::MonomialVector{false}, x::DMonomialLike{false})
     MonomialVector{false}([yi * x for yi in y])
 end
-function (*)(x::DMonomialLike{false}, y::MonomialVector{false})
+function Base.:(*)(x::DMonomialLike{false}, y::MonomialVector{false})
     # The order may change
     # Example: y * [x^2, y^2] == [y^3, yx^2]
     MonomialVector{false}([x * yi for yi in y])

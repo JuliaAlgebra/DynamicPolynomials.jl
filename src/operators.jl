@@ -1,12 +1,10 @@
-import Base.(^), Base.(+)
-
 # In Base/intfuncs.jl, x^p returns zero(x) when p == 0
 # Since one(PolyVar) and one(Monomial) do not return
 # a PolyVar and a Monomial, this results in type instability
 # Defining the specific methods solve this problem and also make
 # them a lot faster
-^(x::PolyVar{C}, i::Int) where {C} = Monomial{C}([x], [i])
-^(x::Monomial{true}, i::Int) = Monomial{true}(x.vars, i*x.z)
+Base.:(^)(x::PolyVar{C}, i::Int) where {C} = Monomial{C}([x], [i])
+Base.:(^)(x::Monomial{true}, i::Int) = Monomial{true}(x.vars, i*x.z)
 
 myminivect(x::T, y::T) where {T} = [x, y]
 function myminivect(x::S, y::T) where {S,T}
@@ -14,8 +12,8 @@ function myminivect(x::S, y::T) where {S,T}
     [U(x), U(y)]
 end
 
-(+)(x::DMonomialLike, y::DMonomialLike) = Term(x) + Term(y)
-(-)(x::DMonomialLike, y::DMonomialLike) = Term(x) - Term(y)
+Base.:(+)(x::DMonomialLike, y::DMonomialLike) = Term(x) + Term(y)
+Base.:(-)(x::DMonomialLike, y::DMonomialLike) = Term(x) - Term(y)
 
 _getindex(p::Polynomial, i) = p[i]
 _getindex(t::Term, i) = t
@@ -55,14 +53,14 @@ function plusorminus(p::TermPoly{C, S}, q::TermPoly{C, T}, op) where {C, S, T}
 end
 
 
-(+)(x::TermPoly{C}, y::TermPoly{C}) where C = plusorminus(x, y, +)
-(-)(x::TermPoly{C}, y::TermPoly{C}) where C = plusorminus(x, y, -)
-(+)(x::TermPoly{C, T}, y::Union{Monomial,PolyVar}) where {C, T} = x + Term{C, T}(y)
-(+)(x::Union{Monomial,PolyVar}, y::TermPoly{C, T}) where {C, T} = Term{C, T}(x) + y
+Base.:(+)(x::TermPoly{C}, y::TermPoly{C}) where C = plusorminus(x, y, +)
+Base.:(-)(x::TermPoly{C}, y::TermPoly{C}) where C = plusorminus(x, y, -)
+Base.:(+)(x::TermPoly{C, T}, y::Union{Monomial,PolyVar}) where {C, T} = x + Term{C, T}(y)
+Base.:(+)(x::Union{Monomial,PolyVar}, y::TermPoly{C, T}) where {C, T} = Term{C, T}(x) + y
 
-(-)(x::TermPoly{T}, y::DMonomialLike) where T = x - Term{T}(y)
-(-)(x::DMonomialLike, y::TermPoly{T}) where T = Term{T}(x) - y
+Base.:(-)(x::TermPoly{T}, y::DMonomialLike) where T = x - Term{T}(y)
+Base.:(-)(x::DMonomialLike, y::TermPoly{T}) where T = Term{T}(x) - y
 
-(-)(p::Polynomial) = Polynomial(-p.a, p.x)
+Base.:(-)(p::Polynomial) = Polynomial(-p.a, p.x)
 
 include("mult.jl")
