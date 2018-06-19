@@ -9,6 +9,10 @@ const MP = MultivariatePolynomials
 
 using Nullables
 
+# Exports which should be available for an enduser
+import MultivariatePolynomials: differentiate, variables, subs
+export differentiate, variables, subs
+
 #const PolyType{C} = Union{DMonomialLike{C}, RationalPoly{C}}
 #iscomm(::PolyType{C}) where {C} = C
 #Base.zero(p::PolyType{C}) where {C} = zero(typeof(p))
