@@ -96,3 +96,14 @@ end
 (m::Monomial)(s::MP.AbstractSubstitution...)   = MP.substitute(MP.Eval(), m, s)
 (t::Term)(s::MP.AbstractSubstitution...)       = MP.substitute(MP.Eval(), t, s)
 (p::Polynomial)(s::MP.AbstractSubstitution...) = MP.substitute(MP.Eval(), p, s)
+
+(p::PolyVar)(x::Number) = x
+(p::Monomial)(x::NTuple{N, <:Number}) where N = MP.substitute(MP.Eval(), p, variables(p)=>x)
+(p::Monomial)(x::AbstractVector{<:Number}) = MP.substitute(MP.Eval(), p, variables(p)=>x)
+(p::Monomial)(x::Number...) = MP.substitute(MP.Eval(), p, variables(p)=>x)
+(p::Term)(x::NTuple{N, <:Number}) where N = MP.substitute(MP.Eval(), p, variables(p)=>x)
+(p::Term)(x::AbstractVector{<:Number}) = MP.substitute(MP.Eval(), p, variables(p)=>x)
+(p::Term)(x::Number...) = MP.substitute(MP.Eval(), p, variables(p)=>x)
+(p::Polynomial)(x::NTuple{N, <:Number}) where N = MP.substitute(MP.Eval(), p, variables(p)=>x)
+(p::Polynomial)(x::AbstractVector{<:Number}) = MP.substitute(MP.Eval(), p, variables(p)=>x)
+(p::Polynomial)(x::Number...) = MP.substitute(MP.Eval(), p, variables(p)=>x)
