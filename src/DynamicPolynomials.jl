@@ -2,8 +2,6 @@ __precompile__()
 
 module DynamicPolynomials
 
-import Base: length, getindex, vect, isless, isempty, start, done, next, zero, one, *, +, -
-
 using Compat
 
 using MultivariatePolynomials
@@ -13,8 +11,8 @@ using Nullables
 
 #const PolyType{C} = Union{DMonomialLike{C}, RationalPoly{C}}
 #iscomm(::PolyType{C}) where {C} = C
-#zero(p::PolyType{C}) where {C} = zero(typeof(p))
-#one(p::PolyType{C}) where {C} = one(typeof(p))
+#Base.zero(p::PolyType{C}) where {C} = zero(typeof(p))
+#Base.one(p::PolyType{C}) where {C} = one(typeof(p))
 
 include("var.jl")
 include("mono.jl")

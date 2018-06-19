@@ -33,16 +33,16 @@ MP.multconstant(α, x::Monomial)   = Term(α, x)
 MP.mapcoefficientsnz(f::Function, p::Polynomial) = Polynomial(f.(p.a), p.x)
 
 # I do not want to cast x to TermContainer because that would force the promotion of eltype(q) with Int
-function *(x::DMonomialLike, p::Polynomial)
+function Base.:(*)(x::DMonomialLike, p::Polynomial)
     # /!\ No copy of a is done
     Polynomial(p.a, x*p.x)
 end
-function *(x::DMonomialLike{false}, p::Polynomial)
+function Base.:(*)(x::DMonomialLike{false}, p::Polynomial)
     # /!\ No copy of a is done
     # Order may change, e.g. y * (x + y) = y^2 + yx
     Polynomial(monovec(p.a, [x*m for m in p.x])...)
 end
-function *(p::Polynomial, x::DMonomialLike)
+function Base.:(*)(p::Polynomial, x::DMonomialLike)
     # /!\ No copy of a is done
     Polynomial(p.a, p.x*x)
 end
@@ -64,10 +64,10 @@ function _term_poly_mult(t::Term{C, S}, p::Polynomial{C, T}, op::Function) where
         Polynomial(op.(t.α, p.a), MonomialVector(allvars, Z))
     end
 end
-*(p::Polynomial, t::Term) = _term_poly_mult(t, p, (α, β) -> β * α)
-*(t::Term, p::Polynomial) = _term_poly_mult(t, p, *)
+Base.:(*)(p::Polynomial, t::Term) = _term_poly_mult(t, p, (α, β) -> β * α)
+Base.:(*)(t::Term, p::Polynomial) = _term_poly_mult(t, p, *)
 _sumprod(a, b) = a * b + a * b
-function *(p::Polynomial{C, S}, q::Polynomial{C, T}) where {C, S, T}
+function Base.:(*)(p::Polynomial{C, S}, q::Polynomial{C, T}) where {C, S, T}
     U = Base.promote_op(_sumprod, S, T)
     if iszero(p) || iszero(q)
         zero(Polynomial{C, U})
