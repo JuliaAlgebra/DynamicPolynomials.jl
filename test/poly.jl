@@ -64,4 +64,15 @@
         @inferred polynomial(2u)
         @inferred polynomial(2.0u, Int)
     end
+
+    @testset "Evaluation" begin
+        @polyvar x y
+        @test (x^2+y^3)(2, 3) == 31
+        @test (x^2+y^3)((2, 3)) == 31
+        @test (x^2+y^3)([2, 3]) == 31
+        @test (2x^2*y)(3,2) == 36
+        @test (2x^2*y)((3,2)) == 36
+        @test (2x^2*y)([3,2]) == 36
+        @test (2x^2)(3) == 18
+    end
 end

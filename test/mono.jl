@@ -94,4 +94,13 @@
         @test variables(m) == [x, y, z, x, y]
         @test m.z == [2, 1, 1, 0, 0]
     end
+
+    @testset "Evaluation" begin
+        @polyvar x y
+        @test (x^2*y)(3,2) == 18
+        @test (x^2*y)((3,2)) == 18
+        @test (x^2*y)([3,2]) == 18
+        @test (x^2)(3) == 9
+        @test (x)(3) == 3
+    end
 end
