@@ -28,8 +28,11 @@ function Monomial{C}(α) where C
     α == 1 || error("Cannot convert $α to a Monomial{$C} as it is not one")
     Monomial{C}(PolyVar{C}[], Int[])
 end
-# defaults to commutative so that `Monomial(1)` is consistent with TypedPolynomials
-Monomial(α) = Monomial{true}(α)
+
+@static if VERSION ≥ v"0.7-"
+    # defaults to commutative so that `Monomial(1)` is consistent with TypedPolynomials
+    Monomial(α::Number) = Monomial{true}(α)
+end
 
 Base.copy(m::M) where {M<:Monomial} = M(m.vars, copy(m.z))
 
