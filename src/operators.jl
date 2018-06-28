@@ -30,12 +30,12 @@ function plusorminus(p::TermPoly{C, S}, q::TermPoly{C, T}, op) where {C, S, T}
         if j > nterms(q) || (i <= nterms(p) && _getindex(p, i).x > _getindex(q, j).x)
             t = _getindex(p, i)
             z[maps[1]] = t.x.z
-            α = U(t.α)
+            α = convert(U, t.α)
             i += 1
         elseif i > nterms(p) || _getindex(q, j).x > _getindex(p, i).x
             t = _getindex(q, j)
             z[maps[2]] = t.x.z
-            α = U(op(t.α))
+            α = convert(U, op(t.α))
             j += 1
         else
             t = _getindex(p, i)
