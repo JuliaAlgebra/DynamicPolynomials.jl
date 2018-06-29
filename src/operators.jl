@@ -55,8 +55,8 @@ end
 
 Base.:(+)(x::TermPoly{C}, y::TermPoly{C}) where C = plusorminus(x, y, +)
 Base.:(-)(x::TermPoly{C}, y::TermPoly{C}) where C = plusorminus(x, y, -)
-Base.:(+)(x::TermPoly{C, T}, y::Union{Monomial,PolyVar}) where {C, T} = x + Term{C, T}(y)
-Base.:(+)(x::Union{Monomial,PolyVar}, y::TermPoly{C, T}) where {C, T} = Term{C, T}(x) + y
+Base.:(+)(x::TermPoly{C}, y::Union{Monomial,PolyVar}) where C = x + Term{C}(y)
+Base.:(+)(x::Union{Monomial,PolyVar}, y::TermPoly{C}) where C = Term{C}(x) + y
 
 Base.:(-)(x::TermPoly{T}, y::DMonomialLike) where T = x - Term{T}(y)
 Base.:(-)(x::DMonomialLike, y::TermPoly{T}) where T = Term{T}(x) - y
