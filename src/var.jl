@@ -31,10 +31,10 @@ end
 
 # Variable vector x returned garanteed to be sorted so that if p is built with x then vars(p) == x
 macro polyvar(args...)
-    reduce((x,y) -> :($x; $y), :(), [buildpolyvar(PolyVar{true}, arg) for arg in args])
+    Compat.reduce((x,y) -> :($x; $y), [buildpolyvar(PolyVar{true}, arg) for arg in args], init=:())
 end
 macro ncpolyvar(args...)
-    reduce((x,y) -> :($x; $y), :(), [buildpolyvar(PolyVar{false}, arg) for arg in args])
+    Compat.reduce((x,y) -> :($x; $y), [buildpolyvar(PolyVar{false}, arg) for arg in args], init=:())
 end
 
 struct PolyVar{C} <: AbstractVariable
