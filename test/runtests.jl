@@ -2,6 +2,7 @@ using DynamicPolynomials
 using MultivariatePolynomials
 using Compat
 using Compat.Test
+using Compat.LinearAlgebra
 
 include("mono.jl")
 include("poly.jl")
