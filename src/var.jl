@@ -11,7 +11,7 @@ end
 
 function buildpolyvar(::Type{PV}, var) where {PV}
     if isa(var, Symbol)
-        :($(esc(var)) = $PV($"$var"))
+        var, :($(esc(var)) = $PV($"$var"))
     else
         isa(var, Expr) || error("Expected $var to be a variable name")
         Base.Meta.isexpr(var, :ref) || error("Expected $var to be of the form varname[idxset]")
@@ -20,21 +20,35 @@ function buildpolyvar(::Type{PV}, var) where {PV}
         prefix = string(var.args[1])
         if length(var.args) == 2
             idxset = esc(var.args[2])
-            :($(esc(varname)) = polyvecvar($PV, $prefix, $idxset))
+            varname, :($(esc(varname)) = polyvecvar($PV, $prefix, $idxset))
         else
             rowidxset = esc(var.args[2])
             colidxset = esc(var.args[3])
-            :($(esc(varname)) = polymatrixvar($PV, $prefix, $rowidxset, $colidxset))
+            varname, :($(esc(varname)) = polymatrixvar($PV, $prefix, $rowidxset, $colidxset))
         end
     end
 end
 
+function buildpolyvars(::Type{PV}, args) where {PV}
+    vars = Symbol[]
+    exprs = []
+    for arg in args
+        var, expr = buildpolyvar(PV, arg)
+        push!(vars, var)
+        push!(exprs, expr)
+    end
+    vars, exprs
+end
+
 # Variable vector x returned garanteed to be sorted so that if p is built with x then vars(p) == x
 macro polyvar(args...)
-    reduce((x,y) -> :($x; $y), [buildpolyvar(PolyVar{true}, arg) for arg in args], init=:())
+    vars, exprs = buildpolyvars(PolyVar{true}, args)
+    :($(foldl((x,y) -> :($x; $y), exprs, init=:())); $(Expr(:tuple, esc.(vars)...)))
 end
+
 macro ncpolyvar(args...)
-    reduce((x,y) -> :($x; $y), [buildpolyvar(PolyVar{false}, arg) for arg in args], init=:())
+    vars, exprs = buildpolyvars(PolyVar{false}, args)
+    :($(foldl((x,y) -> :($x; $y), exprs, init=:())); $(Expr(:tuple, esc.(vars)...)))
 end
 
 struct PolyVar{C} <: AbstractVariable
