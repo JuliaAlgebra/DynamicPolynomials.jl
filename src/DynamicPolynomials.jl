@@ -1,7 +1,5 @@
 module DynamicPolynomials
 
-using Compat
-
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
 

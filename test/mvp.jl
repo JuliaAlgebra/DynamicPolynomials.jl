@@ -1,4 +1,4 @@
-using Compat.Pkg
+using Pkg
 import MultivariatePolynomials
 const mvp_test = joinpath(dirname(pathof(MultivariatePolynomials)), "..", "test")
 const Mod = DynamicPolynomials
