@@ -219,19 +219,21 @@ function MP.mergemonovec(ms::Vector{MonomialVector{C}}) where {C}
     L = length.(ms)
     X = Vector{Monomial{C}}()
     while any(I .<= L)
-        max = Nullable{Monomial{C}}()
+        max = nothing
         for i in 1:m
             if I[i] <= L[i]
                 x = ms[i][I[i]]
-                if isnull(max) || get(max) < x
-                    max = Nullable(x)
+                if max === nothing || max < x
+                    max = x
                 end
             end
         end
-        @assert !isnull(max)
-        push!(X, get(max))
+        @assert max !== nothing
+        # to ensure that max is no more a union
+        max === nothing && return X
+        push!(X, max)
         for i in 1:m
-            if I[i] <= L[i] && get(max) == ms[i][I[i]]
+            if I[i] <= L[i] && max == ms[i][I[i]]
                 I[i] += 1
             end
         end
