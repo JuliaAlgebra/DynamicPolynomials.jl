@@ -1,5 +1,6 @@
 using Compat.Pkg
-const mvp_test = joinpath(Pkg.dir("MultivariatePolynomials"), "test")
+import MultivariatePolynomials
+const mvp_test = joinpath(dirname(pathof(MultivariatePolynomials)), "..", "test")
 const Mod = DynamicPolynomials
 const MP = MultivariatePolynomials
 include(joinpath(mvp_test, "utils.jl"))
