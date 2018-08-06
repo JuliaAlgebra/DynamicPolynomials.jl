@@ -49,6 +49,7 @@ struct PolyVar{C} <: AbstractVariable
 end
 
 Base.hash(x::PolyVar, u::UInt) = hash(x.id, u)
+Base.broadcastable(x::PolyVar) = Ref(x)
 
 MP.name(v::PolyVar) = v.name
 MP.monomial(v::PolyVar) = Monomial(v)

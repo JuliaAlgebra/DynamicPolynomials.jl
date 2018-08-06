@@ -29,6 +29,7 @@ end
 
 iscomm(::Type{Polynomial{C, T}}) where {C, T} = C
 
+Base.broadcastable(p::Polynomial) = Ref(p)
 Base.copy(p::Polynomial{C, T}) where {C, T} = Polynomial{C, T}(copy(p.a), copy(p.x))
 Base.zero(::Type{Polynomial{C, T}}) where {C, T} = Polynomial(T[], MonomialVector{C}())
 Base.one(::Type{Polynomial{C, T}}) where {C, T} = Polynomial([one(T)], MonomialVector{C}(PolyVar{C}[], [Int[]]))
