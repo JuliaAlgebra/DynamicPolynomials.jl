@@ -29,6 +29,7 @@ end
 
 iscomm(::Type{Polynomial{C, T}}) where {C, T} = C
 
+Base.broadcastable(p::Polynomial) = Ref(p)
 Base.copy(p::Polynomial{C, T}) where {C, T} = Polynomial{C, T}(copy(p.a), copy(p.x))
 Base.zero(::Type{Polynomial{C, T}}) where {C, T} = Polynomial(T[], MonomialVector{C}())
 Base.one(::Type{Polynomial{C, T}}) where {C, T} = Polynomial([one(T)], MonomialVector{C}(PolyVar{C}[], [Int[]]))
@@ -75,9 +76,10 @@ Polynomial{C}(f::Function, x) where {C} = Polynomial{C, Base.promote_op(f, Int)}
 
 Base.length(p::Polynomial) = length(p.a)
 Base.isempty(p::Polynomial) = isempty(p.a)
-Base.start(::Polynomial) = 1
-Base.done(p::Polynomial, state) = length(p) < state
-Base.next(p::Polynomial, state) = (p[state], state+1)
+Base.iterate(p::Polynomial) = isempty(p) ? nothing : (p[1], 1)
+function Base.iterate(p::Polynomial, state::Int)
+    state < length(p) ? (p[state+1], state+1) : nothing
+end
 #eltype(::Type{Polynomial{C, T}}) where {C, T} = T
 Base.getindex(p::Polynomial, I::Int) = Term(p.a[I[1]], p.x[I[1]])
 
@@ -90,9 +92,11 @@ Base.endof(p::TermIterator) = length(p.p)
 Base.length(p::TermIterator) = length(p.p.a)
 Base.size(p::TermIterator) = (length(p),)
 Base.isempty(p::TermIterator) = isempty(p.p.a)
-Base.start(::TermIterator) = 1
-Base.done(p::TermIterator, state) = length(p.p) < state
-Base.next(p::TermIterator, state) = (p.p[state], state+1)
+Base.iterate(p::TermIterator) = isempty(p) ? nothing : (p[1], 1)
+function Base.iterate(p::TermIterator, state::Int)
+    state < length(p) ? (p[state+1], state+1) : nothing
+end
+
 Base.getindex(p::TermIterator, I::Int) = Term(p.p.a[I[1]], p.p.x[I[1]])
 
 MP.terms(p::Polynomial) = TermIterator(p)

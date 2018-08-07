@@ -22,6 +22,7 @@ Term(x::PolyVar{C}) where C = Term{C}(x)
 Term{C, T}(α) where {C, T} = Term{C}(T(α))
 Term{C}(α::T) where {C, T} = Term{C, T}(α, Monomial{C}())
 
+Base.broadcastable(t::Term) = Ref(t)
 #(::Type{TermContainer{C}}){C}(x::PolyVar{C}) = Term(x)
 #(::Type{TermContainer{C}}){C}(x::Monomial{C}) = Term(x)
 #(::Type{TermContainer{C}}){C}(t::TermContainer{C}) = t

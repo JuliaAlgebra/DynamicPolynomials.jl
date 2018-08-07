@@ -31,10 +31,10 @@ end
 
 # Variable vector x returned garanteed to be sorted so that if p is built with x then vars(p) == x
 macro polyvar(args...)
-    Compat.reduce((x,y) -> :($x; $y), [buildpolyvar(PolyVar{true}, arg) for arg in args], init=:())
+    reduce((x,y) -> :($x; $y), [buildpolyvar(PolyVar{true}, arg) for arg in args], init=:())
 end
 macro ncpolyvar(args...)
-    Compat.reduce((x,y) -> :($x; $y), [buildpolyvar(PolyVar{false}, arg) for arg in args], init=:())
+    reduce((x,y) -> :($x; $y), [buildpolyvar(PolyVar{false}, arg) for arg in args], init=:())
 end
 
 struct PolyVar{C} <: AbstractVariable
@@ -49,6 +49,7 @@ struct PolyVar{C} <: AbstractVariable
 end
 
 Base.hash(x::PolyVar, u::UInt) = hash(x.id, u)
+Base.broadcastable(x::PolyVar) = Ref(x)
 
 MP.name(v::PolyVar) = v.name
 MP.monomial(v::PolyVar) = Monomial(v)

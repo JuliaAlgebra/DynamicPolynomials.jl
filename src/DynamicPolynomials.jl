@@ -1,13 +1,7 @@
-__precompile__()
-
 module DynamicPolynomials
-
-using Compat
 
 using MultivariatePolynomials
 const MP = MultivariatePolynomials
-
-using Nullables
 
 # Exports which should be available for an enduser
 import MultivariatePolynomials: differentiate, variables, subs, maxdegree, mindegree
