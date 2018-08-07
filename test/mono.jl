@@ -1,5 +1,5 @@
 @testset "PolyVar and Monomial tests" begin
-    @testset "polyvar macro index set" begin
+    @testset "PolyVar macro index set" begin
         n = 3
         @polyvar x[1:n] y z[1:n-1] u[1:n,1:n-1]
         @test x isa Vector{PolyVar{true}}
@@ -12,6 +12,16 @@
         @test x[1] > x[2] > x[3] > y > z[1] > z[2]
         @test u[1, 1] > u[2, 1] > u[2, 2]
     end
+    @testset "PolyVar macro tuple return" begin
+        vars = @polyvar x y z
+        @test vars isa Tuple
+        @test vars == (x, y, z)
+
+        vars = @ncpolyvar x y z
+        @test vars isa Tuple
+        @test vars == (x, y, z)
+    end
+
     @testset "PolyVar" begin
         @test zeroterm(PolyVar{true}) == 0
         @test zero(PolyVar{true}) == 0
