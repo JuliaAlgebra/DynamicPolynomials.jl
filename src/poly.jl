@@ -88,7 +88,8 @@ Base.getindex(p::Polynomial, I::Int) = Term(p.a[I[1]], p.x[I[1]])
 struct TermIterator{C, T} <: AbstractVector{Term{C, T}}
     p::Polynomial{C, T}
 end
-Base.endof(p::TermIterator) = length(p.p)
+Base.firstindex(p::TermIterator) = firstindex(p.p.a)
+Base.lastindex(p::TermIterator) = lastindex(p.p.a)
 Base.length(p::TermIterator) = length(p.p.a)
 Base.size(p::TermIterator) = (length(p),)
 Base.isempty(p::TermIterator) = isempty(p.p.a)
