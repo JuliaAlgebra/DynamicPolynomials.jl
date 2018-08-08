@@ -45,7 +45,8 @@ function Base.getindex(x::MV, I) where {MV<:MonomialVector}
 end
 Base.getindex(x::MonomialVector, i::Integer) = Monomial(x.vars, x.Z[i])
 
-Base.endof(x::MonomialVector) = length(x)
+Base.firstindex(x::MonomialVector) = firstindex(x.Z)
+Base.lastindex(x::MonomialVector) = lastindex(x.Z)
 Base.size(x::MonomialVector) = (length(x),)
 Base.length(x::MonomialVector) = length(x.Z)
 Base.isempty(x::MonomialVector) = length(x) == 0
