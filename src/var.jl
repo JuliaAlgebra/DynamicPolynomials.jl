@@ -1,12 +1,9 @@
 export PolyVar, @polyvar, @ncpolyvar
 export polyvecvar
 
-function polyvecvar(::Type{PV}, prefix, idxset) where {PV}
-    [PV("$(prefix * string(i))") for i in idxset]
-end
 
-function polymatrixvar(::Type{PV}, prefix, rowidxset, colidxset) where {PV}
-    [PV("$(prefix * string(i) * "_" * string(j))") for i in rowidxset, j in colidxset]
+function polyarrayvar(::Type{PV}, prefix, indices...) where {PV}
+    map(i -> PV("$(prefix)" * join(i, "_")), Iterators.product(indices...))
 end
 
 function buildpolyvar(::Type{PV}, var) where {PV}
@@ -15,17 +12,10 @@ function buildpolyvar(::Type{PV}, var) where {PV}
     else
         isa(var, Expr) || error("Expected $var to be a variable name")
         Base.Meta.isexpr(var, :ref) || error("Expected $var to be of the form varname[idxset]")
-        (2 ≤ length(var.args) ≤ 3) || error("Expected $var to have one or two index sets")
+        (2 ≤ length(var.args)) || error("Expected $var to have at least one index set")
         varname = var.args[1]
-        prefix = string(var.args[1])
-        if length(var.args) == 2
-            idxset = esc(var.args[2])
-            varname, :($(esc(varname)) = polyvecvar($PV, $prefix, $idxset))
-        else
-            rowidxset = esc(var.args[2])
-            colidxset = esc(var.args[3])
-            varname, :($(esc(varname)) = polymatrixvar($PV, $prefix, $rowidxset, $colidxset))
-        end
+        prefix = string(varname)
+        varname, :($(esc(varname)) = polyarrayvar($PV, $prefix, $(var.args[2:end]...)))
     end
 end
 
