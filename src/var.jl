@@ -15,7 +15,7 @@ function buildpolyvar(::Type{PV}, var) where {PV}
         (2 ≤ length(var.args)) || error("Expected $var to have at least one index set")
         varname = var.args[1]
         prefix = string(varname)
-        varname, :($(esc(varname)) = polyarrayvar($PV, $prefix, $(var.args[2:end]...)))
+        varname, :($(esc(varname)) = polyarrayvar($PV, $prefix, $(esc.(var.args[2:end])...)))
     end
 end
 
