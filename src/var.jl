@@ -3,7 +3,7 @@ export polyvecvar
 
 
 function polyarrayvar(::Type{PV}, prefix, indices...) where {PV}
-    map(i -> PV("$(prefix)" * join(i, "_")), Iterators.product(indices...))
+    map(i -> PV("$(prefix)[$(join(i, ","))]"), Iterators.product(indices...))
 end
 
 function buildpolyvar(::Type{PV}, var) where {PV}
