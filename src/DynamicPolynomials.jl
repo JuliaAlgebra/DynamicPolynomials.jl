@@ -1,16 +1,9 @@
 module DynamicPolynomials
 
-using MultivariatePolynomials
+using Reexport
+@reexport using MultivariatePolynomials
 const MP = MultivariatePolynomials
 
-# Exports which should be available for an enduser
-import MultivariatePolynomials: differentiate, variables, subs, maxdegree, mindegree
-export differentiate, variables, subs, maxdegree, mindegree
-
-#const PolyType{C} = Union{DMonomialLike{C}, RationalPoly{C}}
-#iscomm(::PolyType{C}) where {C} = C
-#Base.zero(p::PolyType{C}) where {C} = zero(typeof(p))
-#Base.one(p::PolyType{C}) where {C} = one(typeof(p))
 
 include("var.jl")
 include("mono.jl")
@@ -45,6 +38,5 @@ include("diff.jl")
 include("subs.jl")
 
 include("div.jl")
-
 
 end # module
