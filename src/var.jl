@@ -43,12 +43,13 @@ end
 
 struct PolyVar{C} <: AbstractVariable
     id::Int
-    name::AbstractString
+    name::String
+
     function PolyVar{C}(name::AbstractString) where {C}
         # gensym returns something like Symbol("##42")
         # we first remove "##" and then parse it into an Int
         id = parse(Int, string(gensym())[3:end])
-        new(id, name)
+        new(id, convert(String, name))
     end
 end
 
