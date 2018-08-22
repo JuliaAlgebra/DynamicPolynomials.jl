@@ -56,6 +56,15 @@ Base.hash(x::PolyVar, u::UInt) = hash(x.id, u)
 Base.broadcastable(x::PolyVar) = Ref(x)
 
 MP.name(v::PolyVar) = v.name
+function MP.name_base_indices(v::PolyVar)
+    splits = split(v.name, r"[\[,\]]\s*", keepempty=false)
+    if length(splits) == 1
+        return v.name, Int[]
+    else
+        return splits[1], parse.(Int, splits[2:end])
+    end
+end
+
 MP.monomial(v::PolyVar) = Monomial(v)
 _vars(v::PolyVar) = [v]
 
