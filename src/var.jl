@@ -3,7 +3,7 @@ export polyvecvar
 
 
 function polyarrayvar(::Type{PV}, prefix, indices...) where {PV}
-    map(i -> PV("$(prefix)" * join(i, "_")), Iterators.product(indices...))
+    map(i -> PV("$(prefix)[$(join(i, ","))]"), Iterators.product(indices...))
 end
 
 function buildpolyvar(::Type{PV}, var) where {PV}
@@ -43,12 +43,13 @@ end
 
 struct PolyVar{C} <: AbstractVariable
     id::Int
-    name::AbstractString
+    name::String
+
     function PolyVar{C}(name::AbstractString) where {C}
         # gensym returns something like Symbol("##42")
         # we first remove "##" and then parse it into an Int
         id = parse(Int, string(gensym())[3:end])
-        new(id, name)
+        new(id, convert(String, name))
     end
 end
 
@@ -56,6 +57,15 @@ Base.hash(x::PolyVar, u::UInt) = hash(x.id, u)
 Base.broadcastable(x::PolyVar) = Ref(x)
 
 MP.name(v::PolyVar) = v.name
+function MP.name_base_indices(v::PolyVar)
+    splits = split(v.name, r"[\[,\]]\s*", keepempty=false)
+    if length(splits) == 1
+        return v.name, Int[]
+    else
+        return splits[1], parse.(Int, splits[2:end])
+    end
+end
+
 MP.monomial(v::PolyVar) = Monomial(v)
 _vars(v::PolyVar) = [v]
 
