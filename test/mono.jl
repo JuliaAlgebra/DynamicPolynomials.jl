@@ -61,7 +61,8 @@
     end
     @testset "MonomialVector" begin
         @polyvar x y
-        @test_throws ArgumentError MonomialVector{true}([x], [[1], [1,0]])
+        @test_throws AssertionError MonomialVector{true}([x], [[1], [1,0]])
+        @test_throws AssertionError monomials([y, x], 1:2) # should be [x, y]
         X = MonomialVector([x, 1, x*y])
         @test variables(X) == [x, y]
         @test X.Z == [[1, 1], [1, 0], [0, 0]]
@@ -83,7 +84,7 @@
     @testset "Non-commutative" begin
         @ncpolyvar x
         @test_throws ArgumentError Monomial{false}([x], [1,0])
-        @test_throws ArgumentError MonomialVector{false}([x], [[1], [1,0]])
+        @test_throws AssertionError MonomialVector{false}([x], [[1], [1,0]])
     end
     @testset "NC PolyVar * Monomial" begin
         @ncpolyvar x y z
