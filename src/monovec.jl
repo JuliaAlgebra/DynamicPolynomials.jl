@@ -6,11 +6,8 @@ struct MonomialVector{C} <: AbstractVector{Monomial{C}}
     Z::Vector{Vector{Int}}
 
     function MonomialVector{C}(vars::Vector{PolyVar{C}}, Z::Vector{Vector{Int}}) where {C}
-        for z in Z
-            if length(vars) != length(z)
-                throw(ArgumentError("There should be as many vars than exponents"))
-            end
-        end
+        @assert !C || issorted(vars, rev=true)
+        @assert all(z -> length(z) == length(vars), Z)
         @assert issorted(Z, rev=true, lt=grlex)
         new(vars, Z)
     end
