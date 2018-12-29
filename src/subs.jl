@@ -1,10 +1,7 @@
 function fillmap!(vals, vars, s::MP.Substitution)
     j = findfirst(isequal(s.first), vars)
-    # 0.6 behaviour:
-    # If j == 0, that means that the variable is not present
-    # so it is ignored
-    if j!= nothing && j > 0
-      vals[j] = s.second
+    if j !== nothing
+        vals[j] = s.second
     end
 end
 function fillmap!(vals, vars, s::MP.AbstractMultiSubstitution)
