@@ -41,6 +41,9 @@ Polynomial{C, T}(a::AbstractVector, X::DMonoVec) where {C, T} = Polynomial{C, T}
 Polynomial{C}(a::Vector{T}, x) where {C, T} = Polynomial{C, T}(a, x)
 Polynomial(af::Union{Function, Vector}, x::DMonoVec{C}) where {C} = Polynomial{C}(af, x)
 
+# TODO Remove with MP v0.2.8
+Polynomial{C, T}(p::Polynomial{C, T}) where {C, T} = p
+
 Base.convert(::Type{Polynomial{C, T}}, p::Polynomial{C, T}) where {C, T} = p
 function Base.convert(::Type{Polynomial{C, T}},
                       p::Polynomial{C, S}) where {C, S, T}
