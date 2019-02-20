@@ -31,10 +31,8 @@ function MP.convertconstant(::Type{Monomial{C}}, α) where C
     Monomial{C}(PolyVar{C}[], Int[])
 end
 
-@static if VERSION ≥ v"0.7-"
-    # defaults to commutative so that `Monomial(1)` is consistent with TypedPolynomials
-    Monomial(α::Number) = Monomial{true}(α)
-end
+# defaults to commutative so that `Monomial(1)` is consistent with TypedPolynomials
+Monomial(α::Number) = convert(Monomial{true}, α)
 
 Base.broadcastable(m::Monomial) = Ref(m)
 Base.copy(m::M) where {M<:Monomial} = M(m.vars, copy(m.z))
