@@ -80,7 +80,7 @@ function _subs(::MP.Subs, p::Polynomial{C, T}, vals::AbstractVector{S}) where {C
     if iszero(p)
         zero(Polynomial{C, Tout})
     else
-        Polynomial{C, Tout}(sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), 1:length(p)))
+        convert(Polynomial{C, Tout}, sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), 1:length(p)))
     end
 
 end

@@ -22,9 +22,11 @@ Monomial{C}(vars::Tuple{Vararg{PolyVar{C}}}, z::Vector{Int}) where C = Monomial{
 iscomm(::Type{Monomial{C}}) where C = C
 Monomial{C}() where C = Monomial{C}(PolyVar{C}[], Int[])
 Monomial(vars::TupOrVec{PolyVar{C}}, z::Vector{Int}) where C = Monomial{C}(vars, z)
-Monomial{C}(x::PolyVar{C}) where C = Monomial{C}([x], [1])
-Monomial(x::PolyVar{C}) where C = Monomial{C}(x)
-function Monomial{C}(α) where C
+function Base.convert(::Type{Monomial{C}}, x::PolyVar{C}) where C
+    return Monomial{C}([x], [1])
+end
+Monomial(x::PolyVar{C}) where C = convert(Monomial{C}, x)
+function MP.convertconstant(::Type{Monomial{C}}, α) where C
     α == 1 || error("Cannot convert $α to a Monomial{$C} as it is not one")
     Monomial{C}(PolyVar{C}[], Int[])
 end

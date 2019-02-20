@@ -17,10 +17,15 @@ MP.constantmonomial(::Type{<:PolyType{C}}) where {C} = Monomial{C}()
 MP.constantmonomial(p::PolyType) = Monomial(_vars(p), zeros(Int, nvariables(p)))
 MP.monomialtype(::Type{<:PolyType{C}}) where C = Monomial{C}
 MP.monomialtype(::PolyType{C}) where C = Monomial{C}
+#function MP.constantmonomial(::Type{Monomial{C}}, vars=PolyVar{C}[]) where {C}
+#    return Monomial{C}(vars, zeros(Int, length(vars)))
+#end
 MP.termtype(::Union{TermPoly{C, T}, Type{<:TermPoly{C, T}}}) where {C, T} = Term{C, T}
 MP.termtype(::Union{PolyType{C}, Type{<:PolyType{C}}}, ::Type{T}) where {C, T} = Term{C, T}
 MP.polynomial(p::PolyType) = Polynomial(p)
-MP.polynomial(p::PolyType{C}, ::Type{T}) where {C, T} = Polynomial{C, T}(p)
+function MP.polynomial(p::PolyType{C}, ::Type{T}) where {C, T}
+    return convert(Polynomial{C, T}, p)
+end
 MP.polynomialtype(::Type{Term{C, T}}) where {T, C} = Polynomial{C, T}
 MP.polynomialtype(::Type{T}, ::Type{<:DMonomialLike{C}}) where {T, C} = Polynomial{C, T}
 MP.polynomialtype(::Union{PolyType{C}, Type{<:PolyType{C}}}, ::Type{T}) where {C, T} = Polynomial{C, T}

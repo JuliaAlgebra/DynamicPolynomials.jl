@@ -7,19 +7,27 @@ end
 
 iscomm(::Type{Term{C, T}}) where {C, T} = C
 
-Term{C, T}(t::Term{C, T}) where {C, T} = t
-Term{C, T}(t::Term{C}) where {C, T} = Term{C, T}(T(t.α), t.x)
+Base.convert(::Type{Term{C, T}}, t::Term{C, T}) where {C, T} = t
+function Base.convert(::Type{Term{C, T}}, t::Term{C}) where {C, T}
+    return Term{C, T}(T(t.α), t.x)
+end
 Term(t::Term) = t
 
-Term{C, T}(x::Monomial{C}) where {C, T} = Term{C, T}(one(T), x)
-Term{C}(x::Monomial{C}) where C = Term{C, Int}(x)
+function Base.convert(::Type{Term{C, T}}, x::Monomial{C}) where {C, T}
+    return Term{C, T}(one(T), x)
+end
+Term{C}(x::Monomial{C}) where C = convert(Term{C, Int}, x)
 Term(x::Monomial{C}) where C = Term{C}(x)
 
-Term{C, T}(x::PolyVar{C}) where {C, T} = Term{C, T}(Monomial{C}(x))
-Term{C}(x::PolyVar{C}) where C = Term{C}(Monomial{C}(x))
+function Base.convert(::Type{Term{C, T}}, x::PolyVar{C}) where {C, T}
+    return convert(Term{C, T}, convert(Monomial{C}, x))
+end
+Term{C}(x::PolyVar{C}) where C = Term{C}(convert(Monomial{C}, x))
 Term(x::PolyVar{C}) where C = Term{C}(x)
 
-Term{C, T}(α) where {C, T} = Term{C}(T(α))
+function MP.convertconstant(::Type{Term{C, T}}, α) where {C, T}
+    return Term{C}(convert(T, α))
+end
 Term{C}(α::T) where {C, T} = Term{C, T}(α, Monomial{C}())
 
 Base.broadcastable(t::Term) = Ref(t)

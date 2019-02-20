@@ -41,12 +41,24 @@ Polynomial{C, T}(a::AbstractVector, X::DMonoVec) where {C, T} = Polynomial{C, T}
 Polynomial{C}(a::Vector{T}, x) where {C, T} = Polynomial{C, T}(a, x)
 Polynomial(af::Union{Function, Vector}, x::DMonoVec{C}) where {C} = Polynomial{C}(af, x)
 
-Polynomial{C, T}(p::Polynomial{C, T}) where {C, T} = p
-Polynomial{C, T}(p::Polynomial{C, S}) where {C, S, T} = Polynomial{C}(Vector{T}(p.a), p.x)
-Polynomial{C, T}(p::AbstractPolynomialLike) where {C, T} = Polynomial{C, T}(polynomial(p, T))
-Polynomial{C, T}(t::Term{C}) where {C, T} = Polynomial{C, T}([T(t.α)], [t.x])
-Polynomial{C, T}(m::DMonomialLike{C}) where {C, T} = Polynomial(Term{C, T}(m))
-Polynomial{C, T}(α) where {C, T} = Polynomial(Term{C, T}(α))
+Base.convert(::Type{Polynomial{C, T}}, p::Polynomial{C, T}) where {C, T} = p
+function Base.convert(::Type{Polynomial{C, T}},
+                      p::Polynomial{C, S}) where {C, S, T}
+    return Polynomial{C}(convert(Vector{T}, p.a), p.x)
+end
+#function convert(::Type{Polynomial{C, T}},
+#                 p::AbstractPolynomialLike) where {C, T}
+#    return convert(Polynomial{C, T}, polynomial(p, T))
+#end
+function Base.convert(::Type{Polynomial{C, T}}, t::Term{C}) where {C, T}
+    return Polynomial{C, T}(T[t.α], [t.x])
+end
+function Base.convert(::Type{Polynomial{C, T}}, m::DMonomialLike{C}) where {C, T}
+    return Polynomial(convert(Term{C, T}, m))
+end
+function MP.convertconstant(::Type{Polynomial{C, T}}, α) where {C, T}
+    return Polynomial(convert(Term{C, T}, α))
+end
 
 Polynomial{C}(p::Union{Polynomial{C}, Term{C}, Monomial{C}, PolyVar{C}}) where {C} = Polynomial(p)
 Polynomial{C}(α) where {C} = Polynomial(Term{C}(α))

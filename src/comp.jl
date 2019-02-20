@@ -66,14 +66,14 @@ end
 function (==)(x::Monomial{C}, y::Monomial{C}) where C
     mycomp(x, y) == 0
 end
-(==)(x::PolyVar{C}, y::Monomial{C}) where C = Monomial{C}(x) == y
+(==)(x::PolyVar{C}, y::Monomial{C}) where C = convert(Monomial{C}, x) == y
 
 # graded lex ordering
 function Base.isless(x::Monomial{C}, y::Monomial{C}) where C
     mycomp(x, y) < 0
 end
-Base.isless(x::Monomial{C}, y::PolyVar{C}) where C = isless(x, Monomial{C}(y))
-Base.isless(x::PolyVar{C}, y::Monomial{C}) where C = isless(Monomial{C}(x), y)
+Base.isless(x::Monomial{C}, y::PolyVar{C}) where C = isless(x, convert(Monomial{C}, y))
+Base.isless(x::PolyVar{C}, y::Monomial{C}) where C = isless(convert(Monomial{C}, x), y)
 
 # Comparison of MonomialVector
 function (==)(x::MonomialVector{C}, y::MonomialVector{C}) where C
