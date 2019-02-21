@@ -22,7 +22,7 @@ end
 # Comparison of PolyVar
 
 function (==)(x::PolyVar{C}, y::PolyVar{C}) where C
-    x.id == y.id
+    x.id == y.id && x.name == y.name
 end
 
 Base.isless(x::PolyVar{C}, y::PolyVar{C}) where C = isless(y.id, x.id)
