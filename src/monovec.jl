@@ -236,5 +236,6 @@ function MP.mergemonovec(ms::Vector{MonomialVector{C}}) where {C}
             end
         end
     end
-    X
+    # There is no duplicate by construction
+    return MonomialVector{C}(buildZvarsvec(PolyVar{C}, X)...)
 end

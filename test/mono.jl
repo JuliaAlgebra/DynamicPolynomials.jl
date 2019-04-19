@@ -75,7 +75,9 @@
         σ, Y = sortmonovec(X)
         @test σ == 1:length(X)
         @test Y === X
-        @test mergemonovec([X, X]) == X
+        XX = @inferred mergemonovec([X, X])
+        @test XX isa MonomialVector{true}
+        @test X == XX
 
         @test 2 != MonomialVector([x, y], 1)
         @test x != MonomialVector([x, y], 1)
