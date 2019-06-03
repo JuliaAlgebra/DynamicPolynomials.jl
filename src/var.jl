@@ -71,8 +71,6 @@ _vars(v::PolyVar) = [v]
 
 iscomm(::Type{PolyVar{C}}) where {C} = C
 
-const VarVec{C} = Union{AbstractVector{PolyVar{C}}, NTuple{<:Integer, PolyVar{C}}}
-
 function mergevars(varsvec::Vector{Vector{PV}}) where {PV<:PolyVar}
     n = length(varsvec)
     is = ones(Int, n)
