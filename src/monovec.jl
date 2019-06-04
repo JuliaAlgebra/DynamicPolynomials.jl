@@ -67,7 +67,6 @@ const DMonoVecElemNonConstant{C} = Union{PolyVar{C}, Monomial{C}, Term{C}}
 const DMonoVecElem{C} = Union{Int, DMonoVecElemNonConstant{C}}
 const DMonoVec{C} = AbstractVector{<:DMonoVecElem{C}}
 
-MP.emptymonovec(vars::NTuple{N, PolyVar{C}}) where {N, C} = MonomialVector{C}(collect(vars), Vector{Int}[])
 MP.emptymonovec(vars::AbstractVector{PolyVar{C}}) where {C} = MonomialVector{C}(vars, Vector{Int}[])
 MP.emptymonovec(t::DMonoVecElemNonConstant) = emptymonovec(_vars(t))
 MP.emptymonovec(::Type{<:DMonoVecElemNonConstant{C}}) where {C} = MonomialVector{C}()
