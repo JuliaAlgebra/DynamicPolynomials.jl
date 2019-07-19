@@ -1,3 +1,12 @@
+struct SafeValues{T}
+    undefined::BitSet
+    values::Vector{T}
+end
+function Base.setindex!(sv::SafeValues, v, i::Int)
+    delete!(sv.undefined, i)
+    sv.values[i] = v
+end
+
 function fillmap!(vals, vars, s::MP.Substitution)
     j = findfirst(isequal(s.first), vars)
     if j !== nothing
@@ -24,20 +33,20 @@ _substype(s1::MP.AbstractSubstitution, s2::MP.AbstractSubstitution...) = promote
 _substype(s::MP.Substitutions) = _substype(s...)
 
 function _subsmap(::MP.Eval, vars, s::MP.Substitutions)
-    # Every variable will be replaced by some value of type T
-    vals = Vector{_substype(s)}(undef, length(vars))
+    # Every variable should be replaced by some value of type T
+    vals = SafeValues(BitSet(1:length(vars)), Vector{_substype(s)}(undef, length(vars)))
     fillmap!(vals, vars, s...)
-    for i in 1:length(vals)
-        @assert isassigned(vals, i) "Variable $(vars[i]) was not assigned a value"
+    if !isempty(vals.undefined)
+        throw(ArgumentError("Variable `$(vars[first(vals.undefined)])` was not assigned a value. Use `subs` to substitute only a subset of the variables."))
     end
-    vals
+    return vals.values
 end
 function _subsmap(::MP.Subs, vars::Vector{PolyVar{C}}, s::MP.Substitutions) where {C}
     # Some variable may not be replaced
     vals = Vector{promote_type(_substype(s), PolyVar{C})}(undef, length(vars))
     copyto!(vals, vars)
     fillmap!(vals, vars, s...)
-    vals
+    return vals
 end
 
 subsmap(st, vars, s::MP.Substitutions) = _subsmap(st, vars, s)
