@@ -74,5 +74,13 @@
         @test (2x^2*y)((3,2)) == 36
         @test (2x^2*y)([3,2]) == 36
         @test (2x^2)(3) == 18
+        err = ArgumentError("Variable `y` was not assigned a value. Use `subs` to substitute only a subset of the variables.")
+        t = 2x^2 * y
+        @test_throws err t(x => 1)
+        p = 2x^2 + y
+        @test_throws err p(x => 1)
+        err = ArgumentError("Variable `x` was not assigned a value. Use `subs` to substitute only a subset of the variables.")
+        @test_throws err t(y => 1)
+        @test_throws err p(y => 1)
     end
 end
