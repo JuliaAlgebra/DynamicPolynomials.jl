@@ -7,6 +7,17 @@ include("mono.jl")
 include("poly.jl")
 include("comp.jl")
 
+# TODO move to MultivariatePolynomials.jl
+@testset "Subs with no variables" begin
+    @polyvar x
+    t = convert(termtype(x, Int), 3)
+    @test t == @inferred subs(t, x => x + 1)
+    @test t == @inferred subs(t, x => x + 1.0)
+    @test t == @inferred subs(t, x => 1x)
+    @test t == @inferred subs(t, x => 1.0x)
+    @test t == @inferred subs(t, x => 1.0)
+end
+
 module newmodule
     using Test
     import DynamicPolynomials

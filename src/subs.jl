@@ -62,7 +62,9 @@ end
 
 function monoeval(z::Vector{Int}, vals::AbstractVector)
     @assert length(z) == length(vals)
-    @assert !isempty(z)
+    if isempty(z)
+        return one(eltype(vals))^1
+    end
     val = vals[1]^z[1]
     for i in 2:length(vals)
         if z[i] > 0
