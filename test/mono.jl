@@ -25,6 +25,18 @@
         @test vars == (x, y, z)
     end
 
+    @testset "variable_union_type" begin
+        @polyvar x
+        @test DynamicPolynomials.MP.variable_union_type(x) == PolyVar{true}
+        @test DynamicPolynomials.MP.variable_union_type(x^2) == PolyVar{true}
+        @test DynamicPolynomials.MP.variable_union_type(2x) == PolyVar{true}
+        @test DynamicPolynomials.MP.variable_union_type(x + 1) == PolyVar{true}
+        @ncpolyvar y
+        @test DynamicPolynomials.MP.variable_union_type(y) == PolyVar{false}
+        @test DynamicPolynomials.MP.variable_union_type(y^2) == PolyVar{false}
+        @test DynamicPolynomials.MP.variable_union_type(2y) == PolyVar{false}
+        @test DynamicPolynomials.MP.variable_union_type(y + 1) == PolyVar{false}
+    end
     @testset "PolyVar" begin
         @test zeroterm(PolyVar{true}) == 0
         @test zero(PolyVar{true}) == 0

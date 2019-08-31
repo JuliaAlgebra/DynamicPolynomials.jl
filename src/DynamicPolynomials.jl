@@ -13,6 +13,7 @@ include("monovec.jl")
 include("poly.jl")
 const TermPoly{C, T} = Union{Term{C, T}, Polynomial{C, T}}
 const PolyType{C} = Union{Polynomial{C}, Term{C}, Monomial{C}, PolyVar{C}}
+MP.variable_union_type(::Union{PolyType{C}, Type{<:PolyType{C}}}) where {C} = PolyVar{C}
 MP.constantmonomial(::Type{<:PolyType{C}}) where {C} = Monomial{C}()
 MP.constantmonomial(p::PolyType) = Monomial(_vars(p), zeros(Int, nvariables(p)))
 MP.monomialtype(::Type{<:PolyType{C}}) where C = Monomial{C}
