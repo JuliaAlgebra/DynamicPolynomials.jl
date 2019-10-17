@@ -149,8 +149,8 @@ MP.removemonomials(p::Polynomial, x::Vector) = removemonomials(p, MonomialVector
 
 function removedups(adup::Vector{T}, Zdup::Vector{Vector{Int}}) where {T}
     σ = sortperm(Zdup, rev=true, lt=grlex)
-    Z = Vector{Vector{Int}}()
-    a = Vector{T}()
+    Z = Vector{Int}[]
+    a = T[]
     i = 0
     j = 1
     while j <= length(adup)
@@ -160,7 +160,7 @@ function removedups(adup::Vector{T}, Zdup::Vector{Vector{Int}}) where {T}
             push!(a, adup[k])
             i += 1
         else
-            a[i] += adup[k]
+            a[i] = MA.operate!(+, a[i], adup[k])
         end
         j += 1
     end

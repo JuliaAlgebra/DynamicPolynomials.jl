@@ -4,6 +4,8 @@ using Reexport
 @reexport using MultivariatePolynomials
 const MP = MultivariatePolynomials
 
+import MutableArithmetics
+const MA = MutableArithmetics
 
 include("var.jl")
 include("mono.jl")
