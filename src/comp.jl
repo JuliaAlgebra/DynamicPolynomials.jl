@@ -30,6 +30,21 @@ Base.isless(x::PolyVar{C}, y::PolyVar{C}) where C = isless(y.id, x.id)
 # Comparison of Monomial
 
 # graded lex ordering
+function samevars_grlex(x::Vector{Int}, y::Vector{Int})
+    @assert length(x) == length(y)
+    degx = sum(x)
+    degy = sum(y)
+    if degx != degy
+        degx - degy
+    else
+        for i in eachindex(x)
+            if x[i] != y[i]
+                return x[i] - y[i]
+            end
+        end
+        return 0
+    end
+end
 function mycomp(x::Monomial{C}, y::Monomial{C}) where C
     degx = degree(x)
     degy = degree(y)

@@ -239,3 +239,17 @@ function MP.mergemonovec(ms::Vector{MonomialVector{C}}) where {C}
     # There is no duplicate by construction
     return MonomialVector{C}(buildZvarsvec(PolyVar{C}, X)...)
 end
+
+function _add_variables!(monos::MonomialVector{C}, allvars::Vector{PolyVar{C}}, map) where C
+    resize!(monos.vars, length(allvars))
+    copyto!(monos.vars, allvars)
+    if !isempty(monos.Z)
+        tmp = similar(first(monos.Z))
+        for z in monos.Z
+            copyto!(tmp, z)
+            resize!(z, length(allvars))
+            fill!(z, 0)
+            z[map] = tmp
+        end
+    end
+end

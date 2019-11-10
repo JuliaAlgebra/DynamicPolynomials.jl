@@ -7,6 +7,8 @@ const MP = MultivariatePolynomials
 import MutableArithmetics
 const MA = MutableArithmetics
 
+using DataStructures
+
 include("var.jl")
 include("mono.jl")
 const DMonomialLike{C} = Union{Monomial{C}, PolyVar{C}}
@@ -37,6 +39,9 @@ MP.variables(p::Union{PolyType, MonomialVector, AbstractArray{<:PolyType}}) = _v
 MP.nvariables(p::Union{PolyType, MonomialVector, AbstractArray{<:PolyType}}) = length(_vars(p))
 MP.similarvariable(p::Union{PolyType{C}, Type{<:PolyType{C}}}, ::Type{Val{V}}) where {C, V} = PolyVar{C}(string(V))
 MP.similarvariable(p::Union{PolyType{C}, Type{<:PolyType{C}}}, V::Symbol) where {C} = PolyVar{C}(string(V))
+
+MA.mutability(::Type{<:PolyType}) = MA.IsMutable()
+
 include("promote.jl")
 
 include("operators.jl")
