@@ -10,20 +10,9 @@ struct Polynomial{C, T} <: AbstractPolynomial{T}
 
     function Polynomial{C, T}(a::Vector{T}, x::MonomialVector{C}) where {C, T}
         length(a) == length(x) || throw(ArgumentError("There should be as many coefficient than monomials"))
-        zeroidx = Int[]
-        for (i,α) in enumerate(a)
-            if iszero(α)
-                push!(zeroidx, i)
-            end
-        end
-        if !isempty(zeroidx)
-            isnz = ones(Bool, length(a))
-            isnz[zeroidx] .= false
-            nzidx = findall(isnz)
-            a = a[nzidx]
-            x = x[nzidx]
-        end
-        new{C, T}(a, x)
+        p = new{C, T}(a, x)
+        _remove_zeros!(p)
+        return p
     end
 end
 
@@ -147,10 +136,22 @@ function MP.removemonomials(p::Polynomial, x::MonomialVector)
 end
 MP.removemonomials(p::Polynomial, x::Vector) = removemonomials(p, MonomialVector(x))
 
-function removedups(adup::Vector{T}, Zdup::Vector{Vector{Int}}) where {T}
+function _remove_zeros!(p::Polynomial)
+    zeroidx = Int[]
+    for (i, α) in enumerate(p.a)
+        if iszero(α)
+            push!(zeroidx, i)
+        end
+    end
+    if !isempty(zeroidx)
+        deleteat!(p.a, zeroidx)
+        deleteat!(p.x.Z, zeroidx)
+    end
+end
+
+function removedups_to!(a::Vector{T}, Z::Vector{Vector{Int}},
+                        adup::Vector{T}, Zdup::Vector{Vector{Int}}) where T
     σ = sortperm(Zdup, rev=true, lt=grlex)
-    Z = Vector{Int}[]
-    a = T[]
     i = 0
     j = 1
     while j <= length(adup)
@@ -164,11 +165,21 @@ function removedups(adup::Vector{T}, Zdup::Vector{Vector{Int}}) where {T}
         end
         j += 1
     end
-    a, Z
 end
 function polynomialclean(vars::Vector{PolyVar{C}}, adup::Vector{T}, Zdup::Vector{Vector{Int}}) where {C, T}
-    a, Z = removedups(adup, Zdup)
+    Z = Vector{Int}[]
+    a = T[]
+    removedups_to!(a, Z, adup, Zdup)
     Polynomial{C, T}(a, MonomialVector{C}(vars, Z))
+end
+function polynomialclean_to!(p::Polynomial{C, T}, vars::Vector{PolyVar{C}}, adup::Vector{T}, Zdup::Vector{Vector{Int}}) where {C, T}
+    resize!(p.x.vars, length(vars))
+    copyto!(p.x.vars, vars)
+    empty!(p.a)
+    empty!(p.x.Z)
+    removedups_to!(p.a, p.x.Z, adup, Zdup)
+    _remove_zeros!(p)
+    return p
 end
 
 MP.polynomial(a::AbstractVector, x::DMonoVec, s::MP.ListState) = Polynomial(collect(a), x)
@@ -227,4 +238,22 @@ function MP.polynomial(Q::AbstractMatrix, mv::MonomialVector{C}, ::Type{T}) wher
         end
         polynomialclean(v, a, Z)
     end
+end
+
+function MA.mutable_operate!(::typeof(zero), p::Polynomial)
+    empty!(p.a)
+    empty!(p.x.Z)
+    return p
+end
+function MA.mutable_operate!(::typeof(one), p::Polynomial{C, T}) where {C, T}
+    if isempty(p.a)
+        push!(p.a, one(T))
+        push!(p.x.Z, zeros(Int, length(p.x.vars)))
+    else
+        resize!(p.a, 1)
+        MA.mutable_operate!(one, p.a[1])
+        resize!(p.x.Z, 1)
+        MA.mutable_operate!(zero, p.x.Z[1])
+    end
+    return p
 end

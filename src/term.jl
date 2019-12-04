@@ -50,3 +50,20 @@ Base.copy(t::T) where {T<:Term} = T(copy(t.α), copy(t.x))
 MP.coefficient(t::Term) = t.α
 MP.monomial(t::Term) = t.x
 _vars(t) = _vars(t.x)
+
+MA.mutability(::Type{Term{C, T}}) where {C, T} = MA.mutability(T)
+function MA.mutable_operate_to!(t::Term, ::typeof(*), t1::MP.AbstractTermLike, t2::MP.AbstractTermLike)
+    MA.mutable_operate_to!(t.α, *, coefficient(t1), coefficient(t2))
+    MA.mutable_operate_to!(t.x, *, monomial(t1), monomial(t2))
+    return t
+end
+function MA.mutable_operate!(::typeof(*), t1::Term, t2::MP.AbstractTermLike)
+    MA.mutable_operate!(*, t1.α, coefficient(t2))
+    MA.mutable_operate!(*, t1.x, monomial(t2))
+    return t1
+end
+function MA.mutable_operate!(::typeof(one), t::Term)
+    MA.mutable_operate!(one, t.α)
+    MA.mutable_operate!(zero, t.x.z)
+    return t
+end

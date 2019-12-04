@@ -17,13 +17,7 @@ Base.:(-)(x::DMonomialLike, y::DMonomialLike) = Term(x) - Term(y)
 
 _getindex(p::Polynomial, i) = p[i]
 _getindex(t::Term, i) = t
-function plusorminus(p::TermPoly{C, S}, q::TermPoly{C, T}, op) where {C, S, T}
-    varsvec = [_vars(p), _vars(q)]
-    allvars, maps = mergevars(varsvec)
-    nvars = length(allvars)
-    U = Base.promote_op(op, S, T)
-    a = Vector{U}()
-    Z = Vector{Vector{Int}}()
+function _plusorminus_to!(a::Vector{U}, Z::Vector{Vector{Int}}, op::Function, p::TermPoly{C}, q::TermPoly{C}, maps, nvars) where {C, U}
     i = j = 1
     while i <= nterms(p) || j <= nterms(q)
         z = zeros(Int, nvars)
@@ -48,8 +42,31 @@ function plusorminus(p::TermPoly{C, S}, q::TermPoly{C, T}, op) where {C, S, T}
         push!(a, α)
         push!(Z, z)
     end
-
+end
+function plusorminus(p::TermPoly{C, S}, q::TermPoly{C, T}, op::Function) where {C, S, T}
+    varsvec = [_vars(p), _vars(q)]
+    allvars, maps = mergevars(varsvec)
+    U = MA.promote_operation(op, S, T)
+    a = U[]
+    Z = Vector{Int}[]
+    _plusorminus_to!(a, Z, op, p, q, maps, length(allvars))
     Polynomial(a, MonomialVector{C}(allvars, Z))
+end
+
+function MA.mutable_operate_to!(output::Polynomial{C}, op::Union{typeof(+), typeof(-)},
+                                p::TermPoly{C}, q::TermPoly{C}) where C
+    if output === p || output === q
+        # Otherwise, `_plusorminus_to!` never finishes
+        error("Cannot call `mutable_operate_to!` with the output equal to `p` or `q`, call `mutable_operate!` instead.")
+    end
+    varsvec = [_vars(p), _vars(q)]
+    allvars, maps = mergevars(varsvec)
+    resize!(output.x.vars, length(allvars))
+    copyto!(output.x.vars, allvars)
+    empty!(output.a)
+    empty!(output.x.Z)
+    _plusorminus_to!(output.a, output.x.Z, op, p, q, maps, length(allvars))
+    return output
 end
 
 function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial,

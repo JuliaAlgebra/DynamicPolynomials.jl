@@ -67,35 +67,47 @@ end
 Base.:(*)(p::Polynomial, t::Term) = _term_poly_mult(t, p, (α, β) -> β * α)
 Base.:(*)(t::Term, p::Polynomial) = _term_poly_mult(t, p, *)
 _sumprod(a, b) = a * b + a * b
-function Base.:(*)(p::Polynomial{C, S}, q::Polynomial{C, T}) where {C, S, T}
-    U = Base.promote_op(_sumprod, S, T)
-    if iszero(p) || iszero(q)
-        zero(Polynomial{C, U})
+function _mul(::Type{T}, p::Polynomial{C}, q::Polynomial{C}) where {C, T}
+    samevars = _vars(p) == _vars(q)
+    if samevars
+        allvars = _vars(p)
     else
-        samevars = _vars(p) == _vars(q)
-        if samevars
-            allvars = _vars(p)
-        else
-            allvars, maps = mergevars([_vars(p), _vars(q)])
-        end
-        N = length(p)*length(q)
-        Z = Vector{Vector{Int}}(undef, N)
-        a = Vector{U}(undef, N)
-        i = 0
-        for u in p
-            for v in q
-                if samevars
-                    z = u.x.z + v.x.z
-                else
-                    z = zeros(Int, length(allvars))
-                    z[maps[1]] += u.x.z
-                    z[maps[2]] += v.x.z
-                end
-                i += 1
-                Z[i] = z
-                a[i] = u.α * v.α
-            end
-        end
-        polynomialclean(allvars, a, Z)
+        allvars, maps = mergevars([_vars(p), _vars(q)])
     end
+    N = length(p) * length(q)
+    Z = Vector{Vector{Int}}(undef, N)
+    a = Vector{T}(undef, N)
+    i = 0
+    for u in p
+        for v in q
+            if samevars
+                z = u.x.z + v.x.z
+            else
+                z = zeros(Int, length(allvars))
+                z[maps[1]] += u.x.z
+                z[maps[2]] += v.x.z
+            end
+            i += 1
+            Z[i] = z
+            a[i] = u.α * v.α
+        end
+    end
+    return allvars, a, Z
+end
+function Base.:(*)(p::Polynomial{C, S}, q::Polynomial{C, T}) where {C, S, T}
+    if iszero(p) || iszero(q)
+        zero(MA.promote_operation(*, p, q))
+    else
+        polynomialclean(_mul(MA.promote_operation(MA.add_mul, S, T), p, q)...)
+    end
+end
+function MA.mutable_operate_to!(p::Polynomial{C, T}, ::typeof(*), q1::Polynomial{C}, q2::Polynomial{C}) where {C, T}
+    if iszero(q1) || iszero(q2)
+        MA.mutable_operate_to!(zero, p)
+    else
+        polynomialclean_to!(p, _mul(T, q1, q2)...)
+    end
+end
+function MA.mutable_operate!(::typeof(*), p::Polynomial{C}, q::Polynomial{C}) where C
+    return MA.mutable_operate_to!(p, *, p, q)
 end

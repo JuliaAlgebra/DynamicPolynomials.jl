@@ -86,14 +86,12 @@ function _subs(::MP.Eval, p::Polynomial{C, T}, vals::AbstractVector{S}) where {C
     end
 end
 function _subs(::MP.Subs, p::Polynomial{C, T}, vals::AbstractVector{S}) where {C, T, S}
-    Tout = Base.promote_op(*, T, MP.coefficienttype(S))
-    # I need to check for iszero otherwise I get : ArgumentError: reducing over an empty collection is not allowed
-    if iszero(p)
-        zero(Polynomial{C, Tout})
-    else
-        convert(Polynomial{C, Tout}, sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), 1:length(p)))
+    Tout = MA.promote_operation(*, T, MP.coefficienttype(S))
+    q = zero(Polynomial{C, Tout})
+    for i in 1:length(p.a)
+        MA.mutable_operate!(+, q, p.a[i] * monoeval(p.x.Z[i], vals))
     end
-
+    return q
 end
 
 function MP.substitute(st::MP.AbstractSubstitutionType, p::PolyType, s::MP.Substitutions)
