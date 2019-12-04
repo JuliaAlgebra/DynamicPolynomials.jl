@@ -48,7 +48,7 @@ function Base.:(*)(p::Polynomial, x::DMonomialLike)
 end
 
 function _term_poly_mult(t::Term{C, S}, p::Polynomial{C, T}, op::Function) where {C, S, T}
-    U = Base.promote_op(op, S, T)
+    U = MA.promote_operation(op, S, T)
     if iszero(t)
         zero(Polynomial{C, U})
     else
@@ -96,7 +96,7 @@ function _mul(::Type{T}, p::Polynomial{C}, q::Polynomial{C}) where {C, T}
 end
 function Base.:(*)(p::Polynomial{C, S}, q::Polynomial{C, T}) where {C, S, T}
     if iszero(p) || iszero(q)
-        zero(MA.promote_operation(*, p, q))
+        zero(MA.promote_operation(*, typeof(p), typeof(q)))
     else
         polynomialclean(_mul(MA.promote_operation(MA.add_mul, S, T), p, q)...)
     end
