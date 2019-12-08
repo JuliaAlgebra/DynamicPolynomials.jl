@@ -35,8 +35,9 @@ function Base.hash(m::MonomialVector, u::UInt)
     end
 end
 
-# /!\ vars not copied, do not mess with vars
-Base.copy(m::MV) where {MV<:MonomialVector} = MV(m.vars, copy(m.Z))
+# vars copied as it may be modifed by `_add_variables!`
+# `copy_if_mutable` recursively copies the vector or vector of integers.
+Base.copy(m::MV) where {MV<:MonomialVector} = MV(copy(m.vars), MA.copy_if_mutable(m.Z))
 function Base.getindex(x::MV, I) where {MV<:MonomialVector}
     MV(x.vars, x.Z[sort(I)])
 end

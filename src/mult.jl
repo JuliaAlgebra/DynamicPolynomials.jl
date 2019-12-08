@@ -31,6 +31,21 @@ include("ncmult.jl")
 
 MP.multconstant(α, x::Monomial)   = Term(α, x)
 MP.mapcoefficientsnz(f::Function, p::Polynomial) = Polynomial(f.(p.a), p.x)
+function MP.mapcoefficientsnz_to!(output::Polynomial, f::Function, t::MP.AbstractTermLike)
+    MP.mapcoefficientsnz_to!(output, f, polynomial(t))
+end
+function MP.mapcoefficientsnz_to!(output::Polynomial, f::Function, p::Polynomial)
+    resize!(output.a, length(p.a))
+    @. output.a = f(p.a)
+    resize!(output.x.vars, length(p.x.vars))
+    copyto!(output.x.vars, p.x.vars)
+    # TODO reuse the part of `Z` that is already in `output`.
+    resize!(output.x.Z, length(p.x.Z))
+    for i in eachindex(p.x.Z)
+        output.x.Z[i] = copy(p.x.Z[i])
+    end
+    return output
+end
 
 # I do not want to cast x to TermContainer because that would force the promotion of eltype(q) with Int
 function Base.:(*)(x::DMonomialLike, p::Polynomial)
@@ -67,7 +82,10 @@ end
 Base.:(*)(p::Polynomial, t::Term) = _term_poly_mult(t, p, (α, β) -> β * α)
 Base.:(*)(t::Term, p::Polynomial) = _term_poly_mult(t, p, *)
 _sumprod(a, b) = a * b + a * b
-function _mul(::Type{T}, p::Polynomial{C}, q::Polynomial{C}) where {C, T}
+function _mul(::Type{T}, p::AbstractPolynomialLike, q::AbstractPolynomialLike) where T
+    return _mul(T, polynomial(p), polynomial(q))
+end
+function _mul(::Type{T}, p::Polynomial{true}, q::Polynomial{true}) where T
     samevars = _vars(p) == _vars(q)
     if samevars
         allvars = _vars(p)
@@ -94,16 +112,30 @@ function _mul(::Type{T}, p::Polynomial{C}, q::Polynomial{C}) where {C, T}
     end
     return allvars, a, Z
 end
-function Base.:(*)(p::Polynomial{C, S}, q::Polynomial{C, T}) where {C, S, T}
+function Base.:(*)(p::Polynomial{true, S}, q::Polynomial{true, T}) where {S, T}
     if iszero(p) || iszero(q)
         zero(MA.promote_operation(*, typeof(p), typeof(q)))
     else
         polynomialclean(_mul(MA.promote_operation(MA.add_mul, S, T), p, q)...)
     end
 end
-function MA.mutable_operate_to!(p::Polynomial{C, T}, ::typeof(*), q1::Polynomial{C}, q2::Polynomial{C}) where {C, T}
+function MA.mutable_operate_to!(p::Polynomial{false, T}, ::typeof(*), q1::MP.AbstractPolynomialLike, q2::MP.AbstractPolynomialLike) where T
     if iszero(q1) || iszero(q2)
-        MA.mutable_operate_to!(zero, p)
+        MA.mutable_operate!(zero, p)
+    else
+        ts = Term{false, T}[]
+        MP.mul_to_terms!(ts, q1, q2)
+        # TODO do better than create tmp
+        tmp = polynomial(ts)
+        copy!(p.a, tmp.a)
+        copy!(p.x.vars, tmp.x.vars)
+        copy!(p.x.Z, tmp.x.Z)
+        return p
+    end
+end
+function MA.mutable_operate_to!(p::Polynomial{true, T}, ::typeof(*), q1::MP.AbstractPolynomialLike, q2::MP.AbstractPolynomialLike) where T
+    if iszero(q1) || iszero(q2)
+        MA.mutable_operate!(zero, p)
     else
         polynomialclean_to!(p, _mul(T, q1, q2)...)
     end

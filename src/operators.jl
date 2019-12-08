@@ -15,6 +15,10 @@ end
 Base.:(+)(x::DMonomialLike, y::DMonomialLike) = Term(x) + Term(y)
 Base.:(-)(x::DMonomialLike, y::DMonomialLike) = Term(x) - Term(y)
 
+# `+(::UniformScaling)` is not defined...
+_unary(::typeof(+), x) = MA.copy_if_mutable(x)
+_unary(::typeof(-), x) = -x
+
 _getindex(p::Polynomial, i) = p[i]
 _getindex(t::Term, i) = t
 function _plusorminus_to!(a::Vector{U}, Z::Vector{Vector{Int}}, op::Function, p::TermPoly{C}, q::TermPoly{C}, maps, nvars) where {C, U}
@@ -24,12 +28,12 @@ function _plusorminus_to!(a::Vector{U}, Z::Vector{Vector{Int}}, op::Function, p:
         if j > nterms(q) || (i <= nterms(p) && _getindex(p, i).x > _getindex(q, j).x)
             t = _getindex(p, i)
             z[maps[1]] = t.x.z
-            α = convert(U, t.α)
+            α = MA.scaling_convert(U, MA.copy_if_mutable(t.α))
             i += 1
         elseif i > nterms(p) || _getindex(q, j).x > _getindex(p, i).x
             t = _getindex(q, j)
             z[maps[2]] = t.x.z
-            α = convert(U, op(t.α))
+            α = MA.scaling_convert(U, _unary(op, t.α))
             j += 1
         else
             t = _getindex(p, i)
@@ -57,7 +61,7 @@ function MA.mutable_operate_to!(output::Polynomial{C}, op::Union{typeof(+), type
                                 p::TermPoly{C}, q::TermPoly{C}) where C
     if output === p || output === q
         # Otherwise, `_plusorminus_to!` never finishes
-        error("Cannot call `mutable_operate_to!` with the output equal to `p` or `q`, call `mutable_operate!` instead.")
+        error("Cannot call `mutable_operate_to!(output, $op, p, q)` with `output` equal to `p` or `q`, call `mutable_operate!` instead.")
     end
     varsvec = [_vars(p), _vars(q)]
     allvars, maps = mergevars(varsvec)
@@ -73,8 +77,14 @@ function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial,
                              q::Union{PolyVar, Monomial, Term})
     return MA.mutable_operate!(op, p, polynomial(q))
 end
-function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial,
-                             q::Polynomial)
+const _NoVarTerm{T} = Tuple{T, Vector{Int}}
+function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{false},
+                             q::Polynomial{false})
+    return MA.mutable_operate_to!(p, op, MA.mutable_copy(p), q)
+end
+# TODO need to check that this also works for non-commutative
+function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{true},
+                             q::Polynomial{true})
     if _vars(p) != _vars(q)
         varsvec = [_vars(p), _vars(q)]
         allvars, maps = mergevars(varsvec)
@@ -88,83 +98,31 @@ function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial,
         _add_variables!(rhs.x, allvars, maps[2])
         return MA.mutable_operate!(op, p, rhs)
     end
-    i = j = 1
-    # Invariant:
-    # The terms p[0] -> p[i-1] are sorted and are smaller to the remaining terms.
-    # The terms p[i] -> p[end] are sorted and still need to be added.
-    # The terms q[j] -> p[end] are sorted and still need to be added.
-    while i <= nterms(p) && j <= nterms(q)
-        comp = samevars_grlex(q.x.Z[j], p.x.Z[i])
-        if comp > 0
-            break
-        end
-        if iszero(comp)
-            p.a[i] = MA.operate!(op, p.a[i], q.a[j])
-            j += 1
-        end
-        i += 1
+    get1(i) = (p.a[i], p.x.Z[i])
+    get2(i) = (MA.scaling_convert(eltype(p.a), MA.copy_if_mutable(q.a[i])), copy(q.x.Z[i]))
+    function set(i, t::_NoVarTerm)
+        p.a[i] = t[1]
+        p.x.Z[i] = t[2]
     end
-    if j <= nterms(q) && i <= nterms(p)
-        # Invariant:
-        # The terms in `tmp` are sorted and still need to be added.
-        # Moreover, they are smaller than the terms p[i] -> p[end].
-        tmp = Queue{Tuple{eltype(p.a), Vector{Int}}}()
-        enqueue!(tmp, (p.a[i], p.x.Z[i]))
-        p.a[i] = q.a[j]
-        p.x.Z[i] = q.x.Z[j]
-        i += 1
-        j += 1
-        while !isempty(tmp) && j <= nterms(q)
-            α, z = front(tmp)
-            comp = samevars_grlex(q.x.Z[j], z)
-            if comp >= 0
-                if comp > 0
-                    α = q.a[j]
-                    z = q.x.Z[j]
-                else
-                    α = MA.operate!(op, α, q.a[j])
-                end
-                j += 1
-            end
-            if comp <= 0
-                dequeue!(tmp)
-            end
-            if i <= nterms(p)
-                enqueue!(tmp, (p.a[i], p.x.Z[i]))
-                p.a[i] = α
-                p.x.Z[i] = z
-            else
-                push!(p.a, α)
-                push!(p.x.Z, z)
-            end
-            i += 1
-        end
-        if !isempty(tmp)
-            @assert j == nterms(q) + 1
-            n = length(tmp)
-            resize!(p.a, length(p.a) + n)
-            resize!(p.x.Z, length(p.x.Z) + n)
-            for k in i:(nterms(p) - n)
-                p.a[k + n] = p.a[k]
-                p.x.Z[k + n] = p.x.Z[k]
-            end
-            for k in i:(i + n - 1)
-                p.a[k], p.x.Z[k] = dequeue!(tmp)
-            end
-        end
+    function push(t::_NoVarTerm)
+        push!(p.a, t[1])
+        push!(p.x.Z, t[2])
     end
-    if j <= nterms(q)
-        resize!(p.a, length(p.a) + nterms(q) - j + 1)
-        resize!(p.x.Z, length(p.x.Z) + nterms(q) - j + 1)
-        while j <= nterms(q)
-            p.a[i] = q.a[j]
-            p.x.Z[i] = q.x.Z[j]
-            i += 1
-            j += 1
-        end
+    compare_monomials(t::_NoVarTerm, j::Int) = samevars_grlex(q.x.Z[j], t[2])
+    compare_monomials(i::Int, j::Int) = compare_monomials(get1(i), j)
+    combine(i::Int, j::Int) = p.a[i] = MA.operate!(op, p.a[i], q.a[j])
+    combine(t::_NoVarTerm, j::Int) = (MA.operate!(op, t[1], q.a[j]), t[2])
+    function resize(n)
+        resize!(p.a, n)
+        resize!(p.x.Z, n)
     end
-    @assert j == nterms(q) + 1
-    @assert i <= nterms(p) + 1
+    # We can modify the coefficient since it's the result of `combine`.
+    keep(t::_NoVarTerm) = !MA.iszero!(t[1])
+    keep(i::Int) = !MA.iszero!(p.a[i])
+    MP.polynomial_merge!(
+        nterms(p), nterms(q), get1, get2, set, push,
+        compare_monomials, combine, keep, resize
+    )
     return p
 end
 
