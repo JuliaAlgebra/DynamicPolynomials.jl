@@ -173,8 +173,7 @@ function polynomialclean(vars::Vector{PolyVar{C}}, adup::Vector{T}, Zdup::Vector
     Polynomial{C, T}(a, MonomialVector{C}(vars, Z))
 end
 function polynomialclean_to!(p::Polynomial{C, T}, vars::Vector{PolyVar{C}}, adup::Vector{T}, Zdup::Vector{Vector{Int}}) where {C, T}
-    resize!(p.x.vars, length(vars))
-    copyto!(p.x.vars, vars)
+    Future.copy!(p.x.vars, vars)
     empty!(p.a)
     empty!(p.x.Z)
     removedups_to!(p.a, p.x.Z, adup, Zdup)

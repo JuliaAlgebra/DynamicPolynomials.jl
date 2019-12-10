@@ -65,8 +65,7 @@ function MA.mutable_operate_to!(output::Polynomial{C}, op::Union{typeof(+), type
     end
     varsvec = [_vars(p), _vars(q)]
     allvars, maps = mergevars(varsvec)
-    resize!(output.x.vars, length(allvars))
-    copyto!(output.x.vars, allvars)
+    Future.copy!(output.x.vars, allvars)
     empty!(output.a)
     empty!(output.x.Z)
     _plusorminus_to!(output.a, output.x.Z, op, p, q, maps, length(allvars))

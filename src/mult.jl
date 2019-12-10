@@ -37,8 +37,7 @@ end
 function MP.mapcoefficientsnz_to!(output::Polynomial, f::Function, p::Polynomial)
     resize!(output.a, length(p.a))
     @. output.a = f(p.a)
-    resize!(output.x.vars, length(p.x.vars))
-    copyto!(output.x.vars, p.x.vars)
+    Future.copy!(output.x.vars, p.x.vars)
     # TODO reuse the part of `Z` that is already in `output`.
     resize!(output.x.Z, length(p.x.Z))
     for i in eachindex(p.x.Z)
@@ -127,9 +126,9 @@ function MA.mutable_operate_to!(p::Polynomial{false, T}, ::typeof(*), q1::MP.Abs
         MP.mul_to_terms!(ts, q1, q2)
         # TODO do better than create tmp
         tmp = polynomial(ts)
-        copy!(p.a, tmp.a)
-        copy!(p.x.vars, tmp.x.vars)
-        copy!(p.x.Z, tmp.x.Z)
+        Future.copy!(p.a, tmp.a)
+        Future.copy!(p.x.vars, tmp.x.vars)
+        Future.copy!(p.x.Z, tmp.x.Z)
         return p
     end
 end

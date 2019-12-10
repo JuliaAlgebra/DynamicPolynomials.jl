@@ -44,7 +44,7 @@ end
 function _subsmap(::MP.Subs, vars::Vector{PolyVar{C}}, s::MP.Substitutions) where {C}
     # Some variable may not be replaced
     vals = Vector{promote_type(_substype(s), PolyVar{C})}(undef, length(vars))
-    copyto!(vals, vars)
+    Future.copy!(vals, vars)
     fillmap!(vals, vars, s...)
     return vals
 end
