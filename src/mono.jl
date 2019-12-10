@@ -35,7 +35,8 @@ end
 Monomial(α::Number) = convert(Monomial{true}, α)
 
 Base.broadcastable(m::Monomial) = Ref(m)
-Base.copy(m::M) where {M<:Monomial} = M(m.vars, copy(m.z))
+MA.mutable_copy(m::M) where {M<:Monomial} = M(copy(m.vars), copy(m.z))
+Base.copy(m::Monomial) = MA.mutable_copy(m)
 
 # Generate canonical reperesentation by removing variables that are not used
 function canonical(m::Monomial)

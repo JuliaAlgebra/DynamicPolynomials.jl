@@ -125,7 +125,7 @@ function MA.mutable_operate_to!(p::Polynomial{false, T}, ::typeof(*), q1::MP.Abs
         ts = Term{false, T}[]
         MP.mul_to_terms!(ts, q1, q2)
         # TODO do better than create tmp
-        tmp = polynomial(ts)
+        tmp = polynomial!(ts)
         Future.copy!(p.a, tmp.a)
         Future.copy!(p.x.vars, tmp.x.vars)
         Future.copy!(p.x.Z, tmp.x.Z)
