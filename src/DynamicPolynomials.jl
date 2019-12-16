@@ -16,8 +16,10 @@ include("mono.jl")
 const DMonomialLike{C} = Union{Monomial{C}, PolyVar{C}}
 MA.mutability(::Type{<:Monomial}) = MA.IsMutable()
 include("term.jl")
+MA.mutability(::Type{Term{C, T}}) where {C, T} = MA.mutability(T)
 include("monovec.jl")
 include("poly.jl")
+MA.mutability(::Type{<:Polynomial}) = MA.IsMutable()
 const TermPoly{C, T} = Union{Term{C, T}, Polynomial{C, T}}
 const PolyType{C} = Union{Polynomial{C}, Term{C}, Monomial{C}, PolyVar{C}}
 MP.variable_union_type(::Union{PolyType{C}, Type{<:PolyType{C}}}) where {C} = PolyVar{C}

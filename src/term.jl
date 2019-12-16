@@ -52,7 +52,6 @@ MP.coefficient(t::Term) = t.α
 MP.monomial(t::Term) = t.x
 _vars(t) = _vars(t.x)
 
-MA.mutability(::Type{Term{C, T}}) where {C, T} = MA.mutability(T)
 function MA.mutable_operate_to!(t::Term, ::typeof(*), t1::MP.AbstractTermLike, t2::MP.AbstractTermLike)
     MA.mutable_operate_to!(t.α, *, coefficient(t1), coefficient(t2))
     MA.mutable_operate_to!(t.x, *, monomial(t1), monomial(t2))
