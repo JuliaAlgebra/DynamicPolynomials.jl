@@ -15,5 +15,6 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 MultivariatePolynomials = "~0.3.2"
+MutableArithmetics = "0.1.1"
 Reexport = ">= 0.2"
 julia = "1"
