@@ -17,9 +17,6 @@ matrix:
 notifications:
   email: false
 
-before_script:
-    - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/JuliaAlgebra/MultivariatePolynomials.jl", rev="bl/mutable_arithmetics"))'
-
 after_success:
   # push coverage results to Coveralls
   - julia -e 'cd(Pkg.dir("DynamicPolynomials")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
