@@ -1,16 +1,25 @@
 module DynamicPolynomials
 
+import Future # For `copy!`
+
 using Reexport
 @reexport using MultivariatePolynomials
 const MP = MultivariatePolynomials
 
+import MutableArithmetics
+const MA = MutableArithmetics
+
+using DataStructures
 
 include("var.jl")
 include("mono.jl")
 const DMonomialLike{C} = Union{Monomial{C}, PolyVar{C}}
+MA.mutability(::Type{<:Monomial}) = MA.IsMutable()
 include("term.jl")
+MA.mutability(::Type{Term{C, T}}) where {C, T} = MA.mutability(T)
 include("monovec.jl")
 include("poly.jl")
+MA.mutability(::Type{<:Polynomial}) = MA.IsMutable()
 const TermPoly{C, T} = Union{Term{C, T}, Polynomial{C, T}}
 const PolyType{C} = Union{Polynomial{C}, Term{C}, Monomial{C}, PolyVar{C}}
 MP.variable_union_type(::Union{PolyType{C}, Type{<:PolyType{C}}}) where {C} = PolyVar{C}
@@ -35,6 +44,7 @@ MP.variables(p::Union{PolyType, MonomialVector, AbstractArray{<:PolyType}}) = _v
 MP.nvariables(p::Union{PolyType, MonomialVector, AbstractArray{<:PolyType}}) = length(_vars(p))
 MP.similarvariable(p::Union{PolyType{C}, Type{<:PolyType{C}}}, ::Type{Val{V}}) where {C, V} = PolyVar{C}(string(V))
 MP.similarvariable(p::Union{PolyType{C}, Type{<:PolyType{C}}}, V::Symbol) where {C} = PolyVar{C}(string(V))
+
 include("promote.jl")
 
 include("operators.jl")

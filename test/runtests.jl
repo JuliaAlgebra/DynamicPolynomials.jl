@@ -6,6 +6,7 @@ using LinearAlgebra
 include("mono.jl")
 include("poly.jl")
 include("comp.jl")
+include("mutable_arithmetics.jl")
 
 # TODO move to MultivariatePolynomials.jl
 @testset "Subs with no variables" begin

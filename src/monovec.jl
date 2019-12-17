@@ -35,8 +35,10 @@ function Base.hash(m::MonomialVector, u::UInt)
     end
 end
 
-# /!\ vars not copied, do not mess with vars
-Base.copy(m::MV) where {MV<:MonomialVector} = MV(m.vars, copy(m.Z))
+# vars copied as it may be modifed by `_add_variables!`
+# `mutable_copy` recursively copies the vector or vector of integers.
+MA.mutable_copy(m::MV) where {MV<:MonomialVector} = MV(copy(m.vars), MA.mutable_copy(m.Z))
+Base.copy(m::MonomialVector) = MA.mutable_copy(m)
 function Base.getindex(x::MV, I) where {MV<:MonomialVector}
     MV(x.vars, x.Z[sort(I)])
 end
@@ -238,4 +240,17 @@ function MP.mergemonovec(ms::Vector{MonomialVector{C}}) where {C}
     end
     # There is no duplicate by construction
     return MonomialVector{C}(buildZvarsvec(PolyVar{C}, X)...)
+end
+
+function _add_variables!(monos::MonomialVector{C}, allvars::Vector{PolyVar{C}}, map) where C
+    Future.copy!(monos.vars, allvars)
+    if !isempty(monos.Z)
+        tmp = similar(first(monos.Z))
+        for z in monos.Z
+            Future.copy!(tmp, z)
+            resize!(z, length(allvars))
+            fill!(z, 0)
+            z[map] = tmp
+        end
+    end
 end

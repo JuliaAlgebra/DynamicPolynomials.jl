@@ -45,8 +45,25 @@ Base.broadcastable(t::Term) = Ref(t)
 
 #Base.convert{C, T}(::Type{TermContainer{C, T}}, t::Term{C}) = Term{C, T}(t)
 
-Base.copy(t::T) where {T<:Term} = T(copy(t.α), copy(t.x))
+MA.mutable_copy(t::T) where {T<:Term} = T(MA.copy_if_mutable(t.α), MA.mutable_copy(t.x))
+Base.copy(t::Term) = MA.mutable_copy(t)
 
 MP.coefficient(t::Term) = t.α
 MP.monomial(t::Term) = t.x
 _vars(t) = _vars(t.x)
+
+function MA.mutable_operate_to!(t::Term, ::typeof(*), t1::MP.AbstractTermLike, t2::MP.AbstractTermLike)
+    MA.mutable_operate_to!(t.α, *, coefficient(t1), coefficient(t2))
+    MA.mutable_operate_to!(t.x, *, monomial(t1), monomial(t2))
+    return t
+end
+function MA.mutable_operate!(::typeof(*), t1::Term, t2::MP.AbstractTermLike)
+    MA.mutable_operate!(*, t1.α, coefficient(t2))
+    MA.mutable_operate!(*, t1.x, monomial(t2))
+    return t1
+end
+function MA.mutable_operate!(::typeof(one), t::Term)
+    MA.mutable_operate!(one, t.α)
+    MA.mutable_operate!(zero, t.x.z)
+    return t
+end
