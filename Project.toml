@@ -14,7 +14,8 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
+DataStructures = "0.17"
 MultivariatePolynomials = "~0.3.3"
 MutableArithmetics = "0.1.1"
-Reexport = ">= 0.2"
+Reexport = "0.2"
 julia = "1"
