@@ -4,8 +4,7 @@ function multiplyexistingvar(v::Vector{PolyVar{C}}, x::PolyVar{C}, i::Int) where
         newz[i] += 1
         newz
     end
-    # /!\ v not copied for efficiency, do not mess up with vars
-    v, updatez
+    copy(v), updatez
 end
 function insertvar(v::Vector{PolyVar{C}}, x::PolyVar{C}, i::Int) where {C}
     n = length(v)
@@ -29,8 +28,8 @@ end
 include("cmult.jl")
 include("ncmult.jl")
 
-MP.multconstant(α, x::Monomial)   = Term(α, x)
-MP.mapcoefficientsnz(f::Function, p::Polynomial) = Polynomial(f.(p.a), p.x)
+MP.multconstant(α, x::Monomial)   = Term(α, MA.mutable_copy(x))
+MP.mapcoefficientsnz(f::Function, p::Polynomial) = Polynomial(map(f, p.a), MA.mutable_copy(p.x))
 function MP.mapcoefficientsnz_to!(output::Polynomial, f::Function, t::MP.AbstractTermLike)
     MP.mapcoefficientsnz_to!(output, f, polynomial(t))
 end
@@ -48,17 +47,14 @@ end
 
 # I do not want to cast x to TermContainer because that would force the promotion of eltype(q) with Int
 function Base.:(*)(x::DMonomialLike, p::Polynomial)
-    # /!\ No copy of a is done
-    Polynomial(p.a, x*p.x)
+    Polynomial(MA.mutable_copy(p.a), x*p.x)
 end
 function Base.:(*)(x::DMonomialLike{false}, p::Polynomial)
-    # /!\ No copy of a is done
     # Order may change, e.g. y * (x + y) = y^2 + yx
-    Polynomial(monovec(p.a, [x*m for m in p.x])...)
+    Polynomial(monovec(MA.mutable_copy(p.a), [x*m for m in p.x])...)
 end
 function Base.:(*)(p::Polynomial, x::DMonomialLike)
-    # /!\ No copy of a is done
-    Polynomial(p.a, p.x*x)
+    Polynomial(MA.mutable_copy(p.a), p.x*x)
 end
 
 function _term_poly_mult(t::Term{C, S}, p::Polynomial{C, T}, op::Function) where {C, S, T}
@@ -87,7 +83,7 @@ end
 function _mul(::Type{T}, p::Polynomial{true}, q::Polynomial{true}) where T
     samevars = _vars(p) == _vars(q)
     if samevars
-        allvars = _vars(p)
+        allvars = copy(_vars(p))
     else
         allvars, maps = mergevars([_vars(p), _vars(q)])
     end
