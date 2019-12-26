@@ -15,10 +15,6 @@ end
 Base.:(+)(x::DMonomialLike, y::DMonomialLike) = Term(x) + Term(y)
 Base.:(-)(x::DMonomialLike, y::DMonomialLike) = Term(x) - Term(y)
 
-# `+(::UniformScaling)` is not defined...
-_unary(::typeof(+), x) = MA.copy_if_mutable(x)
-_unary(::typeof(-), x) = -x
-
 _getindex(p::Polynomial, i) = p[i]
 _getindex(t::Term, i) = t
 function _plusorminus_to!(a::Vector{U}, Z::Vector{Vector{Int}}, op::Function, p::TermPoly{C}, q::TermPoly{C}, maps, nvars) where {C, U}
@@ -72,6 +68,11 @@ function MA.mutable_operate_to!(output::Polynomial{C}, op::Union{typeof(+), type
     return output
 end
 
+# TODO replace by MA.operate with MA v0.2
+# `+(::UniformScaling)` is not defined...
+_unary(::typeof(+), x) = MA.copy_if_mutable(x)
+_unary(::typeof(-), x) = -x
+
 function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial,
                              q::Union{PolyVar, Monomial, Term})
     return MA.mutable_operate!(op, p, polynomial(q))
@@ -98,7 +99,7 @@ function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{true
         return MA.mutable_operate!(op, p, rhs)
     end
     get1(i) = (p.a[i], p.x.Z[i])
-    get2(i) = (MA.scaling_convert(eltype(p.a), MA.copy_if_mutable(q.a[i])), copy(q.x.Z[i]))
+    get2(i) = (MA.scaling_convert(eltype(p.a), _unary(op, q.a[i])), copy(q.x.Z[i]))
     function set(i, t::_NoVarTerm)
         p.a[i] = t[1]
         p.x.Z[i] = t[2]
@@ -133,6 +134,11 @@ Base.:(+)(x::Union{Monomial,PolyVar}, y::TermPoly{C}) where C = Term{C}(x) + y
 Base.:(-)(x::TermPoly{T}, y::DMonomialLike) where T = x - Term{T}(y)
 Base.:(-)(x::DMonomialLike, y::TermPoly{T}) where T = Term{T}(x) - y
 
-Base.:(-)(p::Polynomial) = Polynomial(-p.a, p.x)
+# `MA.operate(-, p)` redirects to `-p` as it assumes that `-p` can be modified
+# through the MA API without modifying `p`. We should either copy `p.x` here
+# or implement a `MA.operate(-, p)` that copies it. We choose the first option.
+Base.:(-)(p::Polynomial) = Polynomial(-p.a, copy(p.x))
+# TODO use that with MA v0.2
+#Base.:(-)(p::Polynomial) = Polynomial(map(α -> MA.operate(-, α), p.a), copy(p.x))
 
 include("mult.jl")

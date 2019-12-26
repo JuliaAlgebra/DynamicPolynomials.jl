@@ -57,8 +57,7 @@ function multdivmono!(output_variables::Vector{PolyVar{true}},
 end
 function multdivmono(v::Vector{PolyVar{true}}, x::Monomial{true}, op)
     if v == x.vars
-        # /!\ no copy done here for efficiency, do not mess up with vars
-        w = v
+        w = copy(v)
         updatez = z -> op.(z, x.z)
     else
         w, maps = mergevars([v, x.vars])
