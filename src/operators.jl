@@ -29,7 +29,7 @@ function _plusorminus_to!(a::Vector{U}, Z::Vector{Vector{Int}}, op::Function, p:
         elseif i > nterms(p) || _getindex(q, j).x > _getindex(p, i).x
             t = _getindex(q, j)
             z[maps[2]] = t.x.z
-            α = MA.scaling_convert(U, _unary(op, t.α))
+            α = MA.scaling_convert(U, MA.operate(op, t.α))
             j += 1
         else
             t = _getindex(p, i)
@@ -68,11 +68,6 @@ function MA.mutable_operate_to!(output::Polynomial{C}, op::Union{typeof(+), type
     return output
 end
 
-# TODO replace by MA.operate with MA v0.2
-# `+(::UniformScaling)` is not defined...
-_unary(::typeof(+), x) = MA.copy_if_mutable(x)
-_unary(::typeof(-), x) = -x
-
 function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial,
                              q::Union{PolyVar, Monomial, Term})
     return MA.mutable_operate!(op, p, polynomial(q))
@@ -99,7 +94,7 @@ function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{true
         return MA.mutable_operate!(op, p, rhs)
     end
     get1(i) = (p.a[i], p.x.Z[i])
-    get2(i) = (MA.scaling_convert(eltype(p.a), _unary(op, q.a[i])), copy(q.x.Z[i]))
+    get2(i) = (MA.scaling_convert(eltype(p.a), MA.operate(op, q.a[i])), copy(q.x.Z[i]))
     function set(i, t::_NoVarTerm)
         p.a[i] = t[1]
         p.x.Z[i] = t[2]
