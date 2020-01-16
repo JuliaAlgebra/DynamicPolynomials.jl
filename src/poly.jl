@@ -182,7 +182,8 @@ function polynomialclean_to!(p::Polynomial{C, T}, vars::Vector{PolyVar{C}}, adup
     return p
 end
 
-MP.polynomial(a::AbstractVector, x::DMonoVec, s::MP.ListState) = Polynomial(collect(a), x)
+MP.polynomial!(a::Vector, x::DMonoVec, ::MP.ListState) = Polynomial(a, x)
+MP.polynomial(a::AbstractVector, x::DMonoVec, s::MP.ListState) = MP.polynomial!(collect(a), MA.mutable_copy(x), s)
 
 #MP.polynomial(f::Function, x::AbstractVector) = Polynomial(f, x)
 #MP.polynomial(ts::AbstractVector{Term{C, T}}) where {C, T} = Polynomial(coefficient.(ts), monomial.(ts)) # FIXME invalid age range update
