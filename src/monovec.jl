@@ -39,10 +39,11 @@ end
 # `mutable_copy` recursively copies the vector or vector of integers.
 MA.mutable_copy(m::MV) where {MV<:MonomialVector} = MV(copy(m.vars), MA.mutable_copy(m.Z))
 Base.copy(m::MonomialVector) = MA.mutable_copy(m)
-function Base.getindex(x::MV, I) where {MV<:MonomialVector}
-    MV(x.vars, x.Z[sort(I)])
+function Base.getindex(x::MonomialVector, I)
+    return typeof(x)(x.vars, x.Z[sort(I)])
 end
 Base.getindex(x::MonomialVector, i::Integer) = Monomial(x.vars, x.Z[i])
+Base.getindex(x::MonomialVector, i::CartesianIndex{1}) = x[i.I[1]]
 
 Base.firstindex(x::MonomialVector) = firstindex(x.Z)
 Base.lastindex(x::MonomialVector) = lastindex(x.Z)
