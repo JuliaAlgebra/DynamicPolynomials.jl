@@ -119,7 +119,7 @@ end
 function getZfordegs(n, degs::AbstractVector{Int}, ::Type{Val{C}}, filter::Function) where C
     Z = Vector{Vector{Int}}()
     # For non-commutative, lower degree need to create a vector of exponent as large as for the highest degree
-    maxdeg = maximum(degs)
+    maxdeg = isempty(degs) ? 0 : maximum(degs)
     for deg in sort(degs, rev=true)
         fillZfordeg!(Z, n, deg, Val{C}, filter, maxdeg)
     end
