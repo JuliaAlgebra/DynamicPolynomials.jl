@@ -74,7 +74,7 @@ MP.emptymonovec(vars::AbstractVector{PolyVar{C}}) where {C} = MonomialVector{C}(
 MP.emptymonovec(t::DMonoVecElemNonConstant) = emptymonovec(_vars(t))
 MP.emptymonovec(::Type{<:DMonoVecElemNonConstant{C}}) where {C} = MonomialVector{C}()
 
-function fillZfordeg!(Z, n, deg, ::Type{Val{true}}, filter::Function)
+function fillZfordeg!(Z, n, deg, ::Type{Val{true}}, filter::Function, ::Int)
     z = zeros(Int, n)
     z[1] = deg
     while true
@@ -111,15 +111,17 @@ function fillZrec!(Z, z, i, n, deg, filter::Function)
         end
     end
 end
-function fillZfordeg!(Z, n, deg, ::Type{Val{false}}, filter::Function)
-    z = zeros(Int, deg * n - deg + 1)
+function fillZfordeg!(Z, n, deg, ::Type{Val{false}}, filter::Function, maxdeg::Int)
+    z = zeros(Int, maxdeg * n - maxdeg + 1)
     fillZrec!(Z, z, 1, n, deg, filter)
 end
 # List exponents in decreasing Graded Lexicographic Order
 function getZfordegs(n, degs::AbstractVector{Int}, ::Type{Val{C}}, filter::Function) where C
     Z = Vector{Vector{Int}}()
+    # For non-commutative, lower degree need to create a vector of exponent as large as for the highest degree
+    maxdeg = maximum(degs)
     for deg in sort(degs, rev=true)
-        fillZfordeg!(Z, n, deg, Val{C}, filter)
+        fillZfordeg!(Z, n, deg, Val{C}, filter, maxdeg)
     end
     @assert issorted(Z, rev=true, lt=grlex)
     Z
@@ -134,6 +136,7 @@ function getvarsforlength(vars::Vector{PolyVar{false}}, len::Int)
     map(i -> vars[((i-1) % n) + 1], 1:len)
 end
 function MonomialVector(vars::Vector{PolyVar{false}}, degs::AbstractVector{Int}, filter::Function = x->true)
+    vars = unique!(sort(vars, rev=true))
     Z = getZfordegs(length(vars), degs, Val{false}, z -> filter(Monomial(getvarsforlength(vars, length(z)), z)))
     v = isempty(Z) ? vars : getvarsforlength(vars, length(first(Z)))
     MonomialVector{false}(v, Z)
