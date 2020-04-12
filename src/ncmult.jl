@@ -11,17 +11,17 @@ function multiplyvar(v::Vector{PolyVar{false}}, z::Vector{Int}, x::PolyVar{false
     while i > 0 && z[i] == 0
         i -= 1
     end
-    if v[i] == x
+    if i > 0 && v[i] == x
         multiplyexistingvar(v, x, i)
     else
         #   ---->
         # \  |\  |\
         #  \ | \ | \
         #   \|  \|  \
-        # If z[i] > x, we wait either for a rise (v[i] > v[i-1]) or v[i] < x
+        # If v[i] > x, we wait either for a rise (v[i] > v[i-1]) or v[i] < x
         # Otherwise, we first wait for a drop and then wait for the same thing
         ndrop = 0
-        if v[i] > x
+        if i > 0 && v[i] > x
             droplim1 = 0
             droplim2 = 1
         else
@@ -51,7 +51,7 @@ function multiplyvar(x::PolyVar{false}, v::Vector{PolyVar{false}}, z::Vector{Int
     while i <= length(v) && z[i] == 0
         i += 1
     end
-    if v[i] == x
+    if i <= length(v) && v[i] == x
         multiplyexistingvar(v, x, i)
     else
         #   <----
@@ -61,7 +61,7 @@ function multiplyvar(x::PolyVar{false}, v::Vector{PolyVar{false}}, z::Vector{Int
         # If z[i] < x, we wait either for a drop (v[i] < v[i+1]) or v[i] > x
         # Otherwise, we first wait for a drop and then wait for the same thing
         ndrop = 0
-        if v[i] < x
+        if i <= length(v) && v[i] < x
             droplim1 = 0
             droplim2 = 1
         else
