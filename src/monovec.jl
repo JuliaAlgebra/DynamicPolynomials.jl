@@ -45,6 +45,11 @@ end
 Base.getindex(x::MonomialVector, i::Integer) = Monomial(x.vars, x.Z[i])
 Base.getindex(x::MonomialVector, i::CartesianIndex{1}) = x[i.I[1]]
 
+function Base.deleteat!(x::MonomialVector, i)
+    deleteat!(x.Z, i)
+    return x
+end
+
 Base.firstindex(x::MonomialVector) = firstindex(x.Z)
 Base.lastindex(x::MonomialVector) = lastindex(x.Z)
 Base.size(x::MonomialVector) = (length(x),)

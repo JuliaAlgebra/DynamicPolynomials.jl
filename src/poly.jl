@@ -121,6 +121,11 @@ MP.leadingterm(p::Polynomial) = iszero(p) ? zeroterm(p) : first(terms(p))
 function MP.removeleadingterm(p::Polynomial)
     Polynomial(p.a[2:end], p.x[2:end])
 end
+function MA.mutable_operate!(::typeof(MP.removeleadingterm), p::Polynomial)
+    deleteat!(p.a, 1)
+    deleteat!(p.x, 1)
+    return p
+end
 function MP.removemonomials(p::Polynomial, x::MonomialVector)
     # use the fact that monomials are sorted to do this O(n) instead of O(n^2)
     j = 1
