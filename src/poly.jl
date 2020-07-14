@@ -23,8 +23,8 @@ MA.mutable_copy(p::Polynomial{C, T}) where {C, T} = Polynomial{C, T}(MA.mutable_
 Base.copy(p::Polynomial) = MA.mutable_copy(p)
 Base.zero(::Type{Polynomial{C, T}}) where {C, T} = Polynomial(T[], MonomialVector{C}())
 Base.one(::Type{Polynomial{C, T}}) where {C, T} = Polynomial([one(T)], MonomialVector{C}(PolyVar{C}[], [Int[]]))
-Base.zero(p::Polynomial{C, T}) where {C, T} = Polynomial(T[], emptymonovec(_vars(p)))
-Base.one(p::Polynomial{C, T}) where {C, T} = Polynomial([one(T)], MonomialVector(_vars(p), [zeros(Int, nvariables(p))]))
+Base.zero(p::Polynomial{C, T}) where {C, T} = Polynomial(T[], emptymonovec(copy(_vars(p))))
+Base.one(p::Polynomial{C, T}) where {C, T} = Polynomial([one(T)], MonomialVector(copy(_vars(p)), [zeros(Int, nvariables(p))]))
 
 Polynomial{C, T}(a::AbstractVector, x::MonomialVector) where {C, T} = Polynomial{C, T}(Vector{T}(a), x)
 Polynomial{C, T}(a::AbstractVector, X::DMonoVec) where {C, T} = Polynomial{C, T}(monovec(a, X)...)
