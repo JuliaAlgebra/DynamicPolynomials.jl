@@ -11,7 +11,7 @@ struct Monomial{C} <: AbstractMonomial
 
     function Monomial{C}(vars::Vector{PolyVar{C}}, z::Vector{Int}) where {C}
         if length(vars) != length(z)
-            throw(ArgumentError("There should be as many vars than exponents"))
+            throw(ArgumentError("There should be as many variables as exponents"))
         end
         new(vars, z)
     end

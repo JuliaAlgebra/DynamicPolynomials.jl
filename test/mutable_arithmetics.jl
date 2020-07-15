@@ -27,4 +27,13 @@ using DynamicPolynomials
     @test nterms(p) == 10
     @test issorted(monomials(p), rev=true)
     @test p == T(2)x^3 + T(5)x^2 + T(4)x * y + T(4)y^2 + T(5)x + T(2) + q
+
+    @testset "Issue #62" begin
+        @polyvar x y
+        p = x^2 + x + 1
+        q = rem(p, [x^2-y])
+        @test q == x + y + 1 
+    end
 end
+
+
