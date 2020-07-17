@@ -83,14 +83,20 @@ function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{true
     if _vars(p) != _vars(q)
         varsvec = [_vars(p), _vars(q)]
         allvars, maps = mergevars(varsvec)
-        _add_variables!(p.x, allvars, maps[1])
-        # We could avoid promoting `q` to the same variables
-        # like in `plusorminus` to avoid extra allocation but it then
-        # gives slower comparison. There is a tradeoff and the approach used here
-        # should be better of `q` has less terms and then the same term is compared
-        # many times.
-        rhs = Polynomial(q.a, copy(q.x))
-        _add_variables!(rhs.x, allvars, maps[2])
+        if length(allvars) != length(_vars(p))
+            _add_variables!(p.x, allvars, maps[1])
+        end
+        if length(allvars) == length(_vars(q))
+            rhs = q
+        else
+            # We could avoid promoting `q` to the same variables
+            # like in `plusorminus` to avoid extra allocation but it then
+            # gives slower comparison. There is a tradeoff and the approach used here
+            # should be better of `q` has less terms and then the same term is compared
+            # many times.
+            rhs = Polynomial(q.a, copy(q.x))
+            _add_variables!(rhs.x, allvars, maps[2])
+        end
         return MA.mutable_operate!(op, p, rhs)
     end
     get1(i) = (p.a[i], p.x.Z[i])
