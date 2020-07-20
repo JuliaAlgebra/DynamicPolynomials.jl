@@ -80,3 +80,10 @@ MP.monomial(m::Monomial) = m
 #    end
 #    i > length(m1.z)
 #end
+function _add_variables!(mono::Monomial, allvars, map)
+    Future.copy!(mono.vars, allvars)
+    tmp = copy(mono.z)
+    resize!(mono.z, length(allvars))
+    fill!(mono.z, 0)
+    mono.z[map] = tmp
+end

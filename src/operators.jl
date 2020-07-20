@@ -68,9 +68,54 @@ function MA.mutable_operate_to!(output::Polynomial{C}, op::Union{typeof(+), type
     return output
 end
 
+_copy_monos(m::Monomial) = copy(m)
+_copy_monos(t::Term) = Term(t.α, copy(t.x))
+_copy_monos(p::Polynomial) = Polynomial(p.a, copy(p.x))
+function _merge_vars!(p, q)
+    if _vars(p) == _vars(q)
+        return q
+    end
+    varsvec = [_vars(p), _vars(q)]
+    allvars, maps = mergevars(varsvec)
+    if length(allvars) != length(_vars(p))
+        _add_variables!(p.x, allvars, maps[1])
+    end
+    if length(allvars) != length(_vars(q))
+        # We could avoid promoting `q` to the same variables
+        # like in `plusorminus` to avoid extra allocation but it then
+        # gives slower comparison. There is a tradeoff and the approach used here
+        # should be better of `q` has less terms and then the same term is compared
+        # many times.
+        q = _copy_monos(q)
+        _add_variables!(q, allvars, maps[2])
+    end
+    return q
+end
 function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial,
-                             q::Union{PolyVar, Monomial, Term})
-    return MA.mutable_operate!(op, p, polynomial(q))
+                             v::PolyVar)
+    return MA.mutable_operate!(op, p, monomial(v))
+end
+function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial,
+                             t::Union{Monomial, Term})
+    t = _merge_vars!(p, t)
+    z = MP.exponents(t)
+    i = findfirst(eachindex(p.a)) do i
+        return samevars_grlex(p.x.Z[i], z) <= 0
+    end
+    if i === nothing
+        push!(p.a, MA.operate(op, MP.coefficient(t)))
+        push!(p.x.Z, copy(z))
+    else
+        comp = samevars_grlex(p.x.Z[i], z)
+        if iszero(comp)
+            MA.operate!(op, p.a[i], coefficient(t))
+        else
+            @assert comp < 0
+            insert!(p.a, i, MA.operate(op, MP.coefficient(t)))
+            insert!(p.x.Z, i, copy(z))
+        end
+    end
+    return p
 end
 const _NoVarTerm{T} = Tuple{T, Vector{Int}}
 function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{false},
@@ -80,25 +125,7 @@ end
 # TODO need to check that this also works for non-commutative
 function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{true},
                              q::Polynomial{true})
-    if _vars(p) != _vars(q)
-        varsvec = [_vars(p), _vars(q)]
-        allvars, maps = mergevars(varsvec)
-        if length(allvars) != length(_vars(p))
-            _add_variables!(p.x, allvars, maps[1])
-        end
-        if length(allvars) == length(_vars(q))
-            rhs = q
-        else
-            # We could avoid promoting `q` to the same variables
-            # like in `plusorminus` to avoid extra allocation but it then
-            # gives slower comparison. There is a tradeoff and the approach used here
-            # should be better of `q` has less terms and then the same term is compared
-            # many times.
-            rhs = Polynomial(q.a, copy(q.x))
-            _add_variables!(rhs.x, allvars, maps[2])
-        end
-        return MA.mutable_operate!(op, p, rhs)
-    end
+    q = _merge_vars!(p, q)
     get1(i) = (p.a[i], p.x.Z[i])
     get2(i) = (MA.scaling_convert(eltype(p.a), MA.operate(op, q.a[i])), copy(q.x.Z[i]))
     function set(i, t::_NoVarTerm)

@@ -262,3 +262,4 @@ function MA.mutable_operate!(::typeof(one), p::Polynomial{C, T}) where {C, T}
     end
     return p
 end
+_add_variables!(p::Polynomial, allvars, map) = _add_variables(p.x, allvars, map)
