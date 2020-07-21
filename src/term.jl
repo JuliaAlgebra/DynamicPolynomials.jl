@@ -68,4 +68,4 @@ function MA.mutable_operate!(::typeof(one), t::Term)
     MA.mutable_operate!(zero, t.x.z)
     return t
 end
-_add_variables!(t::Term, allvars, map) = _add_variables(t.x, allvars, map)
+_add_variables!(t::Term, allvars, map) = _add_variables!(t.x, allvars, map)
