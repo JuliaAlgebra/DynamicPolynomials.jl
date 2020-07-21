@@ -108,7 +108,7 @@ function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial,
     else
         comp = samevars_grlex(p.x.Z[i], z)
         if iszero(comp)
-            MA.operate!(op, p.a[i], coefficient(t))
+            p.a[i] = MA.operate!(op, p.a[i], coefficient(t))
         else
             @assert comp < 0
             insert!(p.a, i, MA.operate(op, MP.coefficient(t)))
