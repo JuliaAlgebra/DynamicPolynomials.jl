@@ -13,6 +13,7 @@ using LinearAlgebra
 end
 
 @testset "Issue #71" begin
+    @ncpolyvar x y
     @test x^0 * y == y * x^0
 end
 

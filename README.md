@@ -3,7 +3,7 @@
 | **Build Status** | **References to cite** |
 |:----------------:|:----------------------:|
 | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] | [![DOI][zenodo-img]][zenodo-url] |
-| [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] | |
+| [![Codecov branch][codecov-img]][codecov-url] | |
 
 Sparse dynamic representation of multivariate polynomials that can be used with [MultivariatePolynomials](https://github.com/JuliaAlgebra/MultivariatePolynomials.jl) (see the documentation there for more information).
 Both commutative and non-commutative variables are supported.
@@ -49,8 +49,6 @@ Therefore, this order cannot be used for substitution, even as a default (see [h
 [build-url]: https://travis-ci.org/JuliaAlgebra/DynamicPolynomials.jl
 [winbuild-img]: https://ci.appveyor.com/api/projects/status/wu5dnoq4x3jvjft8?svg=true
 [winbuild-url]: https://ci.appveyor.com/project/blegat/dynamicpolynomials-jl
-[coveralls-img]: https://coveralls.io/repos/github/JuliaAlgebra/DynamicPolynomials.jl/badge.svg?branch=master
-[coveralls-url]: https://coveralls.io/github/JuliaAlgebra/DynamicPolynomials.jl?branch=master
 [codecov-img]: http://codecov.io/github/JuliaAlgebra/DynamicPolynomials.jl/coverage.svg?branch=master
 [codecov-url]: http://codecov.io/github/JuliaAlgebra/DynamicPolynomials.jl?branch=master
 
