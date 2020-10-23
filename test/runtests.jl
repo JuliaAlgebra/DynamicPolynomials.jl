@@ -12,6 +12,10 @@ using LinearAlgebra
     @test polynomial(Q, monovec(x)) == p
 end
 
+@testset "Issue #71" begin
+    @test x^0 * y == y * x^0
+end
+
 include("mono.jl")
 include("poly.jl")
 include("comp.jl")

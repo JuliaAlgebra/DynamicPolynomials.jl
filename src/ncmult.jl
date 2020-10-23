@@ -30,7 +30,7 @@ function multiplyvar(v::Vector{PolyVar{false}}, z::Vector{Int}, x::PolyVar{false
         end
         i += 1
         while i <= length(v) && v[i] != x
-            if v[i] > v[i-1]
+            if i > 1 && v[i] > v[i - 1]
                 ndrop += 1
             end
             if ndrop >= droplim2 || (ndrop >= droplim1 && v[i] < x)
@@ -70,7 +70,7 @@ function multiplyvar(x::PolyVar{false}, v::Vector{PolyVar{false}}, z::Vector{Int
         end
         i -= 1
         while i > 0 && v[i] != x
-            if v[i] < v[i+1]
+            if i > 1 && v[i] < v[i + 1]
                 ndrop += 1
             end
             if ndrop >= droplim2 || (ndrop >= droplim1 && v[i] > x)
