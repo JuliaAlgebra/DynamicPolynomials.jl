@@ -3,6 +3,15 @@ using MultivariatePolynomials
 using Test
 using LinearAlgebra
 
+# TODO move to MP
+@testset "Noncommutative quadratic" begin
+    @ncpolyvar x[1:2]
+    Q = Hermitian([1 2 + 3im; 2 - 3im 4])
+    p = 1x[1]^2 + (2 + 3im) * x[1] * x[2] + (2 - 3im) * x[2] * x[1] + 4x[2]^2
+    @test polynomial(Q, x) == p
+    @test polynomial(Q, monovec(x)) == p
+end
+
 include("mono.jl")
 include("poly.jl")
 include("comp.jl")

@@ -228,13 +228,12 @@ function MP.polynomial(Q::AbstractMatrix, mv::MonomialVector{C}, ::Type{T}) wher
                 # for j in 1:n wouldn't be cache friendly for Q
                 for j in i:n
                     k = trimap(i, j, n)
-                    q = Q[i, j]
                     x[offset+k] = mv[i] * mv[j]
-                    a[offset+k] = q
+                    a[offset+k] = Q[i, j]
                     if i != j
                         offset += 1
                         x[offset+k] = mv[j] * mv[i]
-                        a[offset+k] = q
+                        a[offset+k] = Q[j, i]
                     end
                 end
             end
