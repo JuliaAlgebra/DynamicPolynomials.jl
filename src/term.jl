@@ -4,6 +4,7 @@ struct Term{C, T} <: AbstractTerm{T}
     α::T
     x::Monomial{C}
 end
+MP.term(α, mono::Monomial) = Term(α, mono)
 
 iscomm(::Type{Term{C, T}}) where {C, T} = C
 

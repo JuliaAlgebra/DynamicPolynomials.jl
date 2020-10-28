@@ -28,7 +28,7 @@ end
 include("cmult.jl")
 include("ncmult.jl")
 
-MP.multconstant(α, x::Monomial)   = Term(α, MA.mutable_copy(x))
+MP.multconstant(α, x::Monomial)   = MP.term(α, MA.mutable_copy(x))
 MP.mapcoefficientsnz(f::Function, p::Polynomial) = Polynomial(map(f, p.a), MA.mutable_copy(p.x))
 function MP.mapcoefficientsnz_to!(output::Polynomial, f::Function, t::MP.AbstractTermLike)
     MP.mapcoefficientsnz_to!(output, f, polynomial(t))
