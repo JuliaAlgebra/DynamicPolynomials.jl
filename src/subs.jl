@@ -7,7 +7,14 @@ function Base.setindex!(sv::SafeValues, v, i::Int)
     sv.values[i] = v
 end
 
-function fillmap!(vals, vars, s::MP.Substitution)
+function fillmap!(vals, vars::Vector{PolyVar{false}}, s::MP.Substitution)
+    for j in eachindex(vars)
+        if vars[j] == s.first
+            vals[j] = s.second
+        end
+    end
+end
+function fillmap!(vals, vars::Vector{PolyVar{true}}, s::MP.Substitution)
     j = findfirst(isequal(s.first), vars)
     if j !== nothing
         vals[j] = s.second
