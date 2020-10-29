@@ -4,34 +4,18 @@ using Test
 using LinearAlgebra
 
 # TODO move to MP
-@testset "Noncommutative quadratic" begin
-    @ncpolyvar x[1:2]
-    Q = Hermitian([1 2 + 3im; 2 - 3im 4])
-    p = 1x[1]^2 + (2 + 3im) * x[1] * x[2] + (2 - 3im) * x[2] * x[1] + 4x[2]^2
-    @test polynomial(Q, x) == p
-    @test polynomial(Q, monovec(x)) == p
-end
-
-@testset "Issue #71" begin
-    @ncpolyvar x y
-    @test x^0 * y == y * x^0
+@testset "Issue #70" begin
+    @ncpolyvar y0 y1 x0 x1
+    p = x1 * x0 * x1
+    @test subs(p, x0 => y0, x1 => y1) == y1 * y0 * y1
+    @test subs(p, x0 => 1) == x1^2
+    @test p(x0 => y0, x1 => y1) == y1 * y0 * y1
 end
 
 include("mono.jl")
 include("poly.jl")
 include("comp.jl")
 include("mutable_arithmetics.jl")
-
-# TODO move to MultivariatePolynomials.jl
-@testset "Subs with no variables" begin
-    @polyvar x
-    t = convert(termtype(x, Int), 3)
-    @test t == @inferred subs(t, x => x + 1)
-    @test t == @inferred subs(t, x => x + 1.0)
-    @test t == @inferred subs(t, x => 1x)
-    @test t == @inferred subs(t, x => 1.0x)
-    @test t == @inferred subs(t, x => 1.0)
-end
 
 module newmodule
     using Test
