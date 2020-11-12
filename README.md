@@ -2,7 +2,7 @@
 
 | **Build Status** | **References to cite** |
 |:----------------:|:----------------------:|
-| [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] | [![DOI][zenodo-img]][zenodo-url] |
+| [![Build Status][build-img]][build-url] | [![DOI][zenodo-img]][zenodo-url] |
 | [![Codecov branch][codecov-img]][codecov-url] | |
 
 Sparse dynamic representation of multivariate polynomials that can be used with [MultivariatePolynomials](https://github.com/JuliaAlgebra/MultivariatePolynomials.jl) (see the documentation there for more information).
@@ -45,10 +45,8 @@ Indeed, the ordering between the `PolyVar` is not alphabetical but rather by ord
 which can be undeterministic with parallel computing.
 Therefore, this order cannot be used for substitution, even as a default (see [here](https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/3) for a discussion about this).
 
-[build-img]: https://travis-ci.org/JuliaAlgebra/DynamicPolynomials.jl.svg?branch=master
-[build-url]: https://travis-ci.org/JuliaAlgebra/DynamicPolynomials.jl
-[winbuild-img]: https://ci.appveyor.com/api/projects/status/wu5dnoq4x3jvjft8?svg=true
-[winbuild-url]: https://ci.appveyor.com/project/blegat/dynamicpolynomials-jl
+[build-img]: https://github.com/JuliaAlgebra/DynamicPolynomials.jl/workflows/CI/badge.svg?branch=master
+[build-url]: https://github.com/JuliaAlgebra/DynamicPolynomials.jl/actions?query=workflow%3ACI
 [codecov-img]: http://codecov.io/github/JuliaAlgebra/DynamicPolynomials.jl/coverage.svg?branch=master
 [codecov-url]: http://codecov.io/github/JuliaAlgebra/DynamicPolynomials.jl?branch=master
 
