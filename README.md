@@ -22,23 +22,49 @@ However, commutativity of `T` and of the variables `+` is always assumed.
 This allows to keep the terms sorted (Graded Lexicographic order is used) in polynomial and measure which enables more efficient operations.
 
 Below is a simple usage example
+
 ```julia
-@polyvar x y # assigns x (resp. y) to a variable of name x (resp. y)
-p = 2x + 3.0x*y^2 + y
-@test differentiate(p, x) # compute the derivative of p with respect to x
-@test differentiate.(p, (x, y)) # compute the gradient of p
-@test p((x, y)=>(y, x)) # replace any x by y and y by x
-@test subs(p, y=>x^2) # replace any occurence of y by x^2
-@test p(x=>1, y=>2) # evaluate p at [1, 2]
+julia> using DynamicPolynomials
+
+julia> @polyvar x y # assigns x (resp. y) to a variable of name x (resp. y)
+(x, y)
+
+julia> p = 2x + 3.0x*y^2 + y # define a polynomial in variables x and y
+3.0xy² + 2.0x + y
+
+julia> differentiate(p, x) # compute the derivative of p with respect to x
+3.0y² + 2.0
+
+julia> differentiate.(p, (x, y)) # compute the gradient of p
+(3.0y² + 2.0, 6.0xy + 1.0)
+
+julia> p((x, y)=>(y, x)) # replace any x by y and y by x
+3.0x²y + x + 2.0y
+
+julia> subs(p, y=>x^2) # replace any occurence of y by x^2
+3.0x⁵ + x² + 2.0x
+
+julia> p(x=>1, y=>2) # evaluate p at [1, 2]
+16.0
 ```
 Below is an example with `@polyvar x[1:n]`
+
 ```julia
-n = 3
-A = rand(n, n)
-@polyvar x[1:n] # assign x to a tuple of variables x1, x2, x3
-p = sum(x .* x) # x_1^2 + x_2^2 + x_3^2
-subs(p, x[1]=>2, x[3]=>3) # x_2^2 + 13
-p(x=>A*vec(x)) # corresponds to dot(A*x, A*x), need vec to convert the tuple to a vector
+julia> n = 3;
+
+julia> @polyvar x[1:n] # assign x to a tuple of variables x1, x2, x3
+(PolyVar{true}[x₁, x₂, x₃],)
+
+julia> p = sum(x .* x) # compute the sum of squares
+x₁² + x₂² + x₃²
+
+julia> subs(p, x[1]=>2, x[3]=>3) # make a partial substitution
+x₂² + 13
+
+julia> A = reshape(1:9, 3, 3);
+
+julia> p(x => A * vec(x))  # corresponds to dot(A*x, A*x), need vec to convert the tuple to a vector
+14x₁² + 64x₁x₂ + 100x₁x₃ + 77x₂² + 244x₂x₃ + 194x₃²
 ```
 Note that, when doing substitution, it is required to give the `PolyVar` ordering that is meant.
 Indeed, the ordering between the `PolyVar` is not alphabetical but rather by order of creation
