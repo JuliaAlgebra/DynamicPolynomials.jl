@@ -29,6 +29,19 @@ include("cmult.jl")
 include("ncmult.jl")
 
 MP.multconstant(α, x::Monomial)   = MP.term(α, MA.mutable_copy(x))
+
+function zero_with_variables( ::Type{Polynomial{C,T}}, vars :: Vector{PolyVar{C}} ) where{C, T}
+    Polynomial( T[], emptymonovec(vars) )
+end
+
+function MP._multconstant(α::T, f, p::Polynomial{C,S} ) where {T, C, S}
+    if iszero(α)
+        zero_with_variables(polynomialtype(p, MA.promote_operation(*, T, S)), variables(p))
+    else
+        MP.mapcoefficientsnz(f, p)
+    end
+end
+
 MP.mapcoefficientsnz(f::Function, p::Polynomial) = Polynomial(map(f, p.a), MA.mutable_copy(p.x))
 function MP.mapcoefficientsnz_to!(output::Polynomial, f::Function, t::MP.AbstractTermLike)
     MP.mapcoefficientsnz_to!(output, f, polynomial(t))
@@ -60,7 +73,7 @@ end
 function _term_poly_mult(t::Term{C, S}, p::Polynomial{C, T}, op::Function) where {C, S, T}
     U = MA.promote_operation(op, S, T)
     if iszero(t)
-        zero(Polynomial{C, U})
+        zero( Polynomial{C,U} )
     else
         n = nterms(p)
         allvars, maps = mergevars([t.x.vars, p.x.vars])
@@ -135,6 +148,7 @@ function MA.mutable_operate_to!(p::Polynomial{true, T}, ::typeof(*), q1::MP.Abst
         polynomialclean_to!(p, _mul(T, q1, q2)...)
     end
 end
+
 function MA.mutable_operate!(::typeof(*), p::Polynomial{C}, q::Polynomial{C}) where C
     return MA.mutable_operate_to!(p, *, p, q)
 end
