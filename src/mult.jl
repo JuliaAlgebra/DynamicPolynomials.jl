@@ -30,11 +30,11 @@ include("ncmult.jl")
 
 MP.multconstant(α, x::Monomial)   = MP.term(α, MA.mutable_copy(x))
 
-function zero_with_variables( ::Type{Polynomial{C,T}}, vars :: Vector{PolyVar{C}} ) where{C, T}
+function zero_with_variables( ::Type{<:TermPoly{C,T}}, vars :: Vector{PolyVar{C}} ) where{C, T}
     Polynomial( T[], emptymonovec(vars) )
 end
 
-function MP._multconstant(α::T, f, p::Polynomial{C,S} ) where {T, C, S}
+function MP._multconstant(α::T, f, p::TermPoly{C,S} ) where {T, C, S}
     if iszero(α)
         zero_with_variables(polynomialtype(p, MA.promote_operation(*, T, S)), variables(p))
     else
@@ -148,7 +148,15 @@ function MA.mutable_operate_to!(p::Polynomial{true, T}, ::typeof(*), q1::MP.Abst
         polynomialclean_to!(p, _mul(T, q1, q2)...)
     end
 end
-
 function MA.mutable_operate!(::typeof(*), p::Polynomial{C}, q::Polynomial{C}) where C
     return MA.mutable_operate_to!(p, *, p, q)
+end
+
+# Overwrite this method for monomial-like terms because
+# otherwise it would check `iszero(α)` and in that case
+# dismiss of the variable of `p` by performing
+# `operate_to!(zero, output :: Polynomial )` which only
+# respects the variables that are stored already
+function MP._multconstant_to!(output, α, f, p :: DMonomialLike)
+    MP.mapcoefficientsnz_to!(output, f, p)
 end
