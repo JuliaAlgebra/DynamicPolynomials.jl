@@ -160,7 +160,7 @@ end
 function MP._multconstant_to!(output::Polynomial, α, f, p :: DMonomialLike)
     if iszero(α)
         MA.mutable_operate!(zero, output)
-        Future.copy!(output.x,vars, variables(p))
+        Future.copy!(output.x.vars, variables(p))
         return output
     else
         MP.mapcoefficientsnz_to!(output, f, p)
