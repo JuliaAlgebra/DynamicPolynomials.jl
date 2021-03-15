@@ -30,8 +30,8 @@ include("ncmult.jl")
 
 MP.multconstant(α, x::Monomial)   = MP.term(α, MA.mutable_copy(x))
 
-function zero_with_variables( ::Type{Polynomial{C,T}}, vars :: Vector{PolyVar{C}} ) where{C, T}
-    Polynomial( T[], emptymonovec(vars) )
+function zero_with_variables(::Type{Polynomial{C,T}}, vars::Vector{PolyVar{C}}) where{C, T}
+    Polynomial(T[], emptymonovec(vars))
 end
 
 function MP._multconstant(α::T, f, p::Polynomial{C,S} ) where {T, C, S}
@@ -73,7 +73,7 @@ end
 function _term_poly_mult(t::Term{C, S}, p::Polynomial{C, T}, op::Function) where {C, S, T}
     U = MA.promote_operation(op, S, T)
     if iszero(t)
-        zero( Polynomial{C,U} )
+        zero(Polynomial{C,U})
     else
         n = nterms(p)
         allvars, maps = mergevars([t.x.vars, p.x.vars])
@@ -159,10 +159,8 @@ end
 # respects the variables that are stored already
 function MP._multconstant_to!(output::Polynomial, α, f, p :: DMonomialLike)
     if iszero(α)
-        empty!(output.a)
-        empty!(output.x.vars)
-        push!(output.x.vars, variables(p)...)
-        empty!(output.x.Z)
+        MA.mutable_operate!(zero, output)
+        Future.copy!(output.x,vars, variables(p))
         return output
     else
         MP.mapcoefficientsnz_to!(output, f, p)
