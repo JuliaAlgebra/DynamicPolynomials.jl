@@ -26,15 +26,25 @@ end
 function multdivmono!(output_variables::Vector{PolyVar{true}},
                       v::Vector{PolyVar{true}}, x::Monomial{true}, op)
     if v == x.vars
-        updatez! = (output, z) -> @. output = op(z, x.z)
+        if output_variables == v
+            updatez! = (output, z) -> begin
+                @. output = op(z, x.z)
+                return
+            end
+        else
+            resize!(output_variables, length(v))
+            copyto!(output_variables, v)
+            updatez! = (output, z) -> begin
+                resize!(output, length(output_variables))
+                @. output = op(z, x.z)
+                return
+            end
+        end
     else
-        w, maps = mergevars([v, x.vars])
+        maps = mergevars_to!(output_variables, [v, x.vars])
         n = length(v)
-        resize!(output_variables, length(w))
-        output_variables[maps[1]] = v[1:n]
         updatez! = (output, z) -> begin
-            resize!(output, length(w))
-            z[maps[1]] = z[1:n]
+            resize!(output, length(output_variables))
             I = maps[1]; i = 1; lI = length(I)
             J = maps[2]; j = 1; lJ = length(J)
             while i <= lI || j <= lJ
