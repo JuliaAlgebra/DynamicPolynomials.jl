@@ -71,12 +71,12 @@ _vars(v::PolyVar) = [v]
 
 iscomm(::Type{PolyVar{C}}) where {C} = C
 
-function mergevars(varsvec::Vector{Vector{PV}}) where {PV<:PolyVar}
+function mergevars_to!(vars::Vector{PV}, varsvec::Vector{Vector{PV}}) where {PV<:PolyVar}
+    empty!(vars)
     n = length(varsvec)
     is = ones(Int, n)
     maps = zeros.(Int, length.(varsvec))
     nonempty = BitSet(findall(!isempty, varsvec))
-    vars = Vector{PV}()
     while !isempty(nonempty)
         imin = 0
         for i in nonempty
@@ -97,5 +97,10 @@ function mergevars(varsvec::Vector{Vector{PV}}) where {PV<:PolyVar}
             end
         end
     end
-    vars, maps
+    return maps
+end
+function mergevars(varsvec::Vector{Vector{PV}}) where {PV<:PolyVar}
+    vars = PV[]
+    maps = mergevars_to!(vars, varsvec)
+    return vars, maps
 end
