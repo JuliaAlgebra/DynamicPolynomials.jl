@@ -12,7 +12,7 @@ function multiplyvar(v::Vector{PolyVar{false}}, z::Vector{Int}, x::PolyVar{false
         i -= 1
     end
     if i > 0 && v[i] == x
-        multiplyexistingvar(v, x, i)
+        return copy(v), multiplyexistingvar(i, z)
     else
         #   ---->
         # \  |\  |\
@@ -40,9 +40,9 @@ function multiplyvar(v::Vector{PolyVar{false}}, z::Vector{Int}, x::PolyVar{false
         end
 
         if i <= length(v) && v[i] == x
-            multiplyexistingvar(v, x, i)
+            return copy(v), multiplyexistingvar(i, z)
         else
-            insertvar(v, x, i)
+            return insertvar(v, x, i), insertvar(z, x, i)
         end
     end
 end
@@ -52,7 +52,7 @@ function multiplyvar(x::PolyVar{false}, v::Vector{PolyVar{false}}, z::Vector{Int
         i += 1
     end
     if i <= length(v) && v[i] == x
-        multiplyexistingvar(v, x, i)
+        return copy(v), multiplyexistingvar(i, z)
     else
         #   <----
         # \  |\  |\
@@ -79,19 +79,19 @@ function multiplyvar(x::PolyVar{false}, v::Vector{PolyVar{false}}, z::Vector{Int
             i -= 1
         end
         if i > 0 && v[i] == x
-            multiplyexistingvar(v, x, i)
+            return copy(v), multiplyexistingvar(i, z)
         else
-            insertvar(v, x, i+1)
+            return insertvar(v, x, i+1), insertvar(z, x, i+1)
         end
     end
 end
 function Base.:(*)(x::PolyVar{false}, y::Monomial{false})
-    w, updatez = multiplyvar(x, y.vars, y.z)
-    Monomial{false}(w, updatez(y.z))
+    w, z = multiplyvar(x, y.vars, y.z)
+    Monomial{false}(w, z)
 end
 function Base.:(*)(y::Monomial{false}, x::PolyVar{false})
-    w, updatez = multiplyvar(y.vars, y.z, x)
-    Monomial{false}(w, updatez(y.z))
+    w, z = multiplyvar(y.vars, y.z, x)
+    Monomial{false}(w, z)
 end
 
 function Base.:(*)(x::Monomial{false}, y::Monomial{false})
