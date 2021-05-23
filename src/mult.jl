@@ -1,10 +1,10 @@
-function multiplyexistingvar(v::Vector{PolyVar{C}}, x::PolyVar{C}, i::Int) where {C}
-    updatez = z -> begin
-        newz = copy(z)
-        newz[i] += 1
-        newz
-    end
-    copy(v), updatez
+function multiplyexistingvar(i::Int, z::Vector{Int}) where {C}
+    newz = copy(z)
+    newz[i] += 1
+    return newz
+end
+function multiplyexistingvar(i::Int, Z::Vector{Vector{Int}}) where {C}
+    return Vector{Int}[multiplyexistingvar(i, z) for z in Z]
 end
 function insertvar(v::Vector{PolyVar{C}}, x::PolyVar{C}, i::Int) where {C}
     n = length(v)
@@ -15,14 +15,21 @@ function insertvar(v::Vector{PolyVar{C}}, x::PolyVar{C}, i::Int) where {C}
     w[I] = v[I]
     w[i] = x
     w[K] = v[J]
-    updatez = z -> begin
-        newz = Vector{Int}(undef, n+1)
-        newz[I] = z[I]
-        newz[i] = 1
-        newz[K] = z[J]
-        newz
-    end
-    w, updatez
+    return w
+end
+function insertvar(z::Vector{Int}, x::PolyVar, i::Int)
+    n = length(z)
+    I = 1:i-1
+    J = i:n
+    K = J.+1
+    newz = Vector{Int}(undef, n+1)
+    newz[I] = z[I]
+    newz[i] = 1
+    newz[K] = z[J]
+    return newz
+end
+function insertvar(Z::Vector{Vector{Int}}, x::PolyVar, i::Int)
+    return Vector{Int}[insertvar(z, x, i) for z in Z]
 end
 
 include("cmult.jl")
@@ -153,8 +160,8 @@ function MA.mutable_operate!(::typeof(*), p::Polynomial{C}, q::Polynomial{C}) wh
 end
 
 # Overwrite this method for monomial-like terms because
-# otherwise it would check `iszero(α)` and in that case 
-# dismiss of the variable of `p` by performing 
+# otherwise it would check `iszero(α)` and in that case
+# dismiss of the variable of `p` by performing
 # `operate_to!(zero, output :: Polynomial )` which only
 # respects the variables that are stored already
 function MP._multconstant_to!(output::Polynomial, α, f, p :: DMonomialLike)
