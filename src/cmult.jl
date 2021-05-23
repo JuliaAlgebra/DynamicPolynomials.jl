@@ -24,53 +24,57 @@ function Base.:(*)(x::PolyVar{true}, y::MonomialVector{true})
     w, Z = multiplyvar(y.vars, x, y.Z)
     MonomialVector{true}(w, Z)
 end
-function multdivmono!(output_variables::Vector{PolyVar{true}},
-                      v::Vector{PolyVar{true}}, x::Monomial{true}, op)
+function _operate_exponents_to!(output::Vector{Int}, op::F, z1::Vector{Int}, z2::Vector{Int}) where {F<:Function}
+    @. output = op(z1, z2)
+    return
+end
+function _operate_exponents_to!(output::Vector{Int}, op::F, z1::Vector{Int}, z2::Vector{Int}, n) where {F<:Function}
+    resize!(output, n)
+    @. output = op(z1, z2)
+    return
+end
+function _operate_exponents_to!(output::Vector{Int}, op::F, z1::Vector{Int}, z2::Vector{Int}, n, maps) where {F<:Function}
+    resize!(output, n)
+    I = maps[1]; i = 1; lI = length(I)
+    J = maps[2]; j = 1; lJ = length(J)
+    while i <= lI || j <= lJ
+        if i > lI || (j <= lJ && J[j] < I[i])
+            output[J[j]] = op(0, z2[j])
+            j += 1
+        elseif j > lJ || (i <= lI && I[i] < J[j])
+            output[I[i]] = op(z1[I[i]], 0)
+            i += 1
+        else
+            @assert I[i] == J[j]
+            output[I[i]] = op(z1[I[i]], z2[j])
+            i += 1
+            j += 1
+        end
+    end
+    return
+end
+# Not used yet
+#function _operate_exponents!(op::F, Z::Vector{Vector{Int}}, z2::Vector{Int}, args::Vararg{Any,N}) where {F<:Function,N}
+#    return Vector{Int}[_operate_exponents!(op, z, z2, args...) for z in Z]
+#end
+function multdivmono!(output, output_variables::Vector{PolyVar{true}},
+                      v::Vector{PolyVar{true}}, x::Monomial{true}, op, z)
     if v == x.vars
         if output_variables == v
-            updatez! = (output, z) -> begin
-                @. output = op(z, x.z)
-                return
-            end
+            _operate_exponents_to!(output, op, z, x.z)
         else
             resize!(output_variables, length(v))
             copyto!(output_variables, v)
-            updatez! = (output, z) -> begin
-                resize!(output, length(output_variables))
-                @. output = op(z, x.z)
-                return
-            end
+            _operate_exponents_to!(output, op, z, x.z, length(output_variables))
         end
     else
         maps = mergevars_to!(output_variables, [v, x.vars])
-        n = length(v)
-        updatez! = (output, z) -> begin
-            resize!(output, length(output_variables))
-            I = maps[1]; i = 1; lI = length(I)
-            J = maps[2]; j = 1; lJ = length(J)
-            while i <= lI || j <= lJ
-                if i > lI || (j <= lJ && J[j] < I[i])
-                    output[J[j]] = op(0, x.z[j])
-                    j += 1
-                elseif j > lJ || (i <= lI && I[i] < J[j])
-                    output[I[i]] = op(z[I[i]], 0)
-                    i += 1
-                else
-                    @assert I[i] == J[j]
-                    output[I[i]] = op(z[I[i]], x.z[j])
-                    i += 1
-                    j += 1
-                end
-            end
-        end
+        _operate_exponents_to!(output, op, z, x.z, length(output_variables), maps)
     end
-    return updatez!
+    return
 end
 function _operate_exponents(op::F, z1::Vector{Int}, z2::Vector{Int}) where {F<:Function}
     return op.(z1, z2)
-end
-function _operate_exponents(op::F, Z::Vector{Vector{Int}}, z2::Vector{Int}) where {F<:Function}
-    return Vector{Int}[_operate_exponents(op, z, z2) for z in Z]
 end
 function _operate_exponents(op::F, z1::Vector{Int}, z2::Vector{Int}, n, maps) where {F<:Function}
     newz = zeros(Int, n)
@@ -92,8 +96,8 @@ function _operate_exponents(op::F, z1::Vector{Int}, z2::Vector{Int}, n, maps) wh
     end
     return newz
 end
-function _operate_exponents(op::F, Z::Vector{Vector{Int}}, z2::Vector{Int}, n, maps) where {F<:Function}
-    return Vector{Int}[_operate_exponents(op, z, z2, n, maps) for z in Z]
+function _operate_exponents(op::F, Z::Vector{Vector{Int}}, z2::Vector{Int}, args::Vararg{Any,N}) where {F<:Function,N}
+    return Vector{Int}[_operate_exponents(op, z, z2, args...) for z in Z]
 end
 function multdivmono(v::Vector{PolyVar{true}}, x::Monomial{true}, op, z)
     if v == x.vars
@@ -106,13 +110,11 @@ function multdivmono(v::Vector{PolyVar{true}}, x::Monomial{true}, op, z)
     return w, z_new
 end
 function MP.mapexponents_to!(output::Monomial{true}, f::Function, x::Monomial{true}, y::Monomial{true})
-    updatez! = multdivmono!(output.vars, x.vars, y, f)
-    updatez!(output.z, x.z)
-    return x
+    multdivmono!(output.z, output.vars, x.vars, y, f, x.z)
+    return output
 end
 function MP.mapexponents!(f::Function, x::Monomial{true}, y::Monomial{true})
-    updatez! = multdivmono!(x.vars, x.vars, y, f)
-    updatez!(x.z, x.z)
+    multdivmono!(x.z, x.vars, x.vars, y, f, x.z)
     return x
 end
 function MP.mapexponents(f::Function, x::Monomial{true}, y::Monomial{true})
