@@ -36,6 +36,7 @@ MP.polynomial(p::PolyType) = Polynomial(p)
 function MP.polynomial(p::PolyType{C}, ::Type{T}) where {C, T}
     return convert(Polynomial{C, T}, p)
 end
+MP.polynomialtype(::Type{Term{C}}) where {C} = Polynomial{C}
 MP.polynomialtype(::Type{Term{C, T}}) where {T, C} = Polynomial{C, T}
 MP.polynomialtype(::Type{T}, ::Type{<:DMonomialLike{C}}) where {T, C} = Polynomial{C, T}
 MP.polynomialtype(::Union{PolyType{C}, Type{<:PolyType{C}}}, ::Type{T}) where {C, T} = Polynomial{C, T}
