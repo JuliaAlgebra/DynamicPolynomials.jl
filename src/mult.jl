@@ -128,10 +128,11 @@ function _mul(::Type{T}, p::Polynomial{true}, q::Polynomial{true}) where T
     return allvars, a, Z
 end
 function Base.:(*)(p::Polynomial{true, S}, q::Polynomial{true, T}) where {S, T}
+    PT = MA.promote_operation(*, typeof(p), typeof(q))
     if iszero(p) || iszero(q)
-        zero(MA.promote_operation(*, typeof(p), typeof(q)))
+        zero(PT)
     else
-        polynomialclean(_mul(MA.promote_operation(MA.add_mul, S, T), p, q)...)
+        polynomialclean(_mul(MP.coefficienttype(PT), p, q)...)
     end
 end
 function MA.mutable_operate_to!(p::Polynomial{false, T}, ::typeof(*), q1::MP.AbstractPolynomialLike, q2::MP.AbstractPolynomialLike) where T
