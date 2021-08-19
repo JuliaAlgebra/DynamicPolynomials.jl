@@ -42,18 +42,18 @@ macro ncpolyvar(args...)
 end
 
 struct PolyVar{C} <: AbstractVariable
-    id::Int
+    id::UInt
     name::String
-
-    function PolyVar{C}(name::AbstractString) where {C}
-        # gensym returns something like Symbol("##42")
-        # we first remove "##" and then parse it into an Int
-        id = parse(Int, string(gensym())[3:end])
-        new(id, convert(String, name))
-    end
 end
 
-Base.hash(x::PolyVar, u::UInt) = hash(x.id, u)
+function (::Type{PolyVar{C}})(name::AbstractString, id = parse(UInt, string(gensym())[3:end])) where {C}
+    # gensym returns something like Symbol("##42")
+    # we first remove "##" and then parse it into an Int
+
+    PolyVar{C}(id, convert(String, name))
+end
+
+Base.hash(x::PolyVar, u::UInt) = hash(xor(x.id, 0xaaaabbbbccccdddd), u)
 Base.broadcastable(x::PolyVar) = Ref(x)
 
 MP.name(v::PolyVar) = v.name
