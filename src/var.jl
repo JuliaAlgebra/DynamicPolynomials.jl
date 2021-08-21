@@ -53,7 +53,7 @@ function (::Type{PolyVar{C}})(name::AbstractString, id = parse(Int, string(gensy
     PolyVar{C}(id, convert(String, name))
 end
 
-Base.hash(x::PolyVar, u::UInt) = hash(x.id, xor(u, 0xaaaabbbbccccdddd)) # xor avoids collision with other integers
+Base.hash(x::PolyVar, u::UInt) = hash(x.id, xor(u, trunc(UInt, 0xaaaabbbbccccdddd))) # xor avoids collision with other integers
 Base.broadcastable(x::PolyVar) = Ref(x)
 
 MP.name(v::PolyVar) = v.name
