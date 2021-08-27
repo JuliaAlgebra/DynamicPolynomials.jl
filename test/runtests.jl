@@ -12,7 +12,7 @@ using LinearAlgebra
     @test p(x0 => y0, x1 => y1) == y1 * y0 * y1
 end
 
-@testset "Issue #79 and Issue #80" begin
+@testset "Issue #79, Issue #80 and Issue #90" begin
     @polyvar x[1:2]
     p1 = x[1] * 0.0 + x[2] * 0
     p2 = ( x[1] + x[2] ) * 0.0
@@ -29,6 +29,10 @@ end
     @test isa(vars_array_float, Vector{<:Vector{<:PolyVar}})
     @test vars_array_int == vars_array_float
     @test vars_array_int[1] == vars_array_float[2] == χ
+
+    # This is for Issue #92
+    p3 = subs(p1, x => x)
+    @test variables(p3) == x
 end
 
 include("mono.jl")
