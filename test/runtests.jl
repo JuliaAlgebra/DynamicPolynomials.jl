@@ -12,7 +12,7 @@ using LinearAlgebra
     @test p(x0 => y0, x1 => y1) == y1 * y0 * y1
 end
 
-@testset "Issue #79, Issue #80 and Issue #90" begin
+@testset "Issue #79, Issue #80 and Issue #92" begin
     @polyvar x[1:2]
     p1 = x[1] * 0.0 + x[2] * 0
     p2 = ( x[1] + x[2] ) * 0.0
