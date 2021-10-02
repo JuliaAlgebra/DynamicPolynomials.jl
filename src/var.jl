@@ -104,3 +104,8 @@ function mergevars(varsvec::Vector{Vector{PV}}) where {PV<:PolyVar}
     maps = mergevars_to!(vars, varsvec)
     return vars, maps
 end
+function mergevars_of(::Type{PolyVar{C}}, polys::AbstractVector) where {C}
+    varsvec = Vector{PolyVar{C}}[variables(p) for p in polys if p isa PolyType]
+    # TODO avoid computing `maps`
+    return mergevars(varsvec)
+end

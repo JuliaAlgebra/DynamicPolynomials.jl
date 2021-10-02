@@ -16,7 +16,7 @@ end
     @polyvar x[1:2]
     p1 = x[1] * 0.0 + x[2] * 0
     p2 = ( x[1] + x[2] ) * 0.0
-    @test variables(p1) == x 
+    @test variables(p1) == x
     @test variables(p1) == variables(p2)
 
     @polyvar χ[1:4]
@@ -33,6 +33,10 @@ end
     # This is for Issue #92
     p3 = subs(p1, x => x)
     @test variables(p3) == x
+
+    p4 = x[1] + x[2]
+    @test variables(subs(p4, x[2] => 1)) == [x[1]]
+    @test variables(subs(p4, x[1] => 1)) == [x[2]]
 end
 
 include("mono.jl")
