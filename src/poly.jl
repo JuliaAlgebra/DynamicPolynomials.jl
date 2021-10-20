@@ -121,7 +121,7 @@ MP.leadingterm(p::Polynomial) = iszero(p) ? zeroterm(p) : first(terms(p))
 function MP.removeleadingterm(p::Polynomial)
     Polynomial(p.a[2:end], p.x[2:end])
 end
-function MA.mutable_operate!(::typeof(MP.removeleadingterm), p::Polynomial)
+function MA.operate!(::typeof(MP.removeleadingterm), p::Polynomial)
     deleteat!(p.a, 1)
     deleteat!(p.x, 1)
     return p
@@ -245,20 +245,20 @@ function MP.polynomial(Q::AbstractMatrix, mv::MonomialVector{C}, ::Type{T}) wher
     end
 end
 
-function MA.mutable_operate!(::typeof(zero), p::Polynomial)
+function MA.operate!(::typeof(zero), p::Polynomial)
     empty!(p.a)
     empty!(p.x.Z)
     return p
 end
-function MA.mutable_operate!(::typeof(one), p::Polynomial{C, T}) where {C, T}
+function MA.operate!(::typeof(one), p::Polynomial{C, T}) where {C, T}
     if isempty(p.a)
         push!(p.a, one(T))
         push!(p.x.Z, zeros(Int, length(p.x.vars)))
     else
         resize!(p.a, 1)
-        MA.mutable_operate!(one, p.a[1])
+        MA.operate!(one, p.a[1])
         resize!(p.x.Z, 1)
-        MA.mutable_operate!(zero, p.x.Z[1])
+        MA.operate!(zero, p.x.Z[1])
     end
     return p
 end

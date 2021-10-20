@@ -96,7 +96,7 @@ function _subs(::MP.Subs, p::Polynomial{C, T}, vals::AbstractVector{S}) where {C
     Tout = MA.promote_operation(*, T, MP.coefficienttype(S))
     q = zero_with_variables(Polynomial{C, Tout}, mergevars_of(PolyVar{C}, vals)[1])
     for i in 1:length(p.a)
-        MA.mutable_operate!(+, q, p.a[i] * monoeval(p.x.Z[i], vals))
+        MA.operate!(+, q, p.a[i] * monoeval(p.x.Z[i], vals))
     end
     return q
 end
