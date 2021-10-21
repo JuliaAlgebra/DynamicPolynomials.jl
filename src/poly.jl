@@ -167,7 +167,7 @@ function removedups_to!(a::Vector{T}, Z::Vector{Vector{Int}},
             push!(a, adup[k])
             i += 1
         else
-            a[i] = MA.operate!(+, a[i], adup[k])
+            a[i] = MA.operate!!(+, a[i], adup[k])
         end
         j += 1
     end
