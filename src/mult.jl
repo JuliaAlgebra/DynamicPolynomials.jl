@@ -135,9 +135,9 @@ function Base.:(*)(p::Polynomial{true, S}, q::Polynomial{true, T}) where {S, T}
         polynomialclean(_mul(MP.coefficienttype(PT), p, q)...)
     end
 end
-function MA.mutable_operate_to!(p::Polynomial{false, T}, ::typeof(*), q1::MP.AbstractPolynomialLike, q2::MP.AbstractPolynomialLike) where T
+function MA.operate_to!(p::Polynomial{false, T}, ::typeof(*), q1::MP.AbstractPolynomialLike, q2::MP.AbstractPolynomialLike) where T
     if iszero(q1) || iszero(q2)
-        MA.mutable_operate!(zero, p)
+        MA.operate!(zero, p)
     else
         ts = Term{false, T}[]
         MP.mul_to_terms!(ts, q1, q2)
@@ -149,15 +149,15 @@ function MA.mutable_operate_to!(p::Polynomial{false, T}, ::typeof(*), q1::MP.Abs
         return p
     end
 end
-function MA.mutable_operate_to!(p::Polynomial{true, T}, ::typeof(*), q1::MP.AbstractPolynomialLike, q2::MP.AbstractPolynomialLike) where T
+function MA.operate_to!(p::Polynomial{true, T}, ::typeof(*), q1::MP.AbstractPolynomialLike, q2::MP.AbstractPolynomialLike) where T
     if iszero(q1) || iszero(q2)
-        MA.mutable_operate!(zero, p)
+        MA.operate!(zero, p)
     else
         polynomialclean_to!(p, _mul(T, q1, q2)...)
     end
 end
-function MA.mutable_operate!(::typeof(*), p::Polynomial{C}, q::Polynomial{C}) where C
-    return MA.mutable_operate_to!(p, *, p, q)
+function MA.operate!(::typeof(*), p::Polynomial{C}, q::Polynomial{C}) where C
+    return MA.operate_to!(p, *, p, q)
 end
 
 # Overwrite this method for monomial-like terms because
@@ -167,7 +167,7 @@ end
 # respects the variables that are stored already
 function MP._multconstant_to!(output::Polynomial, α, f, p :: DMonomialLike)
     if iszero(α)
-        MA.mutable_operate!(zero, output)
+        MA.operate!(zero, output)
         Future.copy!(output.x.vars, variables(p))
         return output
     else

@@ -69,6 +69,15 @@ end
 function Polynomial{C, T}(f::Function, x::AbstractVector) where {C, T}
     σ, X = sortmonovec(x)
     a = T[f(i) for i in σ]
+    if length(x) > length(X)
+        rev = Dict(X[j] => j for j in eachindex(σ))
+        for i in eachindex(x)
+            j = rev[x[i]]
+            if i != σ[j]
+                a[j] += f(i)
+            end
+        end
+    end
     Polynomial{C, T}(a, X)
 end
 Polynomial{C}(f::Function, x) where {C} = Polynomial{C, Base.promote_op(f, Int)}(f, x)
@@ -121,7 +130,7 @@ MP.leadingterm(p::Polynomial) = iszero(p) ? zeroterm(p) : first(terms(p))
 function MP.removeleadingterm(p::Polynomial)
     Polynomial(p.a[2:end], p.x[2:end])
 end
-function MA.mutable_operate!(::typeof(MP.removeleadingterm), p::Polynomial)
+function MA.operate!(::typeof(MP.removeleadingterm), p::Polynomial)
     deleteat!(p.a, 1)
     deleteat!(p.x, 1)
     return p
@@ -167,7 +176,7 @@ function removedups_to!(a::Vector{T}, Z::Vector{Vector{Int}},
             push!(a, adup[k])
             i += 1
         else
-            a[i] = MA.operate!(+, a[i], adup[k])
+            a[i] = MA.operate!!(+, a[i], adup[k])
         end
         j += 1
     end
@@ -245,20 +254,20 @@ function MP.polynomial(Q::AbstractMatrix, mv::MonomialVector{C}, ::Type{T}) wher
     end
 end
 
-function MA.mutable_operate!(::typeof(zero), p::Polynomial)
+function MA.operate!(::typeof(zero), p::Polynomial)
     empty!(p.a)
     empty!(p.x.Z)
     return p
 end
-function MA.mutable_operate!(::typeof(one), p::Polynomial{C, T}) where {C, T}
+function MA.operate!(::typeof(one), p::Polynomial{C, T}) where {C, T}
     if isempty(p.a)
         push!(p.a, one(T))
         push!(p.x.Z, zeros(Int, length(p.x.vars)))
     else
         resize!(p.a, 1)
-        MA.mutable_operate!(one, p.a[1])
+        MA.operate!(one, p.a[1])
         resize!(p.x.Z, 1)
-        MA.mutable_operate!(zero, p.x.Z[1])
+        MA.operate!(zero, p.x.Z[1])
     end
     return p
 end

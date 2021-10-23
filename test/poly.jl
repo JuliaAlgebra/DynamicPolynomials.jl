@@ -36,6 +36,10 @@
         @test typeof(zeroterm(1.0 + x)) == Term{true, Float64}
         @test typeof(zero(1.0 + x)) == Polynomial{true, Float64}
 
+        pf = Polynomial(i -> 1.0, [x*x, x, x*x])
+        @test coefficients(pf) == [2.0, 1.0]
+        @test monomials(pf) == monovec([x^2, x])
+
         p = Polynomial([4, 9], [x, x*x])
         p.a == [9, 4]
         p.x[1] == x^2

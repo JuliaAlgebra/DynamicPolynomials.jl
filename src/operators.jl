@@ -53,11 +53,11 @@ function plusorminus(p::TermPoly{C, S}, q::TermPoly{C, T}, op::Function) where {
     Polynomial(a, MonomialVector{C}(allvars, Z))
 end
 
-function MA.mutable_operate_to!(output::Polynomial{C}, op::Union{typeof(+), typeof(-)},
+function MA.operate_to!(output::Polynomial{C}, op::Union{typeof(+), typeof(-)},
                                 p::TermPoly{C}, q::TermPoly{C}) where C
     if output === p || output === q
         # Otherwise, `_plusorminus_to!` never finishes
-        error("Cannot call `mutable_operate_to!(output, $op, p, q)` with `output` equal to `p` or `q`, call `mutable_operate!` instead.")
+        error("Cannot call `operate_to!(output, $op, p, q)` with `output` equal to `p` or `q`, call `operate!` instead.")
     end
     varsvec = [_vars(p), _vars(q)]
     allvars, maps = mergevars(varsvec)
@@ -68,17 +68,17 @@ function MA.mutable_operate_to!(output::Polynomial{C}, op::Union{typeof(+), type
     return output
 end
 
-function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial,
+function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial,
                              q::Union{PolyVar, Monomial, Term})
-    return MA.mutable_operate!(op, p, polynomial(q))
+    return MA.operate!(op, p, polynomial(q))
 end
 const _NoVarTerm{T} = Tuple{T, Vector{Int}}
-function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{false},
+function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{false},
                              q::Polynomial{false})
-    return MA.mutable_operate_to!(p, op, MA.mutable_copy(p), q)
+    return MA.operate_to!(p, op, MA.copy(p), q)
 end
 # TODO need to check that this also works for non-commutative
-function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{true},
+function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{true},
                              q::Polynomial{true})
     if _vars(p) != _vars(q)
         varsvec = [_vars(p), _vars(q)]
@@ -97,7 +97,7 @@ function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{true
             rhs = Polynomial(q.a, copy(q.x))
             _add_variables!(rhs.x, allvars, maps[2])
         end
-        return MA.mutable_operate!(op, p, rhs)
+        return MA.operate!(op, p, rhs)
     end
     get1(i) = (p.a[i], p.x.Z[i])
     get2(i) = (MA.scaling_convert(eltype(p.a), MA.operate(op, q.a[i])), copy(q.x.Z[i]))
@@ -111,15 +111,15 @@ function MA.mutable_operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{true
     end
     compare_monomials(t::_NoVarTerm, j::Int) = samevars_grlex(q.x.Z[j], t[2])
     compare_monomials(i::Int, j::Int) = compare_monomials(get1(i), j)
-    combine(i::Int, j::Int) = p.a[i] = MA.operate!(op, p.a[i], q.a[j])
-    combine(t::_NoVarTerm, j::Int) = (MA.operate!(op, t[1], q.a[j]), t[2])
+    combine(i::Int, j::Int) = p.a[i] = MA.operate!!(op, p.a[i], q.a[j])
+    combine(t::_NoVarTerm, j::Int) = (MA.operate!!(op, t[1], q.a[j]), t[2])
     function resize(n)
         resize!(p.a, n)
         resize!(p.x.Z, n)
     end
     # We can modify the coefficient since it's the result of `combine`.
-    keep(t::_NoVarTerm) = !MA.iszero!(t[1])
-    keep(i::Int) = !MA.iszero!(p.a[i])
+    keep(t::_NoVarTerm) = !MA.iszero!!(t[1])
+    keep(i::Int) = !MA.iszero!!(p.a[i])
     MP.polynomial_merge!(
         nterms(p), nterms(q), get1, get2, set, push,
         compare_monomials, combine, keep, resize
