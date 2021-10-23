@@ -69,6 +69,15 @@ end
 function Polynomial{C, T}(f::Function, x::AbstractVector) where {C, T}
     σ, X = sortmonovec(x)
     a = T[f(i) for i in σ]
+    if length(x) > length(X)
+        rev = Dict(X[j] => j for j in eachindex(σ))
+        for i in eachindex(x)
+            j = rev[x[i]]
+            if i != σ[j]
+                a[j] += f(i)
+            end
+        end
+    end
     Polynomial{C, T}(a, X)
 end
 Polynomial{C}(f::Function, x) where {C} = Polynomial{C, Base.promote_op(f, Int)}(f, x)
