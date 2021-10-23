@@ -83,20 +83,20 @@ end
 
 _subs(st, ::PolyVar, vals) = monoeval([1], vals::AbstractVector)
 _subs(st, m::Monomial, vals) = monoeval(m.z, vals::AbstractVector)
-_subs(st, t::Term, vals) = t.α * monoeval(t.x.z, vals::AbstractVector)
+_subs(st, t::Term, vals) = MA.copy_if_mutable(t.α) * monoeval(t.x.z, vals::AbstractVector)
 function _subs(::MP.Eval, p::Polynomial{C, T}, vals::AbstractVector{S}) where {C, T, S}
     # I need to check for iszero otherwise I get : ArgumentError: reducing over an empty collection is not allowed
     if iszero(p)
         zero(Base.promote_op(*, S, T))
     else
-        sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), 1:length(p))
+        sum(i -> MA.copy_if_mutable(p.a[i]) * monoeval(p.x.Z[i], vals), 1:length(p))
     end
 end
 function _subs(::MP.Subs, p::Polynomial{C, T}, vals::AbstractVector{S}) where {C, T, S}
     Tout = MA.promote_operation(*, T, MP.coefficienttype(S))
     q = zero_with_variables(Polynomial{C, Tout}, mergevars_of(PolyVar{C}, vals)[1])
     for i in 1:length(p.a)
-        MA.mutable_operate!(+, q, p.a[i] * monoeval(p.x.Z[i], vals))
+        MA.mutable_operate!(+, q, MA.copy_if_mutable(p.a[i]) * monoeval(p.x.Z[i], vals))
     end
     return q
 end
