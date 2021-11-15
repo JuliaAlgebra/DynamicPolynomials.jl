@@ -272,24 +272,22 @@ function MA.operate!(::typeof(one), p::Polynomial{C, T}) where {C, T}
     return p
 end
 
-function MP.mapcoefficientsnz(f::Function, p::Polynomial)
+function MP.mapcoefficients(f::Function, p::Polynomial; nonzero = false)
     return Polynomial(map(f, p.a), MA.mutable_copy(p.x))
 end
-function MA.mapcoefficientsnz!(f::Function, p::Polynomial)
+
+function MP.mapcoefficients!(f::Function, p::Polynomial; nonzero = false)
     map!(f, p.a, p.a)
-    return p
-end
-function MA.mapcoefficients!(f::Function, p::Polynomial)
-    MA.mapcoefficientsnz!(f, p)
-    map!(f, p.a, p.a)
-    _remove_zeros!(p)
+    if !nonzero
+        _remove_zeros!(p)
+    end
     return p
 end
 
-function MP.mapcoefficientsnz_to!(output::Polynomial, f::Function, t::MP.AbstractTermLike)
-    MP.mapcoefficientsnz_to!(output, f, polynomial(t))
+function MP.mapcoefficients_to!(output::Polynomial, f::Function, t::MP.AbstractTermLike; nonzero = false)
+    return MP.mapcoefficients_to!(output, f, polynomial(t); nonzero = nonzero)
 end
-function MP.mapcoefficientsnz_to!(output::Polynomial, f::Function, p::Polynomial)
+function MP.mapcoefficients_to!(output::Polynomial, f::Function, p::Polynomial; nonzero = false)
     resize!(output.a, length(p.a))
     map!(f, output.a, p.a)
     Future.copy!(output.x.vars, p.x.vars)
@@ -298,10 +296,8 @@ function MP.mapcoefficientsnz_to!(output::Polynomial, f::Function, p::Polynomial
     for i in eachindex(p.x.Z)
         output.x.Z[i] = copy(p.x.Z[i])
     end
-    return output
-end
-function MP.mapcoefficients_to!(output::Polynomial, f::Function, p)
-    MP.mapcoefficientsnz_to!(output, f, p)
-    _remove_zeros!(output)
+    if !nonzero
+        _remove_zeros!(output)
+    end
     return output
 end
