@@ -271,3 +271,33 @@ function MA.operate!(::typeof(one), p::Polynomial{C, T}) where {C, T}
     end
     return p
 end
+
+function MP.mapcoefficients(f::Function, p::Polynomial; nonzero = false)
+    return Polynomial(map(f, p.a), MA.mutable_copy(p.x))
+end
+
+function MP.mapcoefficients!(f::Function, p::Polynomial; nonzero = false)
+    map!(f, p.a, p.a)
+    if !nonzero
+        _remove_zeros!(p)
+    end
+    return p
+end
+
+function MP.mapcoefficients_to!(output::Polynomial, f::Function, t::MP.AbstractTermLike; nonzero = false)
+    return MP.mapcoefficients_to!(output, f, polynomial(t); nonzero = nonzero)
+end
+function MP.mapcoefficients_to!(output::Polynomial, f::Function, p::Polynomial; nonzero = false)
+    resize!(output.a, length(p.a))
+    map!(f, output.a, p.a)
+    Future.copy!(output.x.vars, p.x.vars)
+    # TODO reuse the part of `Z` that is already in `output`.
+    resize!(output.x.Z, length(p.x.Z))
+    for i in eachindex(p.x.Z)
+        output.x.Z[i] = copy(p.x.Z[i])
+    end
+    if !nonzero
+        _remove_zeros!(output)
+    end
+    return output
+end

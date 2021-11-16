@@ -49,22 +49,6 @@ function MP._multconstant(α::T, f, p::Polynomial{C,S} ) where {T, C, S}
     end
 end
 
-MP.mapcoefficientsnz(f::Function, p::Polynomial) = Polynomial(map(f, p.a), MA.mutable_copy(p.x))
-function MP.mapcoefficientsnz_to!(output::Polynomial, f::Function, t::MP.AbstractTermLike)
-    MP.mapcoefficientsnz_to!(output, f, polynomial(t))
-end
-function MP.mapcoefficientsnz_to!(output::Polynomial, f::Function, p::Polynomial)
-    resize!(output.a, length(p.a))
-    @. output.a = f(p.a)
-    Future.copy!(output.x.vars, p.x.vars)
-    # TODO reuse the part of `Z` that is already in `output`.
-    resize!(output.x.Z, length(p.x.Z))
-    for i in eachindex(p.x.Z)
-        output.x.Z[i] = copy(p.x.Z[i])
-    end
-    return output
-end
-
 # I do not want to cast x to TermContainer because that would force the promotion of eltype(q) with Int
 function Base.:(*)(x::DMonomialLike, p::Polynomial)
     Polynomial(MA.mutable_copy(p.a), x*p.x)
