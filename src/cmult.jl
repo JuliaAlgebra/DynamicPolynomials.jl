@@ -114,7 +114,7 @@ function MP.mapexponents_to!(output::Monomial{true}, f::Function, x::Monomial{tr
     return output
 end
 function MP.mapexponents!(f::Function, x::Monomial{true}, y::Monomial{true})
-    multdivmono!(x.z, x.vars, x.vars, y, f, x.z)
+    multdivmono!(x.z, x.vars, copy(x.vars), y, f, x.z)
     return x
 end
 function MP.mapexponents(f::Function, x::Monomial{true}, y::Monomial{true})
