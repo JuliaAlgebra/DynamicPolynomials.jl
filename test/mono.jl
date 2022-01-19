@@ -133,4 +133,8 @@
         @test (x^2)(3) == 9
         @test (x)(3) == 3
     end
+    @testset "TODO remove when added to MP" begin
+        @polyvar x y
+        @test x == DynamicPolynomials.MP.mapexponents!(div, x^1, x * y^2)
+    end
 end
