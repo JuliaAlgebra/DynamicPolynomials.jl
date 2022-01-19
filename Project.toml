@@ -1,7 +1,7 @@
 name = "DynamicPolynomials"
 uuid = "7c1d4256-1411-5781-91ec-d7bc3513ac07"
 repo = "https://github.com/JuliaAlgebra/DynamicPolynomials.jl.git"
-version = "0.4.1"
+version = "0.4.2"
 
 [deps]
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
