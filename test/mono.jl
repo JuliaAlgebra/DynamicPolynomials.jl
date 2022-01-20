@@ -1,3 +1,5 @@
+using Test
+
 @testset "PolyVar and Monomial tests" begin
     @testset "PolyVar macro index set" begin
         n = 3
@@ -136,5 +138,8 @@
     @testset "TODO remove when added to MP" begin
         @polyvar x y
         @test x == DynamicPolynomials.MP.mapexponents!(div, x^1, x * y^2)
+        for z in [x * y, x^2, y^2]
+            @test y == DynamicPolynomials.MP.mapexponents_to!(z, -, x * y^2, x * y)
+        end
     end
 end

@@ -111,7 +111,7 @@ function MP.mapexponents_to!(output::Monomial{true}, f::Function, x::Monomial{tr
             copyto!(output.vars, x.vars)
             resize!(output.z, n)
         end
-        _operate_exponents_to!(x.z, f, x.z, y.z)
+        _operate_exponents_to!(output.z, f, x.z, y.z)
     else
         _multdivmono!(output.z, output.vars, x.vars, y, f, x.z)
     end
