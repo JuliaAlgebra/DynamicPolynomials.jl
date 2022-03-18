@@ -142,4 +142,13 @@ using Test
             @test y == DynamicPolynomials.MP.mapexponents_to!(z, -, x * y^2, x * y)
         end
     end
+    # TODO add to MP
+    @testset "Indexing with boolean" begin
+        @polyvar x y
+        X = monomials([x, y], 2)
+        @test X[[true, false, true]] == monovec([x^2, y^2])
+        X = monomials([x, y], 0:1)
+        @test filter(mono -> degree(mono) == 1, X) == monovec([x, y])
+        @test filter(mono -> degree(mono) == 0, X) == monovec([x^0])
+    end
 end
