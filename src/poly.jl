@@ -15,6 +15,13 @@ struct Polynomial{C, T} <: AbstractPolynomial{T}
         return p
     end
 end
+function Polynomial{C,T}(ts::Vector{Term{C,T}}) where {C,T}
+    a = T[coefficient(t) for t in ts]
+    monos = Monomial{C}[monomial(t) for t in ts]
+    allvars, Z = buildZvarsvec(PolyVar{C}, monos)
+    x = MonomialVector{C}(allvars, Z)
+    return Polynomial{C,T}(a, x)
+end
 
 iscomm(::Type{Polynomial{C, T}}) where {C, T} = C
 
