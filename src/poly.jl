@@ -42,8 +42,7 @@ Polynomial(af::Union{Function, Vector}, x::DMonoVec{C}) where {C} = Polynomial{C
 Polynomial{C, T}(p::Polynomial{C, T}) where {C, T} = p
 
 Base.convert(::Type{Polynomial{C, T}}, p::Polynomial{C, T}) where {C, T} = p
-function convert(::Type{Polynomial{C, T}},
-                 p::AbstractPolynomialLike) where {C, T}
+function Base.convert(::Type{Polynomial{C, T}}, p::AbstractPolynomialLike) where {C, T}
     return Polynomial{C, T}(terms(p))
 end
 
