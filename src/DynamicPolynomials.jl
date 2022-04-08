@@ -33,10 +33,6 @@ MP.monomialtype(::PolyType{C}) where C = Monomial{C}
 MP.termtype(::Union{TermPoly{C, T}, Type{<:TermPoly{C, T}}}) where {C, T} = Term{C, T}
 MP.termtype(::Union{PolyType{C}, Type{<:PolyType{C}}}, ::Type{T}) where {C, T} = Term{C, T}
 MP.termtype(::Type{Polynomial{C}}) where {C} = Term{C}
-MP.polynomial(p::PolyType) = Polynomial(p)
-function MP.polynomial(p::PolyType{C}, ::Type{T}) where {C, T}
-    return convert(Polynomial{C, T}, p)
-end
 MP.polynomialtype(::Type{Term{C}}) where {C} = Polynomial{C}
 MP.polynomialtype(::Type{Term{C, T}}) where {T, C} = Polynomial{C, T}
 MP.polynomialtype(::Type{T}, ::Type{<:DMonomialLike{C}}) where {T, C} = Polynomial{C, T}
