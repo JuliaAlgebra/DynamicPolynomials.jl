@@ -101,6 +101,11 @@ function _subs(::MP.Subs, p::Polynomial{C, T}, vals::AbstractVector{S}) where {C
     return q
 end
 
+function MA.promote_operation(::typeof(MP.substitute), ::Type{MP.Subs}, ::Type{Monomial{C}}, ::Type{Pair{PolyVar{C},T}}) where {C,T}
+    U = MA.promote_operation(^, T, Int)
+    return Term{C,U}
+end
+
 function MP.substitute(st::MP.AbstractSubstitutionType, p::PolyType, s::MP.Substitutions)
     _subs(st, p, subsmap(st, _vars(p), s))
 end
