@@ -1,9 +1,9 @@
-function multiplyexistingvar(i::Int, z::Vector{Int}) where {C}
+function multiplyexistingvar(i::Int, z::Vector{Int})
     newz = copy(z)
     newz[i] += 1
     return newz
 end
-function multiplyexistingvar(i::Int, Z::Vector{Vector{Int}}) where {C}
+function multiplyexistingvar(i::Int, Z::Vector{Vector{Int}})
     return Vector{Int}[multiplyexistingvar(i, z) for z in Z]
 end
 function insertvar(v::Vector{PolyVar{C}}, x::PolyVar{C}, i::Int) where {C}
