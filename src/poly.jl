@@ -116,16 +116,16 @@ MP.extdegree(p::Polynomial) = extdegree(p.x)
 MP.mindegree(p::Polynomial) = mindegree(p.x)
 MP.maxdegree(p::Polynomial) = maxdegree(p.x)
 
-MP.leadingcoefficient(p::Polynomial{C, T}) where {C, T} = iszero(p) ? zero(T) : first(p.a)
-MP.leadingmonomial(p::Polynomial) = iszero(p) ? constantmonomial(p) : first(p.x)
-MP.leadingterm(p::Polynomial) = iszero(p) ? zeroterm(p) : first(terms(p))
+MP.leadingcoefficient(p::Polynomial{C, T}) where {C, T} = iszero(p) ? zero(T) : last(p.a)
+MP.leadingmonomial(p::Polynomial) = iszero(p) ? constantmonomial(p) : last(p.x)
+MP.leadingterm(p::Polynomial) = iszero(p) ? zeroterm(p) : last(terms(p))
 
 function MP.removeleadingterm(p::Polynomial)
-    Polynomial(p.a[2:end], p.x[2:end])
+    Polynomial(p.a[1:end-1], p.x[1:end-1])
 end
 function MA.operate!(::typeof(MP.removeleadingterm), p::Polynomial)
-    deleteat!(p.a, 1)
-    deleteat!(p.x, 1)
+    pop(p.a)
+    pop(p.x)
     return p
 end
 function MP.removemonomials(p::Polynomial, x::MonomialVector)
@@ -133,7 +133,7 @@ function MP.removemonomials(p::Polynomial, x::MonomialVector)
     j = 1
     I = Int[]
     for (i,t) in enumerate(p)
-        while j <= length(x) && x[j] > t.x
+        while j <= length(x) && x[j] < t.x
             j += 1
         end
         if j > length(x) || x[j] != t.x
@@ -159,7 +159,7 @@ end
 
 function removedups_to!(a::Vector{T}, Z::Vector{Vector{Int}},
                         adup::Vector{T}, Zdup::Vector{Vector{Int}}) where T
-    σ = sortperm(Zdup, rev=true, lt=grlex)
+    σ = sortperm(Zdup, lt=grlex)
     i = 0
     j = 1
     while j <= length(adup)

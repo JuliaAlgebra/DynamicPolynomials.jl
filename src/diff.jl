@@ -1,6 +1,6 @@
 function MP.differentiate(m::Monomial{C}, x::PolyVar{C}) where C
     i = findfirst(isequal(x), _vars(m))
-    if (i == nothing || i == 0) || m.z[i] == 0
+    if (i === nothing || i == 0) || m.z[i] == 0
         zeroterm(m)
     else
         z = copy(m.z)

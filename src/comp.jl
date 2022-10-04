@@ -155,12 +155,12 @@ function Base.isapprox(p::Polynomial{C, S}, q::Polynomial{C, T};
                        ztol::Real=iszero(atol) ? Base.rtoldefault(S, T, 0) : atol) where {C, S, T}
     i = j = 1
     while i <= length(p.x) || j <= length(q.x)
-        if i > length(p.x) || (j <= length(q.x) && q.x[j] > p.x[i])
+        if i > length(p.x) || (j <= length(q.x) && q.x[j] < p.x[i])
             if !isapproxzero(q.a[j], ztol=ztol)
                 return false
             end
             j += 1
-        elseif j > length(q.x) || p.x[i] > q.x[j]
+        elseif j > length(q.x) || p.x[i] < q.x[j]
             if !isapproxzero(p.a[i], ztol=ztol)
                 return false
             end

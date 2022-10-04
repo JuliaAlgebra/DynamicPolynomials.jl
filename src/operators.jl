@@ -21,12 +21,12 @@ function _plusorminus_to!(a::Vector{U}, Z::Vector{Vector{Int}}, op::Function, p:
     i = j = 1
     while i <= nterms(p) || j <= nterms(q)
         z = zeros(Int, nvars)
-        if j > nterms(q) || (i <= nterms(p) && _getindex(p, i).x > _getindex(q, j).x)
+        if j > nterms(q) || (i <= nterms(p) && _getindex(p, i).x < _getindex(q, j).x)
             t = _getindex(p, i)
             z[maps[1]] = t.x.z
             α = MA.scaling_convert(U, MA.copy_if_mutable(t.α))
             i += 1
-        elseif i > nterms(p) || _getindex(q, j).x > _getindex(p, i).x
+        elseif i > nterms(p) || _getindex(q, j).x < _getindex(p, i).x
             t = _getindex(q, j)
             z[maps[2]] = t.x.z
             α = MA.scaling_convert(U, MA.operate(op, t.α))
@@ -109,7 +109,7 @@ function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{true},
         push!(p.a, t[1])
         push!(p.x.Z, t[2])
     end
-    compare_monomials(t::_NoVarTerm, j::Int) = samevars_grlex(q.x.Z[j], t[2])
+    compare_monomials(t::_NoVarTerm, j::Int) = -samevars_grlex(q.x.Z[j], t[2])
     compare_monomials(i::Int, j::Int) = compare_monomials(get1(i), j)
     combine(i::Int, j::Int) = p.a[i] = MA.operate!!(op, p.a[i], q.a[j])
     combine(t::_NoVarTerm, j::Int) = (MA.operate!!(op, t[1], q.a[j]), t[2])
