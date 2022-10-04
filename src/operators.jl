@@ -109,7 +109,7 @@ function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{true},
         push!(p.a, t[1])
         push!(p.x.Z, t[2])
     end
-    compare_monomials(t::_NoVarTerm, j::Int) = -samevars_grlex(q.x.Z[j], t[2])
+    compare_monomials(t::_NoVarTerm, j::Int) = samevars_grlex(q.x.Z[j], t[2])
     compare_monomials(i::Int, j::Int) = compare_monomials(get1(i), j)
     combine(i::Int, j::Int) = p.a[i] = MA.operate!!(op, p.a[i], q.a[j])
     combine(t::_NoVarTerm, j::Int) = (MA.operate!!(op, t[1], q.a[j]), t[2])
