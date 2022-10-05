@@ -53,7 +53,7 @@ function Base.deleteat!(x::MonomialVector, i)
     return x
 end
 function Base.pop!(x::MonomialVector)
-    pop(x.Z)
+    pop!(x.Z)
     return x
 end
 
