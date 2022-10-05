@@ -124,8 +124,8 @@ function MP.removeleadingterm(p::Polynomial)
     Polynomial(p.a[1:end-1], p.x[1:end-1])
 end
 function MA.operate!(::typeof(MP.removeleadingterm), p::Polynomial)
-    pop(p.a)
-    pop(p.x)
+    pop!(p.a)
+    pop!(p.x)
     return p
 end
 function MP.removemonomials(p::Polynomial, x::MonomialVector)
