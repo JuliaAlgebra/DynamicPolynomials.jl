@@ -37,7 +37,7 @@
         @test typeof(zero(1.0 + x)) == Polynomial{true, Float64}
 
         pf = Polynomial(i -> 1.0, [x*x, x, x*x])
-        @test coefficients(pf) == [2.0, 1.0]
+        @test coefficients(pf) == [1.0, 2.0]
         @test monomials(pf) == monovec([x^2, x])
 
         p = Polynomial([4, 9], [x, x*x])
@@ -46,11 +46,11 @@
         p.x[2] == x
 
         @inferred Polynomial(i -> float(i), [x, x*x])
-        @inferred Polynomial(i -> 3 - float(i), MonomialVector([x*x, x]))
+        @inferred Polynomial(i -> float(i), MonomialVector([x*x, x]))
         for p in (Polynomial(i -> float(i), [x, x*x]),
-                  Polynomial(i -> 3 - float(i), MonomialVector([x*x, x])))
+                  Polynomial(i -> float(i), MonomialVector([x*x, x])))
             @test typeof(p) == Polynomial{true, Float64}
-            @test p.a == [2.0, 1.0]
+            @test p.a == [1.0, 2.0]
             @test p.x == MonomialVector([x^2, x])
         end
 
@@ -58,7 +58,7 @@
         @inferred Polynomial(i -> i, [u, u*u, 1])
         p = Polynomial(i -> i, [u, u*u, 1])
         @test typeof(p) == Polynomial{false, Int}
-        @test p.a == [2, 1, 3]
+        @test p.a == [3, 1, 2]
         @test p.x == MonomialVector([u^2, u, 1])
 
         @test u + v*u + 1 != v*u + u

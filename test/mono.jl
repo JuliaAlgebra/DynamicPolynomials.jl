@@ -79,7 +79,7 @@ using Test
         @test_throws AssertionError monomials([y, x], 1:2) # should be [x, y]
         X = MonomialVector([x, 1, x*y])
         @test variables(X) == [x, y]
-        @test X.Z == [[1, 1], [1, 0], [0, 0]]
+        @test X.Z == [[0, 0], [1, 0], [1, 1]]
         @test MonomialVector{true}([1]) isa MonomialVector{true}
         @test MonomialVector{false}([1]) isa MonomialVector{false}
         a = [1, 5, 3]
@@ -95,7 +95,7 @@ using Test
 
         @test 2 != MonomialVector([x, y], 1)
         @test x != MonomialVector([x, y], 1)
-        @test MonomialVector([x, y], [[1, 0], [0, 0]]) == MonomialVector([x], [[1], [0]])
+        @test MonomialVector([x, y], [[0, 0], [1, 0]]) == MonomialVector([x], [[0], [1]])
     end
     @testset "Non-commutative" begin
         @ncpolyvar x
