@@ -25,6 +25,10 @@ end
 
 iscomm(::Type{Polynomial{C, T}}) where {C, T} = C
 
+function _zero_with_variables(::Type{Polynomial{C, T}}, vars::Vector{PolyVar{C}}) where {C,T}
+    return Polynomial(T[], MonomialVector{C}(vars, Vector{Int}[]))
+end
+
 Base.broadcastable(p::Polynomial) = Ref(p)
 MA.mutable_copy(p::Polynomial{C, T}) where {C, T} = Polynomial{C, T}(MA.mutable_copy(p.a), MA.mutable_copy(p.x))
 Base.copy(p::Polynomial) = MA.mutable_copy(p)
@@ -42,6 +46,13 @@ Polynomial(af::Union{Function, Vector}, x::DMonoVec{C}) where {C} = Polynomial{C
 Polynomial{C, T}(p::Polynomial{C, T}) where {C, T} = p
 
 Base.convert(::Type{Polynomial{C, T}}, p::Polynomial{C, T}) where {C, T} = p
+function Base.convert(::Type{Polynomial{C, T}}, t::AbstractTermLike) where {C, T}
+    if iszero(t)
+        _zero_with_variables(Polynomial{C,T}, variables(t))
+    else
+        return Polynomial{C, T}([coefficient(t)], MonomialVector{C}(variables(t), [exponents(t)]))
+    end
+end
 function Base.convert(::Type{Polynomial{C, T}}, p::AbstractPolynomialLike) where {C, T}
     return Polynomial{C, T}(terms(p))
 end
@@ -50,7 +61,7 @@ Polynomial{C}(p::Union{Polynomial{C}, Term{C}, Monomial{C}, PolyVar{C}}) where {
 Polynomial{C}(α) where {C} = Polynomial(Term{C}(α))
 
 Polynomial(p::Polynomial) = p
-Polynomial(t::Term{C, T}) where {C, T} = Polynomial{C, T}([t.α], [t.x])
+Polynomial(t::Term{C, T}) where {C, T} = convert(Polynomial{C, T}, mutable_copy(t))
 Polynomial(x::Union{PolyVar{C}, Monomial{C}}) where {C} = Polynomial(Term{C}(x))
 
 #Base.convert(::Type{TermContainer{C, T}}, p::Polynomial{C}) where {C, T} = Polynomial{C, T}(p)
