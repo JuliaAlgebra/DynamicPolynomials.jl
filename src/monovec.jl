@@ -97,17 +97,12 @@ function fillZfordeg!(Z, n, deg, ::Type{Val{true}}, filter::Function, ::Int)
         if z[1] == deg
             break
         end
-        sum = 1
-        for j in 2:n
-            if z[j] != 0
-                z[j] -= 1
-                z[j-1] += sum
-                break
-            else
-                sum += z[j-1]
-                z[j-1] = 0
-            end
-        end
+        i = findfirst(i -> !iszero(z[i]), n:-1:2)
+        j = (n:-1:2)[i]
+        p = z[j]
+        z[j] = 0
+        z[end] = p - 1
+        z[j-1] += 1
     end
 end
 function fillZrec!(Z, z, i, n, deg, filter::Function)
