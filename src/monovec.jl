@@ -8,7 +8,7 @@ struct MonomialVector{C} <: AbstractVector{Monomial{C}}
     function MonomialVector{C}(vars::Vector{PolyVar{C}}, Z::Vector{Vector{Int}}) where {C}
         @assert !C || issorted(vars, rev=true)
         @assert all(z -> length(z) == length(vars), Z)
-        @assert issorted(Z, rev=true, lt=grlex)
+        @assert issorted(Z, lt=grlex)
         new(vars, Z)
     end
 end
@@ -52,6 +52,10 @@ function Base.deleteat!(x::MonomialVector, i)
     deleteat!(x.Z, i)
     return x
 end
+function Base.pop!(x::MonomialVector)
+    pop!(x.Z)
+    return x
+end
 
 Base.firstindex(x::MonomialVector) = firstindex(x.Z)
 Base.lastindex(x::MonomialVector) = lastindex(x.Z)
@@ -84,26 +88,21 @@ MP.emptymonovec(::Type{<:DMonoVecElemNonConstant{C}}) where {C} = MonomialVector
 
 function fillZfordeg!(Z, n, deg, ::Type{Val{true}}, filter::Function, ::Int)
     z = zeros(Int, n)
-    z[1] = deg
+    z[end] = deg
     while true
         if filter(z)
             push!(Z, z)
             z = copy(z)
         end
-        if z[end] == deg
+        if z[1] == deg
             break
         end
-        sum = 1
-        for j in (n-1):-1:1
-            if z[j] != 0
-                z[j] -= 1
-                z[j+1] += sum
-                break
-            else
-                sum += z[j+1]
-                z[j+1] = 0
-            end
-        end
+        i = findfirst(i -> !iszero(z[i]), n:-1:2)
+        j = (n:-1:2)[i]
+        p = z[j]
+        z[j] = 0
+        z[end] = p - 1
+        z[j-1] += 1
     end
 end
 function fillZrec!(Z, z, i, n, deg, filter::Function)
@@ -121,17 +120,19 @@ function fillZrec!(Z, z, i, n, deg, filter::Function)
 end
 function fillZfordeg!(Z, n, deg, ::Type{Val{false}}, filter::Function, maxdeg::Int)
     z = zeros(Int, maxdeg * n - maxdeg + 1)
+    start = length(Z) + 1
     fillZrec!(Z, z, 1, n, deg, filter)
+    reverse!(view(Z, start:length(Z)))
 end
 # List exponents in decreasing Graded Lexicographic Order
 function getZfordegs(n, degs::AbstractVector{Int}, ::Type{Val{C}}, filter::Function) where C
     Z = Vector{Vector{Int}}()
     # For non-commutative, lower degree need to create a vector of exponent as large as for the highest degree
     maxdeg = isempty(degs) ? 0 : maximum(degs)
-    for deg in sort(degs, rev=true)
+    for deg in sort(degs)
         fillZfordeg!(Z, n, deg, Val{C}, filter, maxdeg)
     end
-    @assert issorted(Z, rev=true, lt=grlex)
+    @assert issorted(Z, lt=grlex)
     Z
 end
 
@@ -191,7 +192,7 @@ end
 MP.sortmonovec(X::MonomialVector) = (1:length(X), X)
 function _sortmonovec(X::DMonoVec{C}) where {C}
     allvars, Z = buildZvarsvec(PolyVar{C}, X)
-    σ = sortperm(Z, rev=true, lt=grlex)
+    σ = sortperm(Z, lt=grlex)
     allvars, Z, σ
 end
 function _removedups!(Z::Vector{Vector{Int}}, σ::Vector{Int})
@@ -210,7 +211,7 @@ end
 
 function MonomialVector{C}(X::DMonoVec{C}) where C
     allvars, Z = buildZvarsvec(PolyVar{C}, X)
-    sort!(Z, rev=true, lt=grlex)
+    sort!(Z, lt=grlex)
     dups = findall(i -> Z[i] == Z[i-1], 2:length(Z))
     deleteat!(Z, dups)
     MonomialVector{C}(allvars, Z)
@@ -231,21 +232,21 @@ function MP.mergemonovec(ms::Vector{MonomialVector{C}}) where {C}
     L = length.(ms)
     X = Vector{Monomial{C}}()
     while any(I .<= L)
-        max = nothing
+        min_monomial = nothing
         for i in 1:m
             if I[i] <= L[i]
                 x = ms[i][I[i]]
-                if max === nothing || max < x
-                    max = x
+                if min_monomial === nothing || min_monomial > x
+                    min_monomial = x
                 end
             end
         end
-        @assert max !== nothing
+        @assert min_monomial !== nothing
         # to ensure that max is no more a union
-        max === nothing && return X
-        push!(X, max)
+        min_monomial === nothing && return X
+        push!(X, min_monomial)
         for i in 1:m
-            if I[i] <= L[i] && max == ms[i][I[i]]
+            if I[i] <= L[i] && min_monomial == ms[i][I[i]]
                 I[i] += 1
             end
         end

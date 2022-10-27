@@ -15,8 +15,19 @@ struct Polynomial{C, T} <: AbstractPolynomial{T}
         return p
     end
 end
+function Polynomial{C,T}(terms::AbstractVector{<:Term{C}}) where {C,T}
+    a = T[coefficient(t) for t in terms]
+    monos = Monomial{C}[monomial(t) for t in terms]
+    allvars, Z = buildZvarsvec(PolyVar{C}, monos)
+    x = MonomialVector{C}(allvars, Z)
+    return Polynomial{C,T}(a, x)
+end
 
 iscomm(::Type{Polynomial{C, T}}) where {C, T} = C
+
+function _zero_with_variables(::Type{Polynomial{C, T}}, vars::Vector{PolyVar{C}}) where {C,T}
+    return Polynomial(T[], MonomialVector{C}(vars, Vector{Int}[]))
+end
 
 Base.broadcastable(p::Polynomial) = Ref(p)
 MA.mutable_copy(p::Polynomial{C, T}) where {C, T} = Polynomial{C, T}(MA.mutable_copy(p.a), MA.mutable_copy(p.x))
@@ -35,29 +46,23 @@ Polynomial(af::Union{Function, Vector}, x::DMonoVec{C}) where {C} = Polynomial{C
 Polynomial{C, T}(p::Polynomial{C, T}) where {C, T} = p
 
 Base.convert(::Type{Polynomial{C, T}}, p::Polynomial{C, T}) where {C, T} = p
-function Base.convert(::Type{Polynomial{C, T}},
-                      p::Polynomial{C, S}) where {C, S, T}
-    return Polynomial{C}(convert(Vector{T}, p.a), p.x)
+function Base.convert(::Type{Polynomial{C, T}}, t::AbstractTermLike) where {C, T}
+    if iszero(t)
+        _zero_with_variables(Polynomial{C,T}, variables(t))
+    else
+        # `exponents(::PolyVar)` gives a tuple
+        return Polynomial{C, T}([coefficient(t)], MonomialVector{C}(variables(t), [_vec(exponents(t))]))
+    end
 end
-#function convert(::Type{Polynomial{C, T}},
-#                 p::AbstractPolynomialLike) where {C, T}
-#    return convert(Polynomial{C, T}, polynomial(p, T))
-#end
-function Base.convert(::Type{Polynomial{C, T}}, t::Term{C}) where {C, T}
-    return Polynomial{C, T}(T[t.α], [t.x])
-end
-function Base.convert(::Type{Polynomial{C, T}}, m::DMonomialLike{C}) where {C, T}
-    return Polynomial(convert(Term{C, T}, m))
-end
-function MP.convertconstant(::Type{Polynomial{C, T}}, α) where {C, T}
-    return Polynomial(convert(Term{C, T}, α))
+function Base.convert(::Type{Polynomial{C, T}}, p::AbstractPolynomialLike) where {C, T}
+    return Polynomial{C, T}(terms(p))
 end
 
 Polynomial{C}(p::Union{Polynomial{C}, Term{C}, Monomial{C}, PolyVar{C}}) where {C} = Polynomial(p)
 Polynomial{C}(α) where {C} = Polynomial(Term{C}(α))
 
 Polynomial(p::Polynomial) = p
-Polynomial(t::Term{C, T}) where {C, T} = Polynomial{C, T}([t.α], [t.x])
+Polynomial(t::Term{C, T}) where {C, T} = convert(Polynomial{C, T}, mutable_copy(t))
 Polynomial(x::Union{PolyVar{C}, Monomial{C}}) where {C} = Polynomial(Term{C}(x))
 
 #Base.convert(::Type{TermContainer{C, T}}, p::Polynomial{C}) where {C, T} = Polynomial{C, T}(p)
@@ -123,16 +128,16 @@ MP.extdegree(p::Polynomial) = extdegree(p.x)
 MP.mindegree(p::Polynomial) = mindegree(p.x)
 MP.maxdegree(p::Polynomial) = maxdegree(p.x)
 
-MP.leadingcoefficient(p::Polynomial{C, T}) where {C, T} = iszero(p) ? zero(T) : first(p.a)
-MP.leadingmonomial(p::Polynomial) = iszero(p) ? constantmonomial(p) : first(p.x)
-MP.leadingterm(p::Polynomial) = iszero(p) ? zeroterm(p) : first(terms(p))
+MP.leadingcoefficient(p::Polynomial{C, T}) where {C, T} = iszero(p) ? zero(T) : last(p.a)
+MP.leadingmonomial(p::Polynomial) = iszero(p) ? constantmonomial(p) : last(p.x)
+MP.leadingterm(p::Polynomial) = iszero(p) ? zeroterm(p) : last(terms(p))
 
 function MP.removeleadingterm(p::Polynomial)
-    Polynomial(p.a[2:end], p.x[2:end])
+    Polynomial(p.a[1:end-1], p.x[1:end-1])
 end
 function MA.operate!(::typeof(MP.removeleadingterm), p::Polynomial)
-    deleteat!(p.a, 1)
-    deleteat!(p.x, 1)
+    pop!(p.a)
+    pop!(p.x)
     return p
 end
 function MP.removemonomials(p::Polynomial, x::MonomialVector)
@@ -140,7 +145,7 @@ function MP.removemonomials(p::Polynomial, x::MonomialVector)
     j = 1
     I = Int[]
     for (i,t) in enumerate(p)
-        while j <= length(x) && x[j] > t.x
+        while j <= length(x) && x[j] < t.x
             j += 1
         end
         if j > length(x) || x[j] != t.x
@@ -166,7 +171,7 @@ end
 
 function removedups_to!(a::Vector{T}, Z::Vector{Vector{Int}},
                         adup::Vector{T}, Zdup::Vector{Vector{Int}}) where T
-    σ = sortperm(Zdup, rev=true, lt=grlex)
+    σ = sortperm(Zdup, lt=grlex)
     i = 0
     j = 1
     while j <= length(adup)

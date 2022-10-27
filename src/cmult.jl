@@ -8,10 +8,10 @@ function Base.:(*)(x::PolyVar{true}, y::PolyVar{true})
 end
 function multiplyvar(v::Vector{PolyVar{true}}, x::PolyVar{true}, z)
     i = findfirst(Base.Fix2(<=, x), v)
-    if (i != nothing && i > 0) && v[i] == x
+    if (i !== nothing && i > 0) && v[i] == x
         copy(v), multiplyexistingvar(i, z)
     else
-        j = (i == nothing || i == 0) ? length(v)+1 : i
+        j = (i === nothing || i == 0) ? length(v)+1 : i
         insertvar(v, x, j), insertvar(z, x, j)
     end
 end
