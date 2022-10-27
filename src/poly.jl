@@ -45,8 +45,6 @@ Polynomial(af::Union{Function, Vector}, x::DMonoVec{C}) where {C} = Polynomial{C
 # TODO Remove with MP v0.2.8
 Polynomial{C, T}(p::Polynomial{C, T}) where {C, T} = p
 
-_vec(v::Vector) = v
-_vec(v::Tuple) = vcat(v...)
 Base.convert(::Type{Polynomial{C, T}}, p::Polynomial{C, T}) where {C, T} = p
 function Base.convert(::Type{Polynomial{C, T}}, t::AbstractTermLike) where {C, T}
     if iszero(t)
