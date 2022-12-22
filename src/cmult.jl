@@ -1,12 +1,12 @@
-# Product between PolyVar and Monomial -> Monomial
-function Base.:(*)(x::PolyVar{true}, y::PolyVar{true})
+# Product between Variable and Monomial -> Monomial
+function Base.:(*)(x::Variable{V,M}, y::Variable{V,M}) where {V<:Commutative,M}
     if x === y
-        Monomial{true}([x], [2])
+        Monomial([x], [2])
     else
-        Monomial{true}(x > y ? [x, y] : [y, x], [1, 1])
+        Monomial(x > y ? [x, y] : [y, x], [1, 1])
     end
 end
-function multiplyvar(v::Vector{PolyVar{true}}, x::PolyVar{true}, z)
+function multiplyvar(v::Vector{Variable{V,M}}, x::Variable{V,M}, z) where {V<:Commutative,M}
     i = findfirst(Base.Fix2(<=, x), v)
     if (i !== nothing && i > 0) && v[i] == x
         copy(v), multiplyexistingvar(i, z)
@@ -15,14 +15,16 @@ function multiplyvar(v::Vector{PolyVar{true}}, x::PolyVar{true}, z)
         insertvar(v, x, j), insertvar(z, x, j)
     end
 end
-function Base.:(*)(x::PolyVar{true}, y::Monomial{true})
+function Base.:(*)(x::Variable{V,M}, y::Monomial{V,M}) where {V<:Commutative,M}
     w, z = multiplyvar(y.vars, x, y.z)
-    return Monomial{true}(w, z)
+    return Monomial(w, z)
 end
-Base.:(*)(y::MonomialVector{true}, x::PolyVar{true}) = x * y
-function Base.:(*)(x::PolyVar{true}, y::MonomialVector{true})
+function Base.:(*)(y::MonomialVector{V,M}, x::Variable{V,M}) where {V<:Commutative,M}
+    return x * y
+end
+function Base.:(*)(x::Variable{V,M}, y::MonomialVector{V,M}) where {V<:Commutative,M}
     w, Z = multiplyvar(y.vars, x, y.Z)
-    return MonomialVector{true}(w, Z)
+    return MonomialVector(w, Z)
 end
 function _operate_exponents_to!(
     output::Vector{Int},
@@ -99,12 +101,12 @@ function _resize!(output::Vector{<:Vector}, n)
 end
 function _multdivmono!(
     output,
-    output_variables::Vector{PolyVar{true}},
-    v::Vector{PolyVar{true}},
-    x::Monomial{true},
+    output_variables::Vector{Variable{V,M}},
+    v::Vector{Variable{V,M}},
+    x::Monomial{V,M},
     op,
     z,
-)
+) where {V<:Commutative,M}
     if v == x.vars
         if output_variables != v
             resize!(output_variables, length(v))
@@ -164,7 +166,12 @@ function _operate_exponents(
 ) where {F<:Function,N}
     return Vector{Int}[_operate_exponents(op, z, z2, args...) for z in Z]
 end
-function multdivmono(v::Vector{PolyVar{true}}, x::Monomial{true}, op, z)
+function multdivmono(
+    v::Vector{Variable{V,M}},
+    x::Monomial{V,M},
+    op,
+    z,
+) where {V<:Commutative,M}
     if v == x.vars
         w = copy(v)
         z_new = _operate_exponents(op, z, x.z)
@@ -175,11 +182,11 @@ function multdivmono(v::Vector{PolyVar{true}}, x::Monomial{true}, op, z)
     return w, z_new
 end
 function MP.map_exponents_to!(
-    output::Monomial{true},
+    output::Monomial{V},
     f::Function,
-    x::Monomial{true},
-    y::Monomial{true},
-)
+    x::Monomial{V},
+    y::Monomial{V},
+) where {V<:Commutative}
     if x.vars == y.vars
         if output.vars != x.vars
             n = length(x.vars)
@@ -193,7 +200,11 @@ function MP.map_exponents_to!(
     end
     return output
 end
-function MP.map_exponents!(f::Function, x::Monomial{true}, y::Monomial{true})
+function MP.map_exponents!(
+    f::Function,
+    x::Monomial{V},
+    y::Monomial{V},
+) where {V<:Commutative}
     if x.vars == y.vars
         _operate_exponents_to!(x.z, f, x.z, y.z)
     else
@@ -201,49 +212,61 @@ function MP.map_exponents!(f::Function, x::Monomial{true}, y::Monomial{true})
     end
     return x
 end
-function MP.map_exponents(f::Function, x::Monomial{true}, y::Monomial{true})
+function MP.map_exponents(
+    f::Function,
+    x::Monomial{V,M},
+    y::Monomial{V,M},
+) where {V<:Commutative,M}
     w, z = multdivmono(x.vars, y, f, x.z)
-    return Monomial{true}(w, z)
+    return Monomial{V,M}(w, z)
 end
 function MP.map_exponents(
     f::Function,
-    x::MonomialVector{true},
-    y::Monomial{true},
-)
+    x::MonomialVector{V},
+    y::Monomial{V},
+) where {V<:Commutative}
     w, Z = multdivmono(x.vars, y, f, x.Z)
-    return MonomialVector{true}(w, Z)
+    return MonomialVector(w, Z)
 end
 function MP.map_exponents!(
     f::Function,
-    x::MonomialVector{true},
-    y::Monomial{true},
-)
+    x::MonomialVector{V},
+    y::Monomial{V},
+) where {V<:Commutative}
     _multdivmono!(x.Z, x.vars, copy(x.vars), y, f, copy.(x.Z))
     return x
 end
 function MP.map_exponents(
     f::Function,
-    x::MonomialVector{true},
-    y::PolyVar{true},
-)
+    x::MonomialVector{V},
+    y::Variable{V},
+) where {V<:Commutative}
     return MP.map_exponents(f, x, MP.monomial(y))
 end
 function MP.map_exponents!(
     f::Function,
-    x::MonomialVector{true},
-    y::PolyVar{true},
-)
+    x::MonomialVector{V},
+    y::Variable{V},
+) where {V<:Commutative}
     return MP.map_exponents!(f, x, MP.monomial(y))
 end
 function MA.operate!(
     ::typeof(*),
-    x::MonomialVector{true},
-    y::DMonomialLike{true},
-)
+    x::MonomialVector{V},
+    y::DMonomialLike{V},
+) where {V<:Commutative}
     return MP.map_exponents!(+, x, y)
 end
-function Base.:(*)(y::MonomialVector{true}, x::DMonomialLike{true})
+function Base.:(*)(
+    y::MonomialVector{V},
+    x::DMonomialLike{V},
+) where {V<:Commutative}
     return MP.map_exponents(+, y, x)
 end
-Base.:(*)(x::DMonomialLike{true}, y::MonomialVector{true}) = y * x
-Base.:(*)(x::Monomial{true}, y::PolyVar{true}) = y * x
+function Base.:(*)(
+    x::DMonomialLike{V},
+    y::MonomialVector{V},
+) where {V<:Commutative}
+    return y * x
+end
+Base.:(*)(x::Monomial{V}, y::Variable{V}) where {V<:Commutative} = y * x

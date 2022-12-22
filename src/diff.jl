@@ -1,4 +1,4 @@
-function MP.differentiate(m::Monomial{C}, x::PolyVar{C}) where {C}
+function MP.differentiate(m::Monomial{C}, x::Variable{C}) where {C}
     i = findfirst(isequal(x), _vars(m))
     if (i === nothing || i == 0) || m.z[i] == 0
         zero_term(m)
@@ -9,7 +9,7 @@ function MP.differentiate(m::Monomial{C}, x::PolyVar{C}) where {C}
     end
 end
 
-function MP.differentiate(p::Polynomial{C,T}, x::PolyVar{C}) where {C,T}
+function MP.differentiate(p::Polynomial{C,T}, x::Variable{C}) where {C,T}
     # grlex order preserved
     i = something(findfirst(isequal(x), _vars(p)), 0)
     S = typeof(zero(T) * 0)

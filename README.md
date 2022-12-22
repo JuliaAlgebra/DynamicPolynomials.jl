@@ -9,7 +9,7 @@ Sparse dynamic representation of multivariate polynomials that can be used with 
 Both commutative and non-commutative variables are supported.
 The following types are defined:
 
-* `PolyVar{C}`: A variable which is commutative with `*` when `C` is `true`. Commutative variables are created using the `@polyvar` macro, e.g. `@polyvar x y`, `@polyvar x[1:8]` and non-commutative variables are created likewise using the `@ncpolyvar` macro.
+* `Variable{C}`: A variable which is commutative with `*` when `C` is `true`. Commutative variables are created using the `@polyvar` macro, e.g. `@polyvar x y`, `@polyvar x[1:8]` and non-commutative variables are created likewise using the `@ncpolyvar` macro.
 * `Monomial{C}`: A product of variables: e.g. `x*y^2`.
 * `Term{C, T}`: A product between an element of type `T` and a `Monomial{C}`, e.g `2x`, `3.0x*y^2`.
 * `Polynomial{C, T}`: A sum of `Term{C, T}`, e.g. `2x + 3.0x*y^2 + y`.
@@ -53,7 +53,7 @@ Below is an example with `@polyvar x[1:n]`
 julia> n = 3;
 
 julia> @polyvar x[1:n] # assign x to a tuple of variables x1, x2, x3
-(PolyVar{true}[x₁, x₂, x₃],)
+(Variable{true}[x₁, x₂, x₃],)
 
 julia> p = sum(x .* x) # compute the sum of squares
 x₁² + x₂² + x₃²
@@ -66,8 +66,8 @@ julia> A = reshape(1:9, 3, 3);
 julia> p(x => A * vec(x))  # corresponds to dot(A*x, A*x), need vec to convert the tuple to a vector
 14x₁² + 64x₁x₂ + 100x₁x₃ + 77x₂² + 244x₂x₃ + 194x₃²
 ```
-Note that, when doing substitution, it is required to give the `PolyVar` ordering that is meant.
-Indeed, the ordering between the `PolyVar` is not alphabetical but rather by order of creation
+Note that, when doing substitution, it is required to give the `Variable` ordering that is meant.
+Indeed, the ordering between the `Variable` is not alphabetical but rather by order of creation
 which can be undeterministic with parallel computing.
 Therefore, this order cannot be used for substitution, even as a default (see [here](https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/3) for a discussion about this).
 

@@ -3,9 +3,9 @@ import Base.==
 #Base.iszero(t::Term) = iszero(t.α)
 Base.iszero(p::Polynomial) = isempty(p)
 
-# TODO This should be in Base with T instead of PolyVar{C}.
+# TODO This should be in Base with T instead of Variable{C}.
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/3
-function (==)(x::Vector{PolyVar{C}}, y::Vector{PolyVar{C}}) where {C}
+function (==)(x::Vector{Variable{C}}, y::Vector{Variable{C}}) where {C}
     if length(x) != length(y)
         false
     else
@@ -19,25 +19,35 @@ function (==)(x::Vector{PolyVar{C}}, y::Vector{PolyVar{C}}) where {C}
     end
 end
 
-# Comparison of PolyVar
+# Comparison of Variable
 
-function (==)(x::PolyVar{C}, y::PolyVar{C}) where {C}
-    return x.id == y.id
+const AnyCommutative{O} = Union{Commutative{O},NonCommutative{O}}
+
+function (==)(
+    x::Variable{<:AnyCommutative{CreationOrder}},
+    y::Variable{<:AnyCommutative{CreationOrder}},
+)
+    return x.variable_order.order.id == y.variable_order.order.id
 end
 
-Base.isless(x::PolyVar{C}, y::PolyVar{C}) where {C} = isless(y.id, x.id)
+function Base.isless(
+    x::Variable{<:AnyCommutative{CreationOrder}},
+    y::Variable{<:AnyCommutative{CreationOrder}},
+)
+    return isless(y.variable_order.order.id, x.variable_order.order.id)
+end
 
 # Comparison of Monomial
 
 # graded lex ordering
-function samevars_grlex(x::Vector{Int}, y::Vector{Int})
+function _samevars_grlex(x::Vector{Int}, y::Vector{Int})
     @assert length(x) == length(y)
     degx = sum(x)
     degy = sum(y)
     if degx != degy
         degx - degy
     else
-        for i in eachindex(x)
+        @inbounds for i in eachindex(x)
             if x[i] != y[i]
                 return x[i] - y[i]
             end
@@ -54,7 +64,7 @@ function mycomp(x::Monomial{C}, y::Monomial{C}) where {C}
         i = j = 1
         # since they have the same degree,
         # if we get j > nvariables(y), the rest in x.z should be zeros
-        while i <= nvariables(x) && j <= nvariables(y)
+        @inbounds while i <= nvariables(x) && j <= nvariables(y)
             if x.vars[i] > y.vars[j]
                 if x.z[i] == 0
                     i += 1
@@ -81,16 +91,16 @@ end
 function (==)(x::Monomial{C}, y::Monomial{C}) where {C}
     return mycomp(x, y) == 0
 end
-(==)(x::PolyVar{C}, y::Monomial{C}) where {C} = convert(Monomial{C}, x) == y
+(==)(x::Variable{C}, y::Monomial{C}) where {C} = convert(Monomial{C}, x) == y
 
 # graded lex ordering
 function Base.isless(x::Monomial{C}, y::Monomial{C}) where {C}
     return mycomp(x, y) < 0
 end
-function Base.isless(x::Monomial{C}, y::PolyVar{C}) where {C}
+function Base.isless(x::Monomial{C}, y::Variable{C}) where {C}
     return isless(x, convert(Monomial{C}, y))
 end
-function Base.isless(x::PolyVar{C}, y::Monomial{C}) where {C}
+function Base.isless(x::Variable{C}, y::Monomial{C}) where {C}
     return isless(convert(Monomial{C}, x), y)
 end
 

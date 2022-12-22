@@ -1,10 +1,10 @@
 # In Base/intfuncs.jl, x^p returns zero(x) when p == 0
-# Since one(PolyVar) and one(Monomial) do not return
-# a PolyVar and a Monomial, this results in type instability
+# Since one(Variable) and one(Monomial) do not return
+# a Variable and a Monomial, this results in type instability
 # Defining the specific methods solve this problem and also make
 # them a lot faster
-Base.:(^)(x::PolyVar{C}, i::Int) where {C} = Monomial{C}([x], [i])
-Base.:(^)(x::Monomial{true}, i::Int) = Monomial{true}(x.vars, i * x.z)
+Base.:(^)(x::Variable{V,M}, i::Int) where {V,M} = Monomial{V,M}([x], [i])
+Base.:(^)(x::Monomial{<:Commutative}, i::Int) = Monomial(x.vars, i * x.z)
 
 myminivect(x::T, y::T) where {T} = [x, y]
 function myminivect(x::S, y::T) where {S,T}
@@ -12,20 +12,20 @@ function myminivect(x::S, y::T) where {S,T}
     return [U(x), U(y)]
 end
 
-Base.:(+)(x::DMonomialLike, y::DMonomialLike) = Term(x) + Term(y)
-Base.:(-)(x::DMonomialLike, y::DMonomialLike) = Term(x) - Term(y)
+Base.:(+)(x::DMonomialLike, y::DMonomialLike) = MP.term(x) + MP.term(y)
+Base.:(-)(x::DMonomialLike, y::DMonomialLike) = MP.term(x) - MP.term(y)
 
-_getindex(p::Polynomial, i) = p[i]
-_getindex(t::Term, i) = t
+_getindex(p::Polynomial, i::Int) = p[i]
+_getindex(t::_Term, ::Int) = t
 function _plusorminus_to!(
     a::Vector{U},
     Z::Vector{Vector{Int}},
     op::Function,
-    p::TermPoly{C},
-    q::TermPoly{C},
+    p::TermPoly{V,M},
+    q::TermPoly{V,M},
     maps,
     nvars,
-) where {C,U}
+) where {V,M,U}
     i = j = 1
     while i <= nterms(p) || j <= nterms(q)
         z = zeros(Int, nvars)
@@ -53,20 +53,20 @@ function _plusorminus_to!(
     end
 end
 function plusorminus(
-    p::TermPoly{C,S},
-    q::TermPoly{C,T},
+    p::TermPoly{V,M,S},
+    q::TermPoly{V,M,T},
     op::Function,
-) where {C,S,T}
+) where {V,M,S,T}
     varsvec = [_vars(p), _vars(q)]
     allvars, maps = mergevars(varsvec)
     U = MA.promote_operation(op, S, T)
     a = U[]
     Z = Vector{Int}[]
     _plusorminus_to!(a, Z, op, p, q, maps, length(allvars))
-    return Polynomial(a, MonomialVector{C}(allvars, Z))
+    return Polynomial(a, MonomialVector{V,M}(allvars, Z))
 end
 
-function MA.operate!(::typeof(*), p::Polynomial, t::Term)
+function MA.operate!(::typeof(*), p::Polynomial, t::_Term)
     # In case `coefficient(t)` is a polynomial (e.g. in `gcd` algorithm)
     # We cannot do `MA.operate!(*, ...)`, we need `MP.right_constant_mult`
     MA.operate!(MP.right_constant_mult, p, coefficient(t))
@@ -75,11 +75,11 @@ function MA.operate!(::typeof(*), p::Polynomial, t::Term)
 end
 
 function MA.operate_to!(
-    output::Polynomial{C},
+    output::Polynomial{V,M},
     op::Union{typeof(+),typeof(-)},
-    p::TermPoly{C},
-    q::TermPoly{C},
-) where {C}
+    p::TermPoly{V,M},
+    q::TermPoly{V,M},
+) where {V,M}
     if output === p || output === q
         # Otherwise, `_plusorminus_to!` never finishes
         error(
@@ -98,7 +98,7 @@ end
 function MA.operate!(
     op::Union{typeof(+),typeof(-)},
     p::Polynomial,
-    q::Union{PolyVar,Monomial,Term},
+    q::Union{Variable,Monomial,_Term},
 )
     return MA.operate!(op, p, polynomial(q))
 end
@@ -113,9 +113,9 @@ end
 # TODO need to check that this also works for non-commutative
 function MA.operate!(
     op::Union{typeof(+),typeof(-)},
-    p::Polynomial{true},
-    q::Polynomial{true},
-)
+    p::Polynomial{V},
+    q::Polynomial{V},
+) where {V<:Commutative}
     if _vars(p) != _vars(q)
         varsvec = [_vars(p), _vars(q)]
         allvars, maps = mergevars(varsvec)
@@ -176,13 +176,17 @@ function MA.operate!(
     return p
 end
 
-Base.:(+)(x::TermPoly{C}, y::TermPoly{C}) where {C} = plusorminus(x, y, +)
-Base.:(-)(x::TermPoly{C}, y::TermPoly{C}) where {C} = plusorminus(x, y, -)
-Base.:(+)(x::TermPoly{C}, y::Union{Monomial,PolyVar}) where {C} = x + Term{C}(y)
-Base.:(+)(x::Union{Monomial,PolyVar}, y::TermPoly{C}) where {C} = Term{C}(x) + y
+Base.:(+)(x::TermPoly{V,M}, y::TermPoly{V,M}) where {V,M} = plusorminus(x, y, +)
+Base.:(-)(x::TermPoly{V,M}, y::TermPoly{V,M}) where {V,M} = plusorminus(x, y, -)
+function Base.:(+)(x::TermPoly{V,M}, y::Union{Monomial,Variable}) where {V,M}
+    return x + _Term{V,M}(y)
+end
+function Base.:(+)(x::Union{Monomial,Variable}, y::TermPoly{V,M}) where {V,M}
+    return _Term{V,M}(x) + y
+end
 
-Base.:(-)(x::TermPoly{T}, y::DMonomialLike) where {T} = x - Term{T}(y)
-Base.:(-)(x::DMonomialLike, y::TermPoly{T}) where {T} = Term{T}(x) - y
+Base.:(-)(x::TermPoly{T}, y::DMonomialLike) where {T} = x - _Term{T}(y)
+Base.:(-)(x::DMonomialLike, y::TermPoly{T}) where {T} = _Term{T}(x) - y
 
 # `MA.operate(-, p)` redirects to `-p` as it assumes that `-p` can be modified
 # through the MA API without modifying `p`. We should either copy `p.x` here

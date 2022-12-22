@@ -1,16 +1,20 @@
-export PolyVar, @polyvar, @ncpolyvar
-export polyvecvar
+export Variable, @polyvar, @ncpolyvar
 
-function polyarrayvar(::Type{PV}, prefix, indices...) where {PV}
+function polyarrayvar(variable_order, monomial_order, prefix, indices...)
     return map(
-        i -> PV("$(prefix)[$(join(i, ","))]"),
+        i -> Variable(
+            "$(prefix)[$(join(i, ","))]",
+            variable_order,
+            monomial_order,
+        ),
         Iterators.product(indices...),
     )
 end
 
-function buildpolyvar(::Type{PV}, var) where {PV}
+function buildpolyvar(var, variable_order, monomial_order)
     if isa(var, Symbol)
-        var, :($(esc(var)) = $PV($"$var"))
+        var,
+        :($(esc(var)) = $Variable($"$var", $variable_order, $monomial_order))
     else
         isa(var, Expr) || error("Expected $var to be a variable name")
         Base.Meta.isexpr(var, :ref) ||
@@ -21,61 +25,118 @@ function buildpolyvar(::Type{PV}, var) where {PV}
         prefix = string(varname)
         varname,
         :(
-            $(esc(varname)) =
-                polyarrayvar($PV, $prefix, $(esc.(var.args[2:end])...))
+            $(esc(varname)) = polyarrayvar(
+                $variable_order,
+                $monomial_order,
+                $prefix,
+                $(esc.(var.args[2:end])...),
+            )
         )
     end
 end
 
-function buildpolyvars(::Type{PV}, args) where {PV}
+function buildpolyvars(args, variable_order, monomial_order)
     vars = Symbol[]
     exprs = []
     for arg in args
-        var, expr = buildpolyvar(PV, arg)
+        var, expr = buildpolyvar(arg, variable_order, monomial_order)
         push!(vars, var)
         push!(exprs, expr)
     end
     return vars, exprs
 end
 
+# Inspired from `JuMP.Containers._extract_kw_args`
+function _extract_kw_args(args, variable_order)
+    positional_args = Any[]
+    monomial_order = :($(MP.Graded(MP.LexOrder())))
+    for arg in args
+        if Base.isexpr(arg, :(=))
+            if arg.args[1] == :variable_order
+                variable_order = arg.args[2]
+            elseif arg.args[1] == :monomial_order
+                monomial_order = arg.args[2]
+            else
+                error("Unrecognized keyword argument `$(arg.args[1])`")
+            end
+        else
+            push!(positional_args, arg)
+        end
+    end
+    return positional_args, variable_order, monomial_order
+end
+
 # Variable vector x returned garanteed to be sorted so that if p is built with x then vars(p) == x
 macro polyvar(args...)
-    vars, exprs = buildpolyvars(PolyVar{true}, args)
-    return :(
-        $(foldl((x, y) -> :($x; $y), exprs, init = :())); $(Expr(
-            :tuple,
-            esc.(vars)...,
-        ))
-    )
+    pos_args, variable_order, monomial_order =
+        _extract_kw_args(args, :($(Commutative{CreationOrder})))
+    vars, exprs = buildpolyvars(pos_args, variable_order, monomial_order)
+    return :($(foldl((x, y) -> :($x; $y), exprs, init = :()));
+    $(Expr(:tuple, esc.(vars)...)))
 end
 
 macro ncpolyvar(args...)
-    vars, exprs = buildpolyvars(PolyVar{false}, args)
-    return :(
-        $(foldl((x, y) -> :($x; $y), exprs, init = :())); $(Expr(
-            :tuple,
-            esc.(vars)...,
-        ))
-    )
+    pos_args, variable_order, monomial_order =
+        _extract_kw_args(args, :($(NonCommutative{CreationOrder})))
+    vars, exprs = buildpolyvars(pos_args, variable_order, monomial_order)
+    return :($(foldl((x, y) -> :($x; $y), exprs, init = :()));
+    $(Expr(:tuple, esc.(vars)...)))
 end
 
-struct PolyVar{C} <: AbstractVariable
-    id::Int
-    name::String
+abstract type AbstractVariableOrdering end
 
-    function PolyVar{C}(name::AbstractString) where {C}
-        # gensym returns something like Symbol("##42")
-        # we first remove "##" and then parse it into an Int
-        id = parse(Int, string(gensym())[3:end])
-        return new(id, convert(String, name))
+struct CreationOrder <: AbstractVariableOrdering
+    id::Int
+end
+
+function instantiate(::Type{CreationOrder})
+    # gensym returns something like Symbol("##42")
+    # we first remove "##" and then parse it into an Int
+    id = parse(Int, string(gensym())[3:end])
+    return CreationOrder(id)
+end
+
+struct Commutative{O<:AbstractVariableOrdering} <: AbstractVariableOrdering
+    order::O
+end
+
+iscomm(::Type{<:Commutative}) = false
+function instantiate(::Type{Commutative{O}}) where {O}
+    return Commutative(instantiate(O))
+end
+
+struct NonCommutative{O<:AbstractVariableOrdering} <: AbstractVariableOrdering
+    order::O
+end
+
+iscomm(::Type{<:NonCommutative}) = false
+function instantiate(::Type{NonCommutative{O}}) where {O}
+    return NonCommutative(instantiate(O))
+end
+
+struct Variable{V,O} <: AbstractVariable
+    name::String
+    variable_order::V
+    monomial_order::O
+
+    function Variable(
+        name::AbstractString,
+        ::Type{V},
+        monomial_order::MP.AbstractMonomialOrdering,
+    ) where {V<:AbstractVariableOrdering}
+        return new{V,typeof(monomial_order)}(
+            convert(String, name),
+            instantiate(V),
+            monomial_order,
+        )
     end
 end
 
-Base.hash(x::PolyVar, u::UInt) = hash(x.id, u)
-Base.broadcastable(x::PolyVar) = Ref(x)
+Base.hash(x::Variable, u::UInt) = hash(x.id, u)
+Base.broadcastable(x::Variable) = Ref(x)
 
-MP.name(v::PolyVar) = v.name
-function MP.name_base_indices(v::PolyVar)
+MP.name(v::Variable) = v.name
+function MP.name_base_indices(v::Variable)
     splits = split(v.name, r"[\[,\]]\s*", keepempty = false)
     if length(splits) == 1
         return v.name, Int[]
@@ -84,15 +145,15 @@ function MP.name_base_indices(v::PolyVar)
     end
 end
 
-MP.monomial(v::PolyVar) = Monomial(v)
-_vars(v::PolyVar) = [v]
+MP.monomial(v::Variable) = Monomial(v)
+_vars(v::Variable) = [v]
 
-iscomm(::Type{PolyVar{C}}) where {C} = C
+iscomm(::Type{Variable{C}}) where {C} = C
 
 function mergevars_to!(
     vars::Vector{PV},
     varsvec::Vector{Vector{PV}},
-) where {PV<:PolyVar}
+) where {PV<:Variable}
     empty!(vars)
     n = length(varsvec)
     is = ones(Int, n)
@@ -120,13 +181,13 @@ function mergevars_to!(
     end
     return maps
 end
-function mergevars(varsvec::Vector{Vector{PV}}) where {PV<:PolyVar}
+function mergevars(varsvec::Vector{Vector{PV}}) where {PV<:Variable}
     vars = PV[]
     maps = mergevars_to!(vars, varsvec)
     return vars, maps
 end
-function mergevars_of(::Type{PolyVar{C}}, polys::AbstractVector) where {C}
-    varsvec = Vector{PolyVar{C}}[variables(p) for p in polys if p isa PolyType]
+function mergevars_of(::Type{Variable{C}}, polys::AbstractVector) where {C}
+    varsvec = Vector{Variable{C}}[variables(p) for p in polys if p isa PolyType]
     # TODO avoid computing `maps`
     return mergevars(varsvec)
 end

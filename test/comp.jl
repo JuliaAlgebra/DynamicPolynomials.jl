@@ -1,4 +1,4 @@
-@testset "PolyVar order" begin
+@testset "Variable order" begin
     @polyvar x
     z = x
     @polyvar x

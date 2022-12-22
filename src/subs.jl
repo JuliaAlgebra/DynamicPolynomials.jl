@@ -7,14 +7,14 @@ function Base.setindex!(sv::SafeValues, v, i::Int)
     return sv.values[i] = v
 end
 
-function fillmap!(vals, vars::Vector{PolyVar{false}}, s::MP.Substitution)
+function fillmap!(vals, vars::Vector{Variable{false}}, s::MP.Substitution)
     for j in eachindex(vars)
         if vars[j] == s.first
             vals[j] = s.second
         end
     end
 end
-function fillmap!(vals, vars::Vector{PolyVar{true}}, s::MP.Substitution)
+function fillmap!(vals, vars::Vector{<:Variable{<:Commutative}}, s::MP.Substitution)
     j = findfirst(isequal(s.first), vars)
     if j !== nothing
         vals[j] = s.second
@@ -64,11 +64,11 @@ function _subsmap(::MP.Eval, vars, s::MP.Substitutions)
 end
 function _subsmap(
     ::MP.Subs,
-    vars::Vector{PolyVar{C}},
+    vars::Vector{Variable{C}},
     s::MP.Substitutions,
 ) where {C}
     # Some variable may not be replaced
-    vals = Vector{promote_type(_substype(s), PolyVar{C})}(undef, length(vars))
+    vals = Vector{promote_type(_substype(s), Variable{C})}(undef, length(vars))
     Future.copy!(vals, vars)
     fillmap!(vals, vars, s...)
     return vals
@@ -99,7 +99,7 @@ function monoeval(z::Vector{Int}, vals::AbstractVector)
     return val
 end
 
-_subs(st, ::PolyVar, vals) = monoeval([1], vals::AbstractVector)
+_subs(st, ::Variable, vals) = monoeval([1], vals::AbstractVector)
 _subs(st, m::Monomial, vals) = monoeval(m.z, vals::AbstractVector)
 _subs(st, t::Term, vals) = t.α * monoeval(t.x.z, vals::AbstractVector)
 function _subs(
@@ -122,7 +122,7 @@ function _subs(
     Tout = MA.promote_operation(*, T, MP.coefficient_type(S))
     q = zero_with_variables(
         Polynomial{C,Tout},
-        mergevars_of(PolyVar{C}, vals)[1],
+        mergevars_of(Variable{C}, vals)[1],
     )
     for i in 1:length(p.a)
         MA.operate!(+, q, p.a[i] * monoeval(p.x.Z[i], vals))
@@ -134,7 +134,7 @@ function MA.promote_operation(
     ::typeof(MP.substitute),
     ::Type{MP.Subs},
     ::Type{Monomial{C}},
-    ::Type{Pair{PolyVar{C},T}},
+    ::Type{Pair{Variable{C},T}},
 ) where {C,T}
     U = MA.promote_operation(^, T, Int)
     return Term{C,U}
@@ -148,12 +148,12 @@ function MP.substitute(
     return _subs(st, p, subsmap(st, _vars(p), s))
 end
 
-(v::PolyVar)(s::MP.AbstractSubstitution...) = MP.substitute(MP.Eval(), v, s)
+(v::Variable)(s::MP.AbstractSubstitution...) = MP.substitute(MP.Eval(), v, s)
 (m::Monomial)(s::MP.AbstractSubstitution...) = MP.substitute(MP.Eval(), m, s)
 (t::Term)(s::MP.AbstractSubstitution...) = MP.substitute(MP.Eval(), t, s)
 (p::Polynomial)(s::MP.AbstractSubstitution...) = MP.substitute(MP.Eval(), p, s)
 
-(p::PolyVar)(x::Number) = x
+(p::Variable)(x::Number) = x
 function (p::Monomial)(x::NTuple{N,<:Number}) where {N}
     return MP.substitute(MP.Eval(), p, variables(p) => x)
 end

@@ -1,27 +1,29 @@
 export MonomialVector
 
 # Invariant: Always sorted and no zero vector
-struct MonomialVector{C} <: AbstractVector{Monomial{C}}
-    vars::Vector{PolyVar{C}}
+struct MonomialVector{V,M} <: AbstractVector{Monomial{V,M}}
+    vars::Vector{Variable{V,M}}
     Z::Vector{Vector{Int}}
 
-    function MonomialVector{C}(
-        vars::Vector{PolyVar{C}},
+    function MonomialVector{V,M}(
+        vars::Vector{Variable{V,M}},
         Z::Vector{Vector{Int}},
-    ) where {C}
-        @assert !C || issorted(vars, rev = true)
+    ) where {V,M}
+        @assert !iscomm(V) || issorted(vars, rev = true)
         @assert all(z -> length(z) == length(vars), Z)
         @assert issorted(Z, lt = grlex)
-        return new(vars, Z)
+        return new{V,M}(vars, Z)
     end
 end
 function MonomialVector(
-    vars::Vector{PolyVar{C}},
+    vars::Vector{Variable{V,M}},
     Z::Vector{Vector{Int}},
-) where {C}
-    return MonomialVector{C}(vars, Z)
+) where {V,M}
+    return MonomialVector{V,M}(vars, Z)
 end
-MonomialVector{C}() where {C} = MonomialVector{C}(PolyVar{C}[], Vector{Int}[])
+function MonomialVector{V,M}() where {V,M}
+    return MonomialVector{V,M}(Variable{V,M}[], Vector{Int}[])
+end
 
 # Generate canonical reperesentation by removing variables that are not used
 function canonical(m::MonomialVector)
@@ -90,27 +92,28 @@ end
 _vars(m::Union{Monomial,MonomialVector}) = m.vars
 
 # Recognize arrays of monomials of this module
-# [x, y] -> Vector{PolyVar}
+# [x, y] -> Vector{Variable}
 # [x, x*y] -> Vector{Monomial}
 # [1, x] -> Vector{Term{Int}}
-const Dmonomial_vectorElemNonConstant{C} = Union{PolyVar{C},Monomial{C},Term{C}}
+const DMonoVecElemNonConstant{V,M} =
+    Union{Variable{V,M},Monomial{V,M},_Term{V,M}}
 # [1] -> Vector{Int}
-const Dmonomial_vectorElem{C} = Union{Int,Dmonomial_vectorElemNonConstant{C}}
-const Dmonomial_vector{C} = AbstractVector{<:Dmonomial_vectorElem{C}}
+const DMonoVecElem{V,M} = Union{Int,DMonoVecElemNonConstant{V,M}}
+const DMonoVec{V,M} = AbstractVector{<:DMonoVecElem{V,M}}
 
-function MP.empty_monomial_vector(vars::AbstractVector{PolyVar{C}}) where {C}
-    return MonomialVector{C}(vars, Vector{Int}[])
-end
-function MP.empty_monomial_vector(t::Dmonomial_vectorElemNonConstant)
-    return empty_monomial_vector(_vars(t))
-end
 function MP.empty_monomial_vector(
-    ::Type{<:Dmonomial_vectorElemNonConstant{C}},
-) where {C}
-    return MonomialVector{C}()
+    vars::AbstractVector{Variable{V,M}},
+) where {V,M}
+    return MonomialVector{V,M}(vars, Vector{Int}[])
+end
+MP.empty_monomial_vector(t::DMonoVecElemNonConstant) = emptymonovec(_vars(t))
+function MP.empty_monomial_vector(
+    ::Type{<:DMonoVecElemNonConstant{V,M}},
+) where {V,M}
+    return MonomialVector{V,M}()
 end
 
-function fillZfordeg!(Z, n, deg, ::Type{Val{true}}, filter::Function, ::Int)
+function fillZfordeg!(Z, n, deg, ::Type{Commutative}, filter::Function, ::Int)
     z = zeros(Int, n)
     z[end] = deg
     while true
@@ -146,7 +149,7 @@ function fillZfordeg!(
     Z,
     n,
     deg,
-    ::Type{Val{false}},
+    ::Type{NonCommutative},
     filter::Function,
     maxdeg::Int,
 )
@@ -159,42 +162,42 @@ end
 function getZfordegs(
     n,
     degs::AbstractVector{Int},
-    ::Type{Val{C}},
+    ::Type{V},
     filter::Function,
-) where {C}
+) where {V}
     Z = Vector{Vector{Int}}()
     # For non-commutative, lower degree need to create a vector of exponent as large as for the highest degree
     maxdeg = isempty(degs) ? 0 : maximum(degs)
     for deg in sort(degs)
-        fillZfordeg!(Z, n, deg, Val{C}, filter, maxdeg)
+        fillZfordeg!(Z, n, deg, V, filter, maxdeg)
     end
     @assert issorted(Z, lt = grlex)
     return Z
 end
 
 function MonomialVector(
-    vars::Vector{PolyVar{true}},
+    vars::Vector{<:Variable{<:Commutative}},
     degs::AbstractVector{Int},
     filter::Function = x -> true,
 )
     vars = unique!(sort(vars, rev = true))
-    return MonomialVector{true}(
+    return MonomialVector{V,M}(
         vars,
         getZfordegs(
             length(vars),
             degs,
-            Val{true},
+            Commutative,
             z -> filter(Monomial(vars, z)),
         ),
     )
 end
 
-function getvarsforlength(vars::Vector{PolyVar{false}}, len::Int)
+function getvarsforlength(vars::Vector{<:Variable{<:NonCommutative}}, len::Int)
     n = length(vars)
     return map(i -> vars[((i-1)%n)+1], 1:len)
 end
 function MonomialVector(
-    vars::Vector{PolyVar{false}},
+    vars::Vector{<:Variable{<:NonCommutative}},
     degs::AbstractVector{Int},
     filter::Function = x -> true,
 )
@@ -202,49 +205,48 @@ function MonomialVector(
     Z = getZfordegs(
         length(vars),
         degs,
-        Val{false},
+        NonCommutative,
         z -> filter(Monomial(getvarsforlength(vars, length(z)), z)),
     )
     v = isempty(Z) ? vars : getvarsforlength(vars, length(first(Z)))
-    return MonomialVector{false}(v, Z)
+    return MonomialVector(v, Z)
 end
 function MonomialVector(
-    vars::Vector{<:PolyVar},
+    vars::Vector{<:Variable},
     degs::Int,
     filter::Function = x -> true,
 )
     return MonomialVector(vars, [degs], filter)
 end
 
-function MP.monomials(vars::AbstractVector{<:PolyVar}, args...)
+function MP.monomials(vars::AbstractVector{<:Variable}, args...)
     return MonomialVector(vars, args...)
 end
-function MP.monomials(vars::Tuple{Vararg{PolyVar}}, args...)
+function MP.monomials(vars::Tuple{Vararg{Variable}}, args...)
     return monomials([vars...], args...)
 end
 
-#function MP.monomials(vars::TupOrVec{PolyVar{true}}, degs::AbstractVector{Int}, filter::Function = x->true)
+#function MP.monomials(vars::TupOrVec{Variable{true}}, degs::AbstractVector{Int}, filter::Function = x->true)
 #    Z = getZfordegs(length(vars), degs, true, z -> filter(Monomial(vars, z)))
 #    [Monomial{true}(vars, z) for z in Z]
 #end
-#function MP.monomials(vars::TupOrVec{PolyVar{false}}, degs::AbstractVector{Int}, filter::Function = x->true)
+#function MP.monomials(vars::TupOrVec{Variable{false}}, degs::AbstractVector{Int}, filter::Function = x->true)
 #    Z = getZfordegs(length(vars), degs, false, z -> filter(Monomial(vars, z)))
 #    v = isempty(Z) ? vars : getvarsforlength(vars, length(first(Z)))
 #    [Monomial{false}(v, z) for z in Z]
 #end
-#MP.monomials(vars::TupOrVec{PV}, degs::Int, filter::Function = x->true) where {PV<:PolyVar} = monomials(vars, [degs], filter)
+#MP.monomials(vars::TupOrVec{PV}, degs::Int, filter::Function = x->true) where {PV<:Variable} = monomials(vars, [degs], filter)
 
-function buildZvarsvec(::Type{PV}, X::Dmonomial_vector) where {PV<:PolyVar}
+function buildZvarsvec(::Type{PV}, X::DMonoVec) where {PV<:Variable}
     varsvec = Vector{PV}[
-        (isa(x, Dmonomial_vectorElemNonConstant) ? _vars(x) : PolyVar[]) for
-        x in X
+        (isa(x, DMonoVecElemNonConstant) ? _vars(x) : Variable[]) for x in X
     ]
     allvars, maps = mergevars(varsvec)
     nvars = length(allvars)
     Z = [zeros(Int, nvars) for i in 1:length(X)]
     offset = 0
     for (i, x) in enumerate(X)
-        if isa(x, PolyVar)
+        if isa(x, Variable)
             @assert length(maps[i]) == 1
             z = [1]
         elseif isa(x, Monomial)
@@ -261,8 +263,8 @@ function buildZvarsvec(::Type{PV}, X::Dmonomial_vector) where {PV<:PolyVar}
 end
 
 MP.sort_monomial_vector(X::MonomialVector) = (1:length(X), X)
-function _sort_monomial_vector(X::Dmonomial_vector{C}) where {C}
-    allvars, Z = buildZvarsvec(PolyVar{C}, X)
+function _sort_monomial_vector(X::DMonoVec{V,M}) where {V,M}
+    allvars, Z = buildZvarsvec(Variable{V,M}, X)
     σ = sortperm(Z, lt = grlex)
     return allvars, Z, σ
 end
@@ -270,47 +272,47 @@ function _removedups!(Z::Vector{Vector{Int}}, σ::Vector{Int})
     dups = findall(i -> Z[σ[i]] == Z[σ[i-1]], 2:length(σ))
     return deleteat!(σ, dups)
 end
-function MP.sort_monomial_vector(X::Dmonomial_vector{C}) where {C}
+function MP.sort_monomial_vector(X::DMonoVec{V,M}) where {V,M}
     if isempty(X)
-        Int[], MonomialVector{C}()
+        Int[], MonomialVector{V,M}()
     else
         allvars, Z, σ = _sort_monomial_vector(X)
         _removedups!(Z, σ)
-        σ, MonomialVector{C}(allvars, Z[σ])
+        σ, MonomialVector{V,M}(allvars, Z[σ])
     end
 end
 
-function MonomialVector{C}(X::Dmonomial_vector{C}) where {C}
-    allvars, Z = buildZvarsvec(PolyVar{C}, X)
+function MonomialVector{V,M}(X::DMonoVec{V,M}) where {V,M}
+    allvars, Z = buildZvarsvec(Variable{V,M}, X)
     sort!(Z, lt = grlex)
     dups = findall(i -> Z[i] == Z[i-1], 2:length(Z))
     deleteat!(Z, dups)
-    return MonomialVector{C}(allvars, Z)
+    return MonomialVector{V,M}(allvars, Z)
 end
 function MonomialVector(X)
     return monomial_vector_type(X)(X)
 end
 
 function MP.monomial_vector_type(
-    X::Union{
-        Dmonomial_vectorElemNonConstant{C},
-        Type{<:Dmonomial_vectorElemNonConstant{C}},
-        Dmonomial_vector{C},
-        Type{<:Dmonomial_vector{C}},
+    ::Union{
+        DMonoVecElemNonConstant{V,M},
+        Type{<:DMonoVecElemNonConstant{V,M}},
+        DMonoVec{V,M},
+        Type{<:DMonoVec{V,M}},
     },
-) where {C}
-    return MonomialVector{C}
+) where {V,M}
+    return MonomialVector{V,M}
 end
-function MP.monomial_vector(X::Dmonomial_vector)
+function MP.monomial_vector(X::DMonoVec)
     return MonomialVector(X)
 end
 MP.monomial_vector(a, mv::MonomialVector) = (a, mv)
 
-function MP.merge_monomial_vectors(ms::Vector{MonomialVector{C}}) where {C}
+function MP.merge_monomial_vectors(ms::Vector{MonomialVector{V,M}}) where {V,M}
     m = length(ms)
     I = ones(Int, length(ms))
     L = length.(ms)
-    X = Vector{Monomial{C}}()
+    X = Monomial{V,M}[]
     while any(I .<= L)
         min_monomial = nothing
         for i in 1:m
@@ -332,14 +334,14 @@ function MP.merge_monomial_vectors(ms::Vector{MonomialVector{C}}) where {C}
         end
     end
     # There is no duplicate by construction
-    return MonomialVector{C}(buildZvarsvec(PolyVar{C}, X)...)
+    return MonomialVector{V,M}(buildZvarsvec(Variable{V,M}, X)...)
 end
 
 function _add_variables!(
-    monos::MonomialVector{C},
-    allvars::Vector{PolyVar{C}},
+    monos::MonomialVector{V,M},
+    allvars::Vector{Variable{V,M}},
     map,
-) where {C}
+) where {V,M}
     Future.copy!(monos.vars, allvars)
     if !isempty(monos.Z)
         tmp = similar(first(monos.Z))

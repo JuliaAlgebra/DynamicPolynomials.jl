@@ -1,13 +1,13 @@
 using Test
 
-@testset "PolyVar and Monomial tests" begin
-    @testset "PolyVar macro index set" begin
+@testset "Variable and Monomial tests" begin
+    @testset "Variable macro index set" begin
         n = 3
         @polyvar x[1:n] y z[1:n-1] u[1:n, 1:n-1]
-        @test x isa Vector{PolyVar{true}}
-        @test y isa PolyVar{true}
-        @test z isa Vector{PolyVar{true}}
-        @test u isa Matrix{PolyVar{true}}
+        @test x isa Vector{Variable{true}}
+        @test y isa Variable{true}
+        @test z isa Vector{Variable{true}}
+        @test u isa Matrix{Variable{true}}
         @test length(x) == 3
         @test length(z) == 2
         @test size(u) == (3, 2)
@@ -17,7 +17,7 @@ using Test
         @polyvar a[1:5, 1:3, 1:2]
         @test size(a) == (5, 3, 2)
     end
-    @testset "PolyVar macro tuple return" begin
+    @testset "Variable macro tuple return" begin
         vars = @polyvar x y z
         @test vars isa Tuple
         @test vars == (x, y, z)
@@ -29,20 +29,21 @@ using Test
 
     @testset "variable_union_type" begin
         @polyvar x
-        @test DynamicPolynomials.MP.variable_union_type(x) == PolyVar{true}
-        @test DynamicPolynomials.MP.variable_union_type(x^2) == PolyVar{true}
-        @test DynamicPolynomials.MP.variable_union_type(2x) == PolyVar{true}
-        @test DynamicPolynomials.MP.variable_union_type(x + 1) == PolyVar{true}
+        @test DynamicPolynomials.MP.variable_union_type(x) == Variable{true}
+        @test DynamicPolynomials.MP.variable_union_type(x^2) == Variable{true}
+        @test DynamicPolynomials.MP.variable_union_type(2x) == Variable{true}
+        @test DynamicPolynomials.MP.variable_union_type(x + 1) == Variable{true}
         @ncpolyvar y
-        @test DynamicPolynomials.MP.variable_union_type(y) == PolyVar{false}
-        @test DynamicPolynomials.MP.variable_union_type(y^2) == PolyVar{false}
-        @test DynamicPolynomials.MP.variable_union_type(2y) == PolyVar{false}
-        @test DynamicPolynomials.MP.variable_union_type(y + 1) == PolyVar{false}
+        @test DynamicPolynomials.MP.variable_union_type(y) == Variable{false}
+        @test DynamicPolynomials.MP.variable_union_type(y^2) == Variable{false}
+        @test DynamicPolynomials.MP.variable_union_type(2y) == Variable{false}
+        @test DynamicPolynomials.MP.variable_union_type(y + 1) ==
+              Variable{false}
     end
-    @testset "PolyVar" begin
-        @test zero_term(PolyVar{true}) == 0
-        @test zero(PolyVar{true}) == 0
-        @test one(PolyVar{false}) == 1
+    @testset "Variable" begin
+        @test zero_term(Variable{true}) == 0
+        @test zero(Variable{true}) == 0
+        @test one(Variable{false}) == 1
         @polyvar x
         @test zero_term(x) isa Term{true,Int}
         @test zero(x) isa Polynomial{true,Int}
@@ -102,7 +103,7 @@ using Test
         @test_throws ArgumentError Monomial{false}([x], [1, 0])
         @test_throws AssertionError MonomialVector{false}([x], [[1], [1, 0]])
     end
-    @testset "NC PolyVar * Monomial" begin
+    @testset "NC Variable * Monomial" begin
         @ncpolyvar x y z
         m = y * Monomial([y, z, x, z], [0, 0, 2, 1])
         @test variables(m) == [y, z, x, z]
@@ -114,7 +115,7 @@ using Test
         @test variables(m) == [y, z, x, y, z]
         @test m.z == [0, 0, 1, 2, 1]
     end
-    @testset "NC Monomial * PolyVar" begin
+    @testset "NC Monomial * Variable" begin
         @ncpolyvar x y z
         m = Monomial([x, z, x, y], [2, 1, 0, 0]) * y
         @test variables(m) == [x, z, x, y]

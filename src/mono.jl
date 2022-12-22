@@ -5,11 +5,14 @@ const TupOrVec{T} = Union{AbstractVector{T},Tuple{Vararg{T}}}
 # Invariant:
 # vars is increasing
 # z may contain 0's (otherwise, getindex of MonomialVector would be inefficient)
-struct Monomial{C} <: AbstractMonomial
-    vars::Vector{PolyVar{C}}
+struct Monomial{V,M} <: AbstractMonomial
+    vars::Vector{Variable{V,M}}
     z::Vector{Int}
 
-    function Monomial{C}(vars::Vector{PolyVar{C}}, z::Vector{Int}) where {C}
+    function Monomial{V,M}(
+        vars::Vector{Variable{V,M}},
+        z::Vector{Int},
+    ) where {V,M}
         if length(vars) != length(z)
             throw(
                 ArgumentError("There should be as many variables as exponents"),
@@ -19,26 +22,31 @@ struct Monomial{C} <: AbstractMonomial
     end
 end
 
-function Monomial{C}(vars::Tuple{Vararg{PolyVar{C}}}, z::Vector{Int}) where {C}
-    return Monomial{C}([vars...], z)
+function Monomial{V,M}(
+    vars::Tuple{Vararg{Variable{V,M}}},
+    z::Vector{Int},
+) where {V,M}
+    return Monomial{V,M}([vars...], z)
 end
 
-iscomm(::Type{Monomial{C}}) where {C} = C
-Monomial{C}() where {C} = Monomial{C}(PolyVar{C}[], Int[])
-function Monomial(vars::TupOrVec{PolyVar{C}}, z::Vector{Int}) where {C}
-    return Monomial{C}(vars, z)
+iscomm(::Type{<:Monomial{V}}) where {V} = iscomm(V)
+Monomial{V,M}() where {V,M} = Monomial{V,M}(Variable{V,M}[], Int[])
+function Monomial(vars::TupOrVec{Variable{V,M}}, z::Vector{Int}) where {V,M}
+    return Monomial{V,M}(vars, z)
 end
-function Base.convert(::Type{Monomial{C}}, x::PolyVar{C}) where {C}
-    return Monomial{C}([x], [1])
+function Base.convert(::Type{Monomial{V,M}}, x::Variable{V,M}) where {V,M}
+    return Monomial{V,M}([x], [1])
 end
-Monomial(x::PolyVar{C}) where {C} = convert(Monomial{C}, x)
-function MP.convert_constant(::Type{Monomial{C}}, α) where {C}
-    α == 1 || error("Cannot convert $α to a Monomial{$C} as it is not one")
-    return Monomial{C}(PolyVar{C}[], Int[])
+Monomial(x::Variable{V,M}) where {V,M} = convert(Monomial{V,M}, x)
+function MP.convert_constant(::Type{Monomial{V,M}}, α) where {V,M}
+    isone(α) || error("Cannot convert $α to a Monomial{$C} as it is not one")
+    return Monomial{V,M}(Variable{V,M}[], Int[])
 end
 
 # defaults to commutative so that `Monomial(1)` is consistent with TypedPolynomials
-Monomial(α::Number) = convert(Monomial{true}, α)
+function Monomial(α::Number)
+    return convert(Monomial{Commutative{CreationOrder},Graded(LexOrder)}, α)
+end
 
 Base.broadcastable(m::Monomial) = Ref(m)
 MA.mutable_copy(m::M) where {M<:Monomial} = M(copy(m.vars), copy(m.z))

@@ -6,18 +6,18 @@ end
 function multiplyexistingvar(i::Int, Z::Vector{Vector{Int}})
     return Vector{Int}[multiplyexistingvar(i, z) for z in Z]
 end
-function insertvar(v::Vector{PolyVar{C}}, x::PolyVar{C}, i::Int) where {C}
+function insertvar(v::Vector{Variable{V,M}}, x::Variable{V,M}, i::Int) where {V,M}
     n = length(v)
     I = 1:i-1
     J = i:n
     K = J .+ 1
-    w = Vector{PolyVar{C}}(undef, n + 1)
+    w = Vector{Variable{V,M}}(undef, n + 1)
     w[I] = v[I]
     w[i] = x
     w[K] = v[J]
     return w
 end
-function insertvar(z::Vector{Int}, x::PolyVar, i::Int)
+function insertvar(z::Vector{Int}, x::Variable, i::Int)
     n = length(z)
     I = 1:i-1
     J = i:n
@@ -28,7 +28,7 @@ function insertvar(z::Vector{Int}, x::PolyVar, i::Int)
     newz[K] = z[J]
     return newz
 end
-function insertvar(Z::Vector{Vector{Int}}, x::PolyVar, i::Int)
+function insertvar(Z::Vector{Vector{Int}}, x::Variable, i::Int)
     return Vector{Int}[insertvar(z, x, i) for z in Z]
 end
 
@@ -38,9 +38,9 @@ include("ncmult.jl")
 MP.left_constant_mult(α, x::Monomial) = MP.term(α, MA.mutable_copy(x))
 
 function zero_with_variables(
-    ::Type{Polynomial{C,T}},
-    vars::Vector{PolyVar{C}},
-) where {C,T}
+    ::Type{Polynomial{V,M,T}},
+    vars::Vector{Variable{V,M}},
+) where {V,M,T}
     return Polynomial(T[], empty_monomial_vector(vars))
 end
 
@@ -48,7 +48,7 @@ end
 function Base.:(*)(x::DMonomialLike, p::Polynomial)
     return Polynomial(MA.mutable_copy(p.a), x * p.x)
 end
-function Base.:(*)(x::DMonomialLike{false}, p::Polynomial)
+function Base.:(*)(x::DMonomialLike{<:NonCommutative}, p::Polynomial)
     # Order may change, e.g. y * (x + y) = y^2 + yx
     return Polynomial(
         monomial_vector(MA.mutable_copy(p.a), [x * m for m in p.x])...,
@@ -56,13 +56,13 @@ function Base.:(*)(x::DMonomialLike{false}, p::Polynomial)
 end
 
 function _term_poly_mult(
-    t::Term{C,S},
-    p::Polynomial{C,T},
+    t::_Term{V,M,S},
+    p::Polynomial{V,M,T},
     op::Function,
-) where {C,S,T}
+) where {V,M,S,T}
     U = MA.promote_operation(op, S, T)
     if iszero(t)
-        zero(Polynomial{C,U})
+        zero(Polynomial{V,M,U})
     else
         n = nterms(p)
         allvars, maps = mergevars([t.x.vars, p.x.vars])
@@ -76,8 +76,8 @@ function _term_poly_mult(
         Polynomial(op.(t.α, p.a), MonomialVector(allvars, Z))
     end
 end
-Base.:(*)(p::Polynomial, t::Term) = _term_poly_mult(t, p, (α, β) -> β * α)
-Base.:(*)(t::Term, p::Polynomial) = _term_poly_mult(t, p, *)
+Base.:(*)(p::Polynomial, t::_Term) = _term_poly_mult(t, p, (α, β) -> β * α)
+Base.:(*)(t::_Term, p::Polynomial) = _term_poly_mult(t, p, *)
 _sumprod(a, b) = a * b + a * b
 function _mul(
     ::Type{T},
@@ -86,7 +86,7 @@ function _mul(
 ) where {T}
     return _mul(T, polynomial(p), polynomial(q))
 end
-function _mul(::Type{T}, p::Polynomial{true}, q::Polynomial{true}) where {T}
+function _mul(::Type{T}, p::Polynomial{<:Commutative}, q::Polynomial{<:Commutative}) where {T}
     samevars = _vars(p) == _vars(q)
     if samevars
         allvars = copy(_vars(p))
@@ -113,7 +113,7 @@ function _mul(::Type{T}, p::Polynomial{true}, q::Polynomial{true}) where {T}
     end
     return allvars, a, Z
 end
-function Base.:(*)(p::Polynomial{true,S}, q::Polynomial{true,T}) where {S,T}
+function Base.:(*)(p::Polynomial{V,M,S}, q::Polynomial{V,M,T}) where {V<:Commutative,M,S,T}
     PT = MA.promote_operation(*, typeof(p), typeof(q))
     if iszero(p) || iszero(q)
         zero(PT)
@@ -122,15 +122,15 @@ function Base.:(*)(p::Polynomial{true,S}, q::Polynomial{true,T}) where {S,T}
     end
 end
 function MA.operate_to!(
-    p::Polynomial{false,T},
+    p::Polynomial{V,M,T},
     ::typeof(*),
     q1::MP.AbstractPolynomialLike,
     q2::MP.AbstractPolynomialLike,
-) where {T}
+) where {V<:NonCommutative,M,T}
     if iszero(q1) || iszero(q2)
         MA.operate!(zero, p)
     else
-        ts = Term{false,T}[]
+        ts = _Term{V,M,T}[]
         MP.mul_to_terms!(ts, q1, q2)
         # TODO do better than create tmp
         tmp = polynomial!(ts)
@@ -141,18 +141,18 @@ function MA.operate_to!(
     end
 end
 function MA.operate_to!(
-    p::Polynomial{true,T},
+    p::Polynomial{<:Commutative,M,T},
     ::typeof(*),
     q1::MP.AbstractPolynomialLike,
     q2::MP.AbstractPolynomialLike,
-) where {T}
+) where {M,T}
     if iszero(q1) || iszero(q2)
         MA.operate!(zero, p)
     else
         polynomialclean_to!(p, _mul(T, q1, q2)...)
     end
 end
-function MA.operate!(::typeof(*), p::Polynomial{C}, q::Polynomial{C}) where {C}
+function MA.operate!(::typeof(*), p::Polynomial{V,M}, q::Polynomial{V,M}) where {V,M}
     if iszero(q)
         return MA.operate!(zero, p)
     elseif nterms(q) == 1

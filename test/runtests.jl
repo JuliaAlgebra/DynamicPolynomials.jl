@@ -25,8 +25,8 @@ end
 
     vars_array_int = variables.(poly_array_int)
     vars_array_float = variables.(poly_array_float)
-    @test isa(vars_array_int, Vector{<:Vector{<:PolyVar}})
-    @test isa(vars_array_float, Vector{<:Vector{<:PolyVar}})
+    @test isa(vars_array_int, Vector{<:Vector{<:Variable}})
+    @test isa(vars_array_float, Vector{<:Vector{<:Variable}})
     @test vars_array_int == vars_array_float
     @test vars_array_int[1] == vars_array_float[2] == χ
 
@@ -51,8 +51,8 @@ import DynamicPolynomials
     # Verify that the @polyvar macro works when the package has been activated
     # with `import` instead of `using`.
     DynamicPolynomials.@polyvar x y
-    @test isa(x, DynamicPolynomials.PolyVar)
-    @test isa(y, DynamicPolynomials.PolyVar)
+    @test isa(x, DynamicPolynomials.Variable)
+    @test isa(y, DynamicPolynomials.Variable)
 end
 end
 

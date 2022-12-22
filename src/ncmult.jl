@@ -1,16 +1,16 @@
-function Base.:(*)(x::PolyVar{false}, y::PolyVar{false})
+function Base.:(*)(x::Variable{V,M}, y::Variable{V,M}) where {V<:NonCommutative,M}
     if x === y
-        Monomial{false}([x], [2])
+        Monomial{V,M}([x], [2])
     else
-        Monomial{false}([x, y], [1, 1])
+        Monomial{V,M}([x, y], [1, 1])
     end
 end
 
 function multiplyvar(
-    v::Vector{PolyVar{false}},
+    v::Vector{Variable{V,M}},
     z::Vector{Int},
-    x::PolyVar{false},
-)
+    x::Variable{V,M},
+) where {V,M}
     i = length(v)
     while i > 0 && z[i] == 0
         i -= 1
@@ -51,8 +51,8 @@ function multiplyvar(
     end
 end
 function multiplyvar(
-    x::PolyVar{false},
-    v::Vector{PolyVar{false}},
+    x::Variable{false},
+    v::Vector{Variable{false}},
     z::Vector{Int},
 )
     i = 1
@@ -93,11 +93,11 @@ function multiplyvar(
         end
     end
 end
-function Base.:(*)(x::PolyVar{false}, y::Monomial{false})
+function Base.:(*)(x::Variable{false}, y::Monomial{false})
     w, z = multiplyvar(x, y.vars, y.z)
     return Monomial{false}(w, z)
 end
-function Base.:(*)(y::Monomial{false}, x::PolyVar{false})
+function Base.:(*)(y::Monomial{false}, x::Variable{false})
     w, z = multiplyvar(y.vars, y.z, x)
     return Monomial{false}(w, z)
 end
