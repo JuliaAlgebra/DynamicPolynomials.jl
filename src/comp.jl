@@ -22,10 +22,16 @@ end
 # Comparison of PolyVar
 
 function (==)(x::PolyVar{C}, y::PolyVar{C}) where C
-    x.id == y.id
+    x.id == y.id && x.kind == y.kind
 end
 
-Base.isless(x::PolyVar{C}, y::PolyVar{C}) where C = isless(y.id, x.id)
+function Base.isless(x::PolyVar{C}, y::PolyVar{C}) where {C}
+    if x.id == y.id
+        return isless(y.kind, x.kind)
+    else
+        return isless(y.id, x.id)
+    end
+end
 
 # Comparison of Monomial
 

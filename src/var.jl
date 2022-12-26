@@ -1,4 +1,4 @@
-export PolyVar, @polyvar, @ncpolyvar
+export PolyVar, @polyvar, @ncpolyvar, @polycvar
 export polyvecvar
 
 
@@ -41,16 +41,31 @@ macro ncpolyvar(args...)
     :($(foldl((x,y) -> :($x; $y), exprs, init=:())); $(Expr(:tuple, esc.(vars)...)))
 end
 
+macro polycvar(args...)
+    vars, exprs = buildpolyvars(PolyVarComplex{true}, args)
+    return :($(foldl((x, y) -> :($x; $y), exprs, init=:())); $(Expr(:tuple, esc.(vars)...)))
+end
+
+@enum ComplexKind cpNone cpFull cpConj cpReal cpImag
+
 struct PolyVar{C} <: AbstractVariable
     id::Int
     name::String
+    kind::ComplexKind
 
-    function PolyVar{C}(name::AbstractString) where {C}
+    function PolyVar{C}(name::AbstractString, kind::ComplexKind=cpNone) where {C}
         # gensym returns something like Symbol("##42")
         # we first remove "##" and then parse it into an Int
         id = parse(Int, string(gensym())[3:end])
-        new(id, convert(String, name))
+        new(id, convert(String, name), kind)
     end
+    function PolyVar{C}(id::Int, name::String, kind::ComplexKind) where {C}
+        new(id, name, kind)
+    end
+end
+
+struct PolyVarComplex{C}
+    PolyVarComplex{C}(name::AbstractString) where {C} = PolyVar{C}(name, cpFull)
 end
 
 Base.hash(x::PolyVar, u::UInt) = hash(x.id, u)
@@ -70,6 +85,45 @@ MP.monomial(v::PolyVar) = Monomial(v)
 _vars(v::PolyVar) = [v]
 
 iscomm(::Type{PolyVar{C}}) where {C} = C
+
+MP.iscomplex(x::PolyVar{C}) where {C} = x.kind == cpFull || x.kind == cpConj
+MP.isrealpart(x::PolyVar{C}) where {C} = x.kind == cpReal
+MP.isimagpart(x::PolyVar{C}) where {C} = x.kind == cpImag
+MP.isconj(x::PolyVar{C}) where {C} = x.kind == cpConj
+MP.ordvar(x::PolyVar{C}) where {C} = x.kind == cpNone || x.kind == cpFull ? x : PolyVar{C}(x.id, x.name, cpFull)
+
+function Base.conj(x::PolyVar{C}) where {C}
+    if x.kind == cpFull
+        return PolyVar{C}(x.id, x.name, cpConj)
+    elseif x.kind == cpConj
+        return PolyVar{C}(x.id, x.name, cpFull)
+    else
+        return x
+    end
+end
+# for efficiency reasons
+function Base.conj(x::Monomial{true})
+    cv = conj.(x.vars)
+    perm = sortperm(cv, rev=true)
+    return Monomial{true}(cv[perm], x.z[perm])
+end
+
+function Base.real(x::PolyVar{C}) where {C}
+    if x.kind == cpFull || x.kind == cpConj
+        return PolyVar{C}(x.id, x.name, cpReal)
+    else
+        return x
+    end
+end
+function Base.imag(x::PolyVar{C}) where {C}
+    if x.kind == cpFull
+        return PolyVar{C}(x.id, x.name, cpImag)
+    elseif x.kind == cpConj
+        return Term{C,Int}(-1, PolyVar{C}(x.id, x.name, cpImag))
+    else
+        return MA.Zero()
+    end
+end
 
 function mergevars_to!(vars::Vector{PV}, varsvec::Vector{Vector{PV}}) where {PV<:PolyVar}
     empty!(vars)

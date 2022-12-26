@@ -70,6 +70,25 @@ end
 MultivariatePolynomials.extdegree(x::MonomialVector) = isempty(x) ? (0, 0) : extrema(sum.(x.Z))
 MultivariatePolynomials.mindegree(x::MonomialVector) = isempty(x) ? 0 : minimum(sum.(x.Z))
 MultivariatePolynomials.maxdegree(x::MonomialVector) = isempty(x) ? 0 : maximum(sum.(x.Z))
+# Complex-valued degrees for monomial vectors
+for (fun, call, def, ret) in [
+    (:extdegree_complex, :extrema, (0, 0), :((min(v1, v2), max(v1, v2)))),
+    (:mindegree_complex, :minimum, 0, :(min(v1, v2))),
+    (:maxdegree_complex, :maximum, 0, :(max(v1, v2)))
+]
+    eval(quote
+        function MP.$fun(x::MonomialVector)
+            isempty(x) && return $def
+            vars = variables(x)
+            @assert(!any(isrealpart, vars) && !any(isimagpart, vars))
+            grouping = isconj.(vars)
+            v1 = $call(sum(z[grouping]) for z in x.Z)
+            grouping = map(!, grouping)
+            v2 = $call(sum(z[grouping]) for z in x.Z)
+            return $ret
+        end
+    end)
+end
 
 _vars(m::Union{Monomial, MonomialVector}) = m.vars
 
