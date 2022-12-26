@@ -101,12 +101,6 @@ function Base.conj(x::PolyVar{C}) where {C}
         return x
     end
 end
-# for efficiency reasons
-function Base.conj(x::Monomial{true})
-    cv = conj.(x.vars)
-    perm = sortperm(cv, rev=true)
-    return Monomial{true}(cv[perm], x.z[perm])
-end
 
 function Base.real(x::PolyVar{C}) where {C}
     if x.kind == cpFull || x.kind == cpConj

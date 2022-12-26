@@ -80,3 +80,10 @@ MP.monomial(m::Monomial) = m
 #    end
 #    i > length(m1.z)
 #end
+
+# for efficiency reasons
+function Base.conj(x::Monomial{true})
+    cv = conj.(x.vars)
+    perm = sortperm(cv, rev=true)
+    return Monomial{true}(cv[perm], x.z[perm])
+end
