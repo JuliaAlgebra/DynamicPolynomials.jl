@@ -35,18 +35,10 @@ end
 include("cmult.jl")
 include("ncmult.jl")
 
-MP.multconstant(α, x::Monomial)   = MP.term(α, MA.mutable_copy(x))
+MP.left_constant_mult(α, x::Monomial)   = MP.term(α, MA.mutable_copy(x))
 
 function zero_with_variables(::Type{Polynomial{C,T}}, vars::Vector{PolyVar{C}}) where{C, T}
     Polynomial(T[], emptymonovec(vars))
-end
-
-function MP._multconstant(α::T, f, p::Polynomial{C,S} ) where {T, C, S}
-    if iszero(α)
-        zero_with_variables(polynomialtype(p, MA.promote_operation(*, T, S)), variables(p))
-    else
-        MP.mapcoefficientsnz(f, p)
-    end
 end
 
 # I do not want to cast x to TermContainer because that would force the promotion of eltype(q) with Int
@@ -57,9 +49,16 @@ function Base.:(*)(x::DMonomialLike{false}, p::Polynomial)
     # Order may change, e.g. y * (x + y) = y^2 + yx
     Polynomial(monovec(MA.mutable_copy(p.a), [x*m for m in p.x])...)
 end
+
 function Base.:(*)(p::Polynomial, x::DMonomialLike)
     Polynomial(MA.mutable_copy(p.a), p.x*x)
 end
+
+function MA.operate!(::typeof(*), p::Polynomial, t::DMonomialLike)
+    MA.operate!(*, p.x, monomial(t))
+    return p
+end
+
 
 function _term_poly_mult(t::Term{C, S}, p::Polynomial{C, T}, op::Function) where {C, S, T}
     U = MA.promote_operation(op, S, T)
@@ -142,19 +141,4 @@ function MA.operate_to!(p::Polynomial{true, T}, ::typeof(*), q1::MP.AbstractPoly
 end
 function MA.operate!(::typeof(*), p::Polynomial{C}, q::Polynomial{C}) where C
     return MA.operate_to!(p, *, p, q)
-end
-
-# Overwrite this method for monomial-like terms because
-# otherwise it would check `iszero(α)` and in that case
-# dismiss of the variable of `p` by performing
-# `operate_to!(zero, output :: Polynomial )` which only
-# respects the variables that are stored already
-function MP._multconstant_to!(output::Polynomial, α, f, p :: DMonomialLike)
-    if iszero(α)
-        MA.operate!(zero, output)
-        Future.copy!(output.x.vars, variables(p))
-        return output
-    else
-        MP.mapcoefficientsnz_to!(output, f, p)
-    end
 end

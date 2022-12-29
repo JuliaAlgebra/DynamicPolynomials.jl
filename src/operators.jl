@@ -53,6 +53,14 @@ function plusorminus(p::TermPoly{C, S}, q::TermPoly{C, T}, op::Function) where {
     Polynomial(a, MonomialVector{C}(allvars, Z))
 end
 
+function MA.operate!(::typeof(*), p::Polynomial, t::Term)
+    # In case `coefficient(t)` is a polynomial (e.g. in `gcd` algorithm)
+    # We cannot do `MA.operate!(*, ...)`, we need `MP.right_constant_mult`
+    MA.operate!(MP.right_constant_mult, p, coefficient(t))
+    MA.operate!(*, p, monomial(t))
+    return p
+end
+
 function MA.operate_to!(output::Polynomial{C}, op::Union{typeof(+), typeof(-)},
                                 p::TermPoly{C}, q::TermPoly{C}) where C
     if output === p || output === q
