@@ -270,7 +270,7 @@ function MA.operate!(::typeof(one), p::Polynomial{C, T}) where {C, T}
         push!(p.x.Z, zeros(Int, length(p.x.vars)))
     else
         resize!(p.a, 1)
-        MA.operate!(one, p.a[1])
+        p.a[1] = MA.operate!!(one, p.a[1])
         resize!(p.x.Z, 1)
         MA.operate!(zero, p.x.Z[1])
     end

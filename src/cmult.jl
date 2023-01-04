@@ -28,6 +28,12 @@ function _operate_exponents_to!(output::Vector{Int}, op::F, z1::Vector{Int}, z2:
     @. output = op(z1, z2)
     return
 end
+function _operate_exponents_to!(output::Vector{Vector{Int}}, op::F, z1::Vector{Vector{Int}}, z2::Vector{Int}) where {F<:Function}
+    for i in eachindex(output)
+        _operate_exponents_to!(output[i], op, z1[i], z2)
+    end
+    return
+end
 function _operate_exponents_to!(output::Vector{Int}, op::F, z1::Vector{Int}, z2::Vector{Int}, maps) where {F<:Function}
     I = maps[1]; i = 1; lI = length(I)
     J = maps[2]; j = 1; lJ = length(J)
@@ -132,6 +138,10 @@ end
 function Base.:(*)(x::Monomial{true}, y::MonomialVector{true})
     w, Z = multdivmono(y.vars, x, +, y.Z)
     return MonomialVector{true}(w, Z)
+end
+function MA.operate!(::typeof(*), x::MonomialVector{true}, y::Monomial{true})
+    _multdivmono!(x.Z, x.vars, copy(x.vars), y, +, copy(x.Z))
+    return x
 end
 Base.:(*)(y::MonomialVector{true}, x::Monomial{true}) = x * y
 Base.:(*)(x::Monomial{true}, y::PolyVar{true}) = y * x
