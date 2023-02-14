@@ -140,5 +140,11 @@ function MA.operate_to!(p::Polynomial{true, T}, ::typeof(*), q1::MP.AbstractPoly
     end
 end
 function MA.operate!(::typeof(*), p::Polynomial{C}, q::Polynomial{C}) where C
-    return MA.operate_to!(p, *, p, q)
+    if iszero(q)
+        return MA.operate!(zero, p)
+    elseif nterms(q) == 1
+        return MA.operate!(*, p, MP.leadingterm(q))
+    else
+        return MA.operate_to!(p, *, p, q)
+    end
 end

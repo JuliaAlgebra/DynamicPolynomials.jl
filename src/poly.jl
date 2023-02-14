@@ -306,3 +306,12 @@ function MP.mapcoefficients_to!(output::Polynomial, f::Function, p::Polynomial; 
     end
     return output
 end
+
+function MP.mapexponents(f::Function, p::Polynomial, m::DMonomialLike)
+    return Polynomial(MA.mutable_copy(p.a), MP.mapexponents(f, p.x, m))
+end
+
+function MP.mapexponents!(f::Function, p::Polynomial, m::DMonomialLike)
+    MP.mapexponents!(f, p.x, m)
+    return p
+end
