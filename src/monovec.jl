@@ -137,6 +137,7 @@ function getZfordegs(n, degs::AbstractVector{Int}, ::Type{Val{C}}, filter::Funct
 end
 
 function MonomialVector(vars::Vector{PolyVar{true}}, degs::AbstractVector{Int}, filter::Function = x->true)
+    vars = unique!(sort(vars, rev=true))
     MonomialVector{true}(vars, getZfordegs(length(vars), degs, Val{true}, z -> filter(Monomial(vars, z))))
 end
 
