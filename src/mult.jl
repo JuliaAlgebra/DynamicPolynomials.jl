@@ -50,16 +50,6 @@ function Base.:(*)(x::DMonomialLike{false}, p::Polynomial)
     Polynomial(monovec(MA.mutable_copy(p.a), [x*m for m in p.x])...)
 end
 
-function Base.:(*)(p::Polynomial, x::DMonomialLike)
-    Polynomial(MA.mutable_copy(p.a), p.x*x)
-end
-
-function MA.operate!(::typeof(*), p::Polynomial, t::DMonomialLike)
-    MA.operate!(*, p.x, monomial(t))
-    return p
-end
-
-
 function _term_poly_mult(t::Term{C, S}, p::Polynomial{C, T}, op::Function) where {C, S, T}
     U = MA.promote_operation(op, S, T)
     if iszero(t)
@@ -140,5 +130,11 @@ function MA.operate_to!(p::Polynomial{true, T}, ::typeof(*), q1::MP.AbstractPoly
     end
 end
 function MA.operate!(::typeof(*), p::Polynomial{C}, q::Polynomial{C}) where C
-    return MA.operate_to!(p, *, p, q)
+    if iszero(q)
+        return MA.operate!(zero, p)
+    elseif nterms(q) == 1
+        return MA.operate!(*, p, MP.leadingterm(q))
+    else
+        return MA.operate_to!(p, *, p, q)
+    end
 end
