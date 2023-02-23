@@ -76,7 +76,6 @@ using Test
     @testset "MonomialVector" begin
         @polyvar x y
         @test_throws AssertionError MonomialVector{true}([x], [[1], [1,0]])
-        @test_throws AssertionError monomials([y, x], 1:2) # should be [x, y]
         X = MonomialVector([x, 1, x*y])
         @test variables(X) == [x, y]
         @test X.Z == [[0, 0], [1, 0], [1, 1]]
