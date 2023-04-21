@@ -90,7 +90,7 @@ MP.iscomplex(x::PolyVar{C}) where {C} = x.kind == cpFull || x.kind == cpConj
 MP.isrealpart(x::PolyVar{C}) where {C} = x.kind == cpReal
 MP.isimagpart(x::PolyVar{C}) where {C} = x.kind == cpImag
 MP.isconj(x::PolyVar{C}) where {C} = x.kind == cpConj
-MP.ordvar(x::PolyVar{C}) where {C} = x.kind == cpNone || x.kind == cpFull ? x : PolyVar{C}(x.id, x.name, cpFull)
+MP.ordinary_variable(x::PolyVar{C}) where {C} = x.kind == cpNone || x.kind == cpFull ? x : PolyVar{C}(x.id, x.name, cpFull)
 
 function Base.conj(x::PolyVar{C}) where {C}
     if x.kind == cpFull
