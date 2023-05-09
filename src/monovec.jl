@@ -67,9 +67,9 @@ function Base.iterate(x::MonomialVector, state::Int)
     state < length(x) ? (x[state+1], state+1) : nothing
 end
 
-MultivariatePolynomials.extdegree(x::MonomialVector) = isempty(x) ? (0, 0) : extrema(sum.(x.Z))
-MultivariatePolynomials.mindegree(x::MonomialVector) = isempty(x) ? 0 : minimum(sum.(x.Z))
-MultivariatePolynomials.maxdegree(x::MonomialVector) = isempty(x) ? 0 : maximum(sum.(x.Z))
+MP.extdegree(x::MonomialVector) = isempty(x) ? (0, 0) : extrema(sum.(x.Z))
+MP.mindegree(x::MonomialVector) = isempty(x) ? 0 : minimum(sum.(x.Z))
+MP.maxdegree(x::MonomialVector) = isempty(x) ? 0 : maximum(sum.(x.Z))
 # Complex-valued degrees for monomial vectors
 for (fun, call, def, ret) in [
     (:extdegree_complex, :extrema, (0, 0), :((min(v1, v2), max(v1, v2)))),
@@ -89,6 +89,9 @@ for (fun, call, def, ret) in [
         end
     end)
 end
+# faster complex-related functions
+MP.iscomplex(x::MonomialVector) = any(iscomplex, x.vars)
+MP.conj(x::MonomialVector) = MonomialVector(conj.(x.vars), x.Z) # TODO: do we want to alias Z or copy Z?
 
 _vars(m::Union{Monomial, MonomialVector}) = m.vars
 
