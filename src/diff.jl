@@ -1,7 +1,7 @@
 function MP.differentiate(m::Monomial{C}, x::PolyVar{C}) where C
     i = findfirst(isequal(x), _vars(m))
     if (i === nothing || i == 0) || m.z[i] == 0
-        zeroterm(m)
+        zero_term(m)
     else
         z = copy(m.z)
         z[i] -= 1

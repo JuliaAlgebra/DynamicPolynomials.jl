@@ -4,21 +4,21 @@
 #       @test coefficienttype(1x) == Int
 #       @test coefficienttype(1.0x^2) == Float64
 #       @test coefficienttype(Term{true, Int}) == Int
-        @test zeroterm(Term{false, Int}).α == 0
+        @test zero_term(Term{false, Int}).α == 0
         @test one(Term{true, Int}).α == 1
         @polyvar x
         @test typeof(Term(1x)) == Term{true, Int}
         @test Term(1x) == 1x
         @test typeof(convert(Any, 1x)) == Term{true, Int}
         @test typeof(one(1x)) == Term{true, Int}
-        @test typeof(zeroterm(1x)) == Term{true, Int}
+        @test typeof(zero_term(1x)) == Term{true, Int}
         @test typeof(zero(1x)) == Polynomial{true, Int}
         @test typeof(one(1.0x)) == Term{true, Float64}
-        @test typeof(zeroterm(1.0x)) == Term{true, Float64}
+        @test typeof(zero_term(1.0x)) == Term{true, Float64}
         @test typeof(zero(1.0x)) == Polynomial{true, Float64}
 
-        @test typeof(constantterm(1, x)) == Term{true, Int}
-        @inferred constantterm(1, x)
+        @test typeof(constant_term(1, x)) == Term{true, Int}
+        @inferred constant_term(1, x)
         @test typeof(polynomial(1:2, monomials([x], 1:2))) == Polynomial{true, Int}
     end
 
@@ -30,15 +30,15 @@
         @test_throws InexactError Polynomial{true, Int}([1.5], [x])
         @test Polynomial(1 + x) == 1 + x
         @test typeof(one(1 + x)) == Polynomial{true, Int}
-        @test typeof(zeroterm(1 + x)) == Term{true, Int}
+        @test typeof(zero_term(1 + x)) == Term{true, Int}
         @test typeof(zero(1 + x)) == Polynomial{true, Int}
         @test typeof(one(1.0 + x)) == Polynomial{true, Float64}
-        @test typeof(zeroterm(1.0 + x)) == Term{true, Float64}
+        @test typeof(zero_term(1.0 + x)) == Term{true, Float64}
         @test typeof(zero(1.0 + x)) == Polynomial{true, Float64}
 
         pf = Polynomial(i -> 1.0, [x*x, x, x*x])
         @test coefficients(pf) == [1.0, 2.0]
-        @test monomials(pf) == monovec([x^2, x])
+        @test monomials(pf) == monomial_vector([x^2, x])
 
         p = Polynomial([4, 9], [x, x*x])
         p.a == [9, 4]
@@ -62,8 +62,8 @@
         @test p.x == MonomialVector([u^2, u, 1])
 
         @test u + v*u + 1 != v*u + u
-        @test removemonomials(u + v*u + 1, [1, u*v]) == v*u + u
-        @test removemonomials(u + u*v + 1, [u*v]) == 1 + u
+        @test remove_monomials(u + v*u + 1, [1, u*v]) == v*u + u
+        @test remove_monomials(u + u*v + 1, [u*v]) == 1 + u
 
         @inferred polynomial(2u)
         @inferred polynomial(2.0u, Int)

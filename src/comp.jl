@@ -109,8 +109,8 @@ function (==)(x::MonomialVector{C}, y::MonomialVector{C}) where C
     end
     return true
 end
-(==)(mv::AbstractVector, x::MonomialVector) = monovec(mv) == x
-(==)(x::MonomialVector, mv::AbstractVector) = x == monovec(mv)
+(==)(mv::AbstractVector, x::MonomialVector) = monomial_vector(mv) == x
+(==)(x::MonomialVector, mv::AbstractVector) = x == monomial_vector(mv)
 
 # Comparison of Term
 function (==)(p::Polynomial{C}, q::Polynomial{C}) where {C}
