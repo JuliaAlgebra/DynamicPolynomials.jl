@@ -91,7 +91,7 @@ for (fun, call, def, ret) in [
 end
 # faster complex-related functions
 MP.iscomplex(x::MonomialVector) = any(iscomplex, x.vars)
-MP.conj(x::MonomialVector) = MonomialVector(conj.(x.vars), x.Z) # TODO: do we want to alias Z or copy Z?
+Base.conj(x::MonomialVector) = MonomialVector(conj.(x.vars), x.Z) # TODO: do we want to alias Z or copy Z?
 
 _vars(m::Union{Monomial, MonomialVector}) = m.vars
 
