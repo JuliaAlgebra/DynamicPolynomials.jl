@@ -123,7 +123,7 @@ function multdivmono(v::Vector{PolyVar{true}}, x::Monomial{true}, op, z)
     end
     return w, z_new
 end
-function MP.mapexponents_to!(output::Monomial{true}, f::Function, x::Monomial{true}, y::Monomial{true})
+function MP.map_exponents_to!(output::Monomial{true}, f::Function, x::Monomial{true}, y::Monomial{true})
     if x.vars == y.vars
         if output.vars != x.vars
             n = length(x.vars)
@@ -137,7 +137,7 @@ function MP.mapexponents_to!(output::Monomial{true}, f::Function, x::Monomial{tr
     end
     return output
 end
-function MP.mapexponents!(f::Function, x::Monomial{true}, y::Monomial{true})
+function MP.map_exponents!(f::Function, x::Monomial{true}, y::Monomial{true})
     if x.vars == y.vars
         _operate_exponents_to!(x.z, f, x.z, y.z)
     else
@@ -145,27 +145,27 @@ function MP.mapexponents!(f::Function, x::Monomial{true}, y::Monomial{true})
     end
     return x
 end
-function MP.mapexponents(f::Function, x::Monomial{true}, y::Monomial{true})
+function MP.map_exponents(f::Function, x::Monomial{true}, y::Monomial{true})
     w, z = multdivmono(x.vars, y, f, x.z)
     return Monomial{true}(w, z)
 end
-function MP.mapexponents(f::Function, x::MonomialVector{true}, y::Monomial{true})
+function MP.map_exponents(f::Function, x::MonomialVector{true}, y::Monomial{true})
     w, Z = multdivmono(x.vars, y, f, x.Z)
     return MonomialVector{true}(w, Z)
 end
-function MP.mapexponents!(f::Function, x::MonomialVector{true}, y::Monomial{true})
+function MP.map_exponents!(f::Function, x::MonomialVector{true}, y::Monomial{true})
     _multdivmono!(x.Z, x.vars, copy(x.vars), y, f, copy.(x.Z))
     return x
 end
-function MP.mapexponents(f::Function, x::MonomialVector{true}, y::PolyVar{true})
-    return MP.mapexponents(f, x, MP.monomial(y))
+function MP.map_exponents(f::Function, x::MonomialVector{true}, y::PolyVar{true})
+    return MP.map_exponents(f, x, MP.monomial(y))
 end
-function MP.mapexponents!(f::Function, x::MonomialVector{true}, y::PolyVar{true})
-    return MP.mapexponents!(f, x, MP.monomial(y))
+function MP.map_exponents!(f::Function, x::MonomialVector{true}, y::PolyVar{true})
+    return MP.map_exponents!(f, x, MP.monomial(y))
 end
 function MA.operate!(::typeof(*), x::MonomialVector{true}, y::DMonomialLike{true})
-    return MP.mapexponents!(+, x, y)
+    return MP.map_exponents!(+, x, y)
 end
-Base.:(*)(y::MonomialVector{true}, x::DMonomialLike{true}) = MP.mapexponents(+, y, x)
+Base.:(*)(y::MonomialVector{true}, x::DMonomialLike{true}) = MP.map_exponents(+, y, x)
 Base.:(*)(x::DMonomialLike{true}, y::MonomialVector{true}) = y * x
 Base.:(*)(x::Monomial{true}, y::PolyVar{true}) = y * x

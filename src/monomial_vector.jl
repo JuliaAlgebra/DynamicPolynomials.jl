@@ -77,14 +77,14 @@ _vars(m::Union{Monomial, MonomialVector}) = m.vars
 # [x, y] -> Vector{PolyVar}
 # [x, x*y] -> Vector{Monomial}
 # [1, x] -> Vector{Term{Int}}
-const DMonoVecElemNonConstant{C} = Union{PolyVar{C}, Monomial{C}, Term{C}}
+const Dmonomial_vectorElemNonConstant{C} = Union{PolyVar{C}, Monomial{C}, Term{C}}
 # [1] -> Vector{Int}
-const DMonoVecElem{C} = Union{Int, DMonoVecElemNonConstant{C}}
-const DMonoVec{C} = AbstractVector{<:DMonoVecElem{C}}
+const Dmonomial_vectorElem{C} = Union{Int, Dmonomial_vectorElemNonConstant{C}}
+const Dmonomial_vector{C} = AbstractVector{<:Dmonomial_vectorElem{C}}
 
-MP.emptymonovec(vars::AbstractVector{PolyVar{C}}) where {C} = MonomialVector{C}(vars, Vector{Int}[])
-MP.emptymonovec(t::DMonoVecElemNonConstant) = emptymonovec(_vars(t))
-MP.emptymonovec(::Type{<:DMonoVecElemNonConstant{C}}) where {C} = MonomialVector{C}()
+MP.empty_monomial_vector(vars::AbstractVector{PolyVar{C}}) where {C} = MonomialVector{C}(vars, Vector{Int}[])
+MP.empty_monomial_vector(t::Dmonomial_vectorElemNonConstant) = empty_monomial_vector(_vars(t))
+MP.empty_monomial_vector(::Type{<:Dmonomial_vectorElemNonConstant{C}}) where {C} = MonomialVector{C}()
 
 function fillZfordeg!(Z, n, deg, ::Type{Val{true}}, filter::Function, ::Int)
     z = zeros(Int, n)
@@ -167,8 +167,8 @@ MP.monomials(vars::Tuple{Vararg{PolyVar}}, args...) = monomials([vars...], args.
 #end
 #MP.monomials(vars::TupOrVec{PV}, degs::Int, filter::Function = x->true) where {PV<:PolyVar} = monomials(vars, [degs], filter)
 
-function buildZvarsvec(::Type{PV}, X::DMonoVec) where {PV<:PolyVar}
-    varsvec = Vector{PV}[ (isa(x, DMonoVecElemNonConstant) ? _vars(x) : PolyVar[]) for x in X ]
+function buildZvarsvec(::Type{PV}, X::Dmonomial_vector) where {PV<:PolyVar}
+    varsvec = Vector{PV}[ (isa(x, Dmonomial_vectorElemNonConstant) ? _vars(x) : PolyVar[]) for x in X ]
     allvars, maps = mergevars(varsvec)
     nvars = length(allvars)
     Z = [zeros(Int, nvars) for i in 1:length(X)]
@@ -190,8 +190,8 @@ function buildZvarsvec(::Type{PV}, X::DMonoVec) where {PV<:PolyVar}
     allvars, Z
 end
 
-MP.sortmonovec(X::MonomialVector) = (1:length(X), X)
-function _sortmonovec(X::DMonoVec{C}) where {C}
+MP.sort_monomial_vector(X::MonomialVector) = (1:length(X), X)
+function _sort_monomial_vector(X::Dmonomial_vector{C}) where {C}
     allvars, Z = buildZvarsvec(PolyVar{C}, X)
     σ = sortperm(Z, lt=grlex)
     allvars, Z, σ
@@ -200,17 +200,17 @@ function _removedups!(Z::Vector{Vector{Int}}, σ::Vector{Int})
     dups = findall(i -> Z[σ[i]] == Z[σ[i-1]], 2:length(σ))
     deleteat!(σ, dups)
 end
-function MP.sortmonovec(X::DMonoVec{C}) where {C}
+function MP.sort_monomial_vector(X::Dmonomial_vector{C}) where {C}
     if isempty(X)
         Int[], MonomialVector{C}()
     else
-        allvars, Z, σ = _sortmonovec(X)
+        allvars, Z, σ = _sort_monomial_vector(X)
         _removedups!(Z, σ)
         σ, MonomialVector{C}(allvars, Z[σ])
     end
 end
 
-function MonomialVector{C}(X::DMonoVec{C}) where C
+function MonomialVector{C}(X::Dmonomial_vector{C}) where C
     allvars, Z = buildZvarsvec(PolyVar{C}, X)
     sort!(Z, lt=grlex)
     dups = findall(i -> Z[i] == Z[i-1], 2:length(Z))
@@ -218,16 +218,16 @@ function MonomialVector{C}(X::DMonoVec{C}) where C
     MonomialVector{C}(allvars, Z)
 end
 function MonomialVector(X)
-    monovectype(X)(X)
+    monomial_vector_type(X)(X)
 end
 
-MP.monovectype(X::Union{DMonoVecElemNonConstant{C}, Type{<:DMonoVecElemNonConstant{C}}, DMonoVec{C}, Type{<:DMonoVec{C}}}) where {C} = MonomialVector{C}
-function MP.monovec(X::DMonoVec)
+MP.monomial_vector_type(X::Union{Dmonomial_vectorElemNonConstant{C}, Type{<:Dmonomial_vectorElemNonConstant{C}}, Dmonomial_vector{C}, Type{<:Dmonomial_vector{C}}}) where {C} = MonomialVector{C}
+function MP.monomial_vector(X::Dmonomial_vector)
     MonomialVector(X)
 end
-MP.monovec(a, mv::MonomialVector) = (a, mv)
+MP.monomial_vector(a, mv::MonomialVector) = (a, mv)
 
-function MP.mergemonovec(ms::Vector{MonomialVector{C}}) where {C}
+function MP.merge_monomial_vectors(ms::Vector{MonomialVector{C}}) where {C}
     m = length(ms)
     I = ones(Int, length(ms))
     L = length.(ms)

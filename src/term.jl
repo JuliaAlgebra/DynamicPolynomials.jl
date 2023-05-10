@@ -26,7 +26,7 @@ end
 Term{C}(x::PolyVar{C}) where C = Term{C}(convert(Monomial{C}, x))
 Term(x::PolyVar{C}) where C = Term{C}(x)
 
-function MP.convertconstant(::Type{Term{C, T}}, α) where {C, T}
+function MP.convert_constant(::Type{Term{C, T}}, α) where {C, T}
     return Term{C}(convert(T, α))
 end
 Term{C}(α::T) where {C, T} = Term{C, T}(α, Monomial{C}())
