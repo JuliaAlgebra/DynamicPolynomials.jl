@@ -35,7 +35,6 @@ MP.term_type(::Union{PolyType{C}, Type{<:PolyType{C}}}, ::Type{T}) where {C, T} 
 MP.term_type(::Type{Polynomial{C}}) where {C} = Term{C}
 MP.polynomial_type(::Type{Term{C}}) where {C} = Polynomial{C}
 MP.polynomial_type(::Type{Term{C, T}}) where {T, C} = Polynomial{C, T}
-MP.polynomial_type(::Type{T}, ::Type{<:DMonomialLike{C}}) where {T, C} = Polynomial{C, T}
 MP.polynomial_type(::Union{PolyType{C}, Type{<:PolyType{C}}}, ::Type{T}) where {C, T} = Polynomial{C, T}
 _vars(p::AbstractArray{<:PolyType}) = mergevars(_vars.(p))[1]
 MP.variables(p::Union{PolyType, MonomialVector, AbstractArray{<:PolyType}}) = _vars(p) # tuple(_vars(p))

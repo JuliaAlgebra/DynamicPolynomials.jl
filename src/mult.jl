@@ -105,7 +105,7 @@ function Base.:(*)(p::Polynomial{true, S}, q::Polynomial{true, T}) where {S, T}
     if iszero(p) || iszero(q)
         zero(PT)
     else
-        polynomialclean(_mul(MP.coefficienttype(PT), p, q)...)
+        polynomialclean(_mul(MP.coefficient_type(PT), p, q)...)
     end
 end
 function MA.operate_to!(p::Polynomial{false, T}, ::typeof(*), q1::MP.AbstractPolynomialLike, q2::MP.AbstractPolynomialLike) where T
