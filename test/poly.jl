@@ -1,9 +1,9 @@
 @testset "Term and Polynomial tests" begin
     @testset "Term" begin
         @polyvar x
-#       @test coefficienttype(1x) == Int
-#       @test coefficienttype(1.0x^2) == Float64
-#       @test coefficienttype(Term{true, Int}) == Int
+#       @test coefficient_type(1x) == Int
+#       @test coefficient_type(1.0x^2) == Float64
+#       @test coefficient_type(Term{true, Int}) == Int
         @test zero_term(Term{false, Int}).α == 0
         @test one(Term{true, Int}).α == 1
         @polyvar x
