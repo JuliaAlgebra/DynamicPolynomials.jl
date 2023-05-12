@@ -26,7 +26,7 @@ function Base.convert(::Type{Monomial{C}}, x::PolyVar{C}) where C
     return Monomial{C}([x], [1])
 end
 Monomial(x::PolyVar{C}) where C = convert(Monomial{C}, x)
-function MP.convertconstant(::Type{Monomial{C}}, α) where C
+function MP.convert_constant(::Type{Monomial{C}}, α) where C
     α == 1 || error("Cannot convert $α to a Monomial{$C} as it is not one")
     Monomial{C}(PolyVar{C}[], Int[])
 end

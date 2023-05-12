@@ -38,7 +38,7 @@ include("ncmult.jl")
 MP.left_constant_mult(α, x::Monomial)   = MP.term(α, MA.mutable_copy(x))
 
 function zero_with_variables(::Type{Polynomial{C,T}}, vars::Vector{PolyVar{C}}) where{C, T}
-    Polynomial(T[], emptymonovec(vars))
+    Polynomial(T[], empty_monomial_vector(vars))
 end
 
 # I do not want to cast x to TermContainer because that would force the promotion of eltype(q) with Int
@@ -47,7 +47,7 @@ function Base.:(*)(x::DMonomialLike, p::Polynomial)
 end
 function Base.:(*)(x::DMonomialLike{false}, p::Polynomial)
     # Order may change, e.g. y * (x + y) = y^2 + yx
-    Polynomial(monovec(MA.mutable_copy(p.a), [x*m for m in p.x])...)
+    Polynomial(monomial_vector(MA.mutable_copy(p.a), [x*m for m in p.x])...)
 end
 
 function _term_poly_mult(t::Term{C, S}, p::Polynomial{C, T}, op::Function) where {C, S, T}
@@ -105,7 +105,7 @@ function Base.:(*)(p::Polynomial{true, S}, q::Polynomial{true, T}) where {S, T}
     if iszero(p) || iszero(q)
         zero(PT)
     else
-        polynomialclean(_mul(MP.coefficienttype(PT), p, q)...)
+        polynomialclean(_mul(MP.coefficient_type(PT), p, q)...)
     end
 end
 function MA.operate_to!(p::Polynomial{false, T}, ::typeof(*), q1::MP.AbstractPolynomialLike, q2::MP.AbstractPolynomialLike) where T
@@ -133,7 +133,7 @@ function MA.operate!(::typeof(*), p::Polynomial{C}, q::Polynomial{C}) where C
     if iszero(q)
         return MA.operate!(zero, p)
     elseif nterms(q) == 1
-        return MA.operate!(*, p, MP.leadingterm(q))
+        return MA.operate!(*, p, MP.leading_term(q))
     else
         return MA.operate_to!(p, *, p, q)
     end
