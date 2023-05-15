@@ -6,7 +6,11 @@ function Base.:(*)(x::PolyVar{false}, y::PolyVar{false})
     end
 end
 
-function multiplyvar(v::Vector{PolyVar{false}}, z::Vector{Int}, x::PolyVar{false})
+function multiplyvar(
+    v::Vector{PolyVar{false}},
+    z::Vector{Int},
+    x::PolyVar{false},
+)
     i = length(v)
     while i > 0 && z[i] == 0
         i -= 1
@@ -30,7 +34,7 @@ function multiplyvar(v::Vector{PolyVar{false}}, z::Vector{Int}, x::PolyVar{false
         end
         i += 1
         while i <= length(v) && v[i] != x
-            if i > 1 && v[i] > v[i - 1]
+            if i > 1 && v[i] > v[i-1]
                 ndrop += 1
             end
             if ndrop >= droplim2 || (ndrop >= droplim1 && v[i] < x)
@@ -46,7 +50,11 @@ function multiplyvar(v::Vector{PolyVar{false}}, z::Vector{Int}, x::PolyVar{false
         end
     end
 end
-function multiplyvar(x::PolyVar{false}, v::Vector{PolyVar{false}}, z::Vector{Int})
+function multiplyvar(
+    x::PolyVar{false},
+    v::Vector{PolyVar{false}},
+    z::Vector{Int},
+)
     i = 1
     while i <= length(v) && z[i] == 0
         i += 1
@@ -70,7 +78,7 @@ function multiplyvar(x::PolyVar{false}, v::Vector{PolyVar{false}}, z::Vector{Int
         end
         i -= 1
         while i > 0 && v[i] != x
-            if i < length(v) && v[i] < v[i + 1]
+            if i < length(v) && v[i] < v[i+1]
                 ndrop += 1
             end
             if ndrop >= droplim2 || (ndrop >= droplim1 && v[i] > x)
@@ -81,22 +89,22 @@ function multiplyvar(x::PolyVar{false}, v::Vector{PolyVar{false}}, z::Vector{Int
         if i > 0 && v[i] == x
             return copy(v), multiplyexistingvar(i, z)
         else
-            return insertvar(v, x, i+1), insertvar(z, x, i+1)
+            return insertvar(v, x, i + 1), insertvar(z, x, i + 1)
         end
     end
 end
 function Base.:(*)(x::PolyVar{false}, y::Monomial{false})
     w, z = multiplyvar(x, y.vars, y.z)
-    Monomial{false}(w, z)
+    return Monomial{false}(w, z)
 end
 function Base.:(*)(y::Monomial{false}, x::PolyVar{false})
     w, z = multiplyvar(y.vars, y.z, x)
-    Monomial{false}(w, z)
+    return Monomial{false}(w, z)
 end
 
 function Base.:(*)(x::Monomial{false}, y::Monomial{false})
     i = findlast(z -> z > 0, x.z)
-    if i === nothing || i == 0
+    if i === nothing || i == 0
         return y
     end
     j = findfirst(z -> z > 0, y.z)
@@ -114,10 +122,10 @@ function Base.:(*)(x::Monomial{false}, y::Monomial{false})
 end
 
 function Base.:(*)(y::MonomialVector{false}, x::DMonomialLike{false})
-    MonomialVector{false}([yi * x for yi in y])
+    return MonomialVector{false}([yi * x for yi in y])
 end
 function Base.:(*)(x::DMonomialLike{false}, y::MonomialVector{false})
     # The order may change
     # Example: y * [x^2, y^2] == [y^3, yx^2]
-    MonomialVector{false}([x * yi for yi in y])
+    return MonomialVector{false}([x * yi for yi in y])
 end

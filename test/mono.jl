@@ -3,7 +3,7 @@ using Test
 @testset "PolyVar and Monomial tests" begin
     @testset "PolyVar macro index set" begin
         n = 3
-        @polyvar x[1:n] y z[1:n-1] u[1:n,1:n-1]
+        @polyvar x[1:n] y z[1:n-1] u[1:n, 1:n-1]
         @test x isa Vector{PolyVar{true}}
         @test y isa PolyVar{true}
         @test z isa Vector{PolyVar{true}}
@@ -44,8 +44,8 @@ using Test
         @test zero(PolyVar{true}) == 0
         @test one(PolyVar{false}) == 1
         @polyvar x
-        @test zero_term(x) isa Term{true, Int}
-        @test zero(x) isa Polynomial{true, Int}
+        @test zero_term(x) isa Term{true,Int}
+        @test zero(x) isa Polynomial{true,Int}
         @test one(x) isa Monomial{true}
     end
     @testset "Monomial" begin
@@ -64,9 +64,9 @@ using Test
             @test convert(Monomial{false}, 1) == 1
         end
         @polyvar x
-        @test_throws ArgumentError Monomial{true}([x], [1,0])
-        @test zero_term(x^2) isa Term{true, Int}
-        @test zero(x^2) isa Polynomial{true, Int}
+        @test_throws ArgumentError Monomial{true}([x], [1, 0])
+        @test zero_term(x^2) isa Term{true,Int}
+        @test zero(x^2) isa Polynomial{true,Int}
         @test one(x^2) isa Monomial{true}
 
         @polyvar y
@@ -75,8 +75,8 @@ using Test
     end
     @testset "MonomialVector" begin
         @polyvar x y
-        @test_throws AssertionError MonomialVector{true}([x], [[1], [1,0]])
-        X = MonomialVector([x, 1, x*y])
+        @test_throws AssertionError MonomialVector{true}([x], [[1], [1, 0]])
+        X = MonomialVector([x, 1, x * y])
         @test variables(X) == [x, y]
         @test X.Z == [[0, 0], [1, 0], [1, 1]]
         @test MonomialVector{true}([1]) isa MonomialVector{true}
@@ -94,12 +94,13 @@ using Test
 
         @test 2 != MonomialVector([x, y], 1)
         @test x != MonomialVector([x, y], 1)
-        @test MonomialVector([x, y], [[0, 0], [1, 0]]) == MonomialVector([x], [[0], [1]])
+        @test MonomialVector([x, y], [[0, 0], [1, 0]]) ==
+              MonomialVector([x], [[0], [1]])
     end
     @testset "Non-commutative" begin
         @ncpolyvar x
-        @test_throws ArgumentError Monomial{false}([x], [1,0])
-        @test_throws AssertionError MonomialVector{false}([x], [[1], [1,0]])
+        @test_throws ArgumentError Monomial{false}([x], [1, 0])
+        @test_throws AssertionError MonomialVector{false}([x], [[1], [1, 0]])
     end
     @testset "NC PolyVar * Monomial" begin
         @ncpolyvar x y z
@@ -128,9 +129,9 @@ using Test
 
     @testset "Evaluation" begin
         @polyvar x y
-        @test (x^2*y)(3,2) == 18
-        @test (x^2*y)((3,2)) == 18
-        @test (x^2*y)([3,2]) == 18
+        @test (x^2 * y)(3, 2) == 18
+        @test (x^2 * y)((3, 2)) == 18
+        @test (x^2 * y)([3, 2]) == 18
         @test (x^2)(3) == 9
         @test (x)(3) == 3
     end
@@ -138,7 +139,8 @@ using Test
         @polyvar x y
         @test x == DynamicPolynomials.MP.map_exponents!(div, x^1, x * y^2)
         for z in [x * y, x^2, y^2]
-            @test y == DynamicPolynomials.MP.map_exponents_to!(z, -, x * y^2, x * y)
+            @test y ==
+                  DynamicPolynomials.MP.map_exponents_to!(z, -, x * y^2, x * y)
         end
     end
     # TODO add to MP

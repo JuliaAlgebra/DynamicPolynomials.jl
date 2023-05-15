@@ -1,9 +1,11 @@
 export PolyVar, @polyvar, @ncpolyvar
 export polyvecvar
 
-
 function polyarrayvar(::Type{PV}, prefix, indices...) where {PV}
-    map(i -> PV("$(prefix)[$(join(i, ","))]"), Iterators.product(indices...))
+    return map(
+        i -> PV("$(prefix)[$(join(i, ","))]"),
+        Iterators.product(indices...),
+    )
 end
 
 function buildpolyvar(::Type{PV}, var) where {PV}
@@ -11,11 +13,17 @@ function buildpolyvar(::Type{PV}, var) where {PV}
         var, :($(esc(var)) = $PV($"$var"))
     else
         isa(var, Expr) || error("Expected $var to be a variable name")
-        Base.Meta.isexpr(var, :ref) || error("Expected $var to be of the form varname[idxset]")
-        (2 ≤ length(var.args)) || error("Expected $var to have at least one index set")
+        Base.Meta.isexpr(var, :ref) ||
+            error("Expected $var to be of the form varname[idxset]")
+        (2 ≤ length(var.args)) ||
+            error("Expected $var to have at least one index set")
         varname = var.args[1]
         prefix = string(varname)
-        varname, :($(esc(varname)) = polyarrayvar($PV, $prefix, $(esc.(var.args[2:end])...)))
+        varname,
+        :(
+            $(esc(varname)) =
+                polyarrayvar($PV, $prefix, $(esc.(var.args[2:end])...))
+        )
     end
 end
 
@@ -27,18 +35,28 @@ function buildpolyvars(::Type{PV}, args) where {PV}
         push!(vars, var)
         push!(exprs, expr)
     end
-    vars, exprs
+    return vars, exprs
 end
 
 # Variable vector x returned garanteed to be sorted so that if p is built with x then vars(p) == x
 macro polyvar(args...)
     vars, exprs = buildpolyvars(PolyVar{true}, args)
-    :($(foldl((x,y) -> :($x; $y), exprs, init=:())); $(Expr(:tuple, esc.(vars)...)))
+    return :(
+        $(foldl((x, y) -> :($x; $y), exprs, init = :())); $(Expr(
+            :tuple,
+            esc.(vars)...,
+        ))
+    )
 end
 
 macro ncpolyvar(args...)
     vars, exprs = buildpolyvars(PolyVar{false}, args)
-    :($(foldl((x,y) -> :($x; $y), exprs, init=:())); $(Expr(:tuple, esc.(vars)...)))
+    return :(
+        $(foldl((x, y) -> :($x; $y), exprs, init = :())); $(Expr(
+            :tuple,
+            esc.(vars)...,
+        ))
+    )
 end
 
 struct PolyVar{C} <: AbstractVariable
@@ -49,7 +67,7 @@ struct PolyVar{C} <: AbstractVariable
         # gensym returns something like Symbol("##42")
         # we first remove "##" and then parse it into an Int
         id = parse(Int, string(gensym())[3:end])
-        new(id, convert(String, name))
+        return new(id, convert(String, name))
     end
 end
 
@@ -58,7 +76,7 @@ Base.broadcastable(x::PolyVar) = Ref(x)
 
 MP.name(v::PolyVar) = v.name
 function MP.name_base_indices(v::PolyVar)
-    splits = split(v.name, r"[\[,\]]\s*", keepempty=false)
+    splits = split(v.name, r"[\[,\]]\s*", keepempty = false)
     if length(splits) == 1
         return v.name, Int[]
     else
@@ -71,7 +89,10 @@ _vars(v::PolyVar) = [v]
 
 iscomm(::Type{PolyVar{C}}) where {C} = C
 
-function mergevars_to!(vars::Vector{PV}, varsvec::Vector{Vector{PV}}) where {PV<:PolyVar}
+function mergevars_to!(
+    vars::Vector{PV},
+    varsvec::Vector{Vector{PV}},
+) where {PV<:PolyVar}
     empty!(vars)
     n = length(varsvec)
     is = ones(Int, n)

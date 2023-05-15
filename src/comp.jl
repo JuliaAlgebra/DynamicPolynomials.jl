@@ -5,7 +5,7 @@ Base.iszero(p::Polynomial) = isempty(p)
 
 # TODO This should be in Base with T instead of PolyVar{C}.
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/3
-function (==)(x::Vector{PolyVar{C}}, y::Vector{PolyVar{C}}) where C
+function (==)(x::Vector{PolyVar{C}}, y::Vector{PolyVar{C}}) where {C}
     if length(x) != length(y)
         false
     else
@@ -21,11 +21,11 @@ end
 
 # Comparison of PolyVar
 
-function (==)(x::PolyVar{C}, y::PolyVar{C}) where C
-    x.id == y.id
+function (==)(x::PolyVar{C}, y::PolyVar{C}) where {C}
+    return x.id == y.id
 end
 
-Base.isless(x::PolyVar{C}, y::PolyVar{C}) where C = isless(y.id, x.id)
+Base.isless(x::PolyVar{C}, y::PolyVar{C}) where {C} = isless(y.id, x.id)
 
 # Comparison of Monomial
 
@@ -45,7 +45,7 @@ function samevars_grlex(x::Vector{Int}, y::Vector{Int})
         return 0
     end
 end
-function mycomp(x::Monomial{C}, y::Monomial{C}) where C
+function mycomp(x::Monomial{C}, y::Monomial{C}) where {C}
     degx = degree(x)
     degy = degree(y)
     if degx != degy
@@ -78,20 +78,24 @@ function mycomp(x::Monomial{C}, y::Monomial{C}) where C
     end
 end
 
-function (==)(x::Monomial{C}, y::Monomial{C}) where C
-    mycomp(x, y) == 0
+function (==)(x::Monomial{C}, y::Monomial{C}) where {C}
+    return mycomp(x, y) == 0
 end
-(==)(x::PolyVar{C}, y::Monomial{C}) where C = convert(Monomial{C}, x) == y
+(==)(x::PolyVar{C}, y::Monomial{C}) where {C} = convert(Monomial{C}, x) == y
 
 # graded lex ordering
-function Base.isless(x::Monomial{C}, y::Monomial{C}) where C
-    mycomp(x, y) < 0
+function Base.isless(x::Monomial{C}, y::Monomial{C}) where {C}
+    return mycomp(x, y) < 0
 end
-Base.isless(x::Monomial{C}, y::PolyVar{C}) where C = isless(x, convert(Monomial{C}, y))
-Base.isless(x::PolyVar{C}, y::Monomial{C}) where C = isless(convert(Monomial{C}, x), y)
+function Base.isless(x::Monomial{C}, y::PolyVar{C}) where {C}
+    return isless(x, convert(Monomial{C}, y))
+end
+function Base.isless(x::PolyVar{C}, y::Monomial{C}) where {C}
+    return isless(convert(Monomial{C}, x), y)
+end
 
 # Comparison of MonomialVector
-function (==)(x::MonomialVector{C}, y::MonomialVector{C}) where C
+function (==)(x::MonomialVector{C}, y::MonomialVector{C}) where {C}
     if length(x.Z) != length(y.Z)
         return false
     end
@@ -150,28 +154,32 @@ function grlex(x::Vector{Int}, y::Vector{Int})
     end
 end
 
-function Base.isapprox(p::Polynomial{C, S}, q::Polynomial{C, T};
-                       rtol::Real=Base.rtoldefault(S, T, 0), atol::Real=0,
-                       ztol::Real=iszero(atol) ? Base.rtoldefault(S, T, 0) : atol) where {C, S, T}
+function Base.isapprox(
+    p::Polynomial{C,S},
+    q::Polynomial{C,T};
+    rtol::Real = Base.rtoldefault(S, T, 0),
+    atol::Real = 0,
+    ztol::Real = iszero(atol) ? Base.rtoldefault(S, T, 0) : atol,
+) where {C,S,T}
     i = j = 1
     while i <= length(p.x) || j <= length(q.x)
         if i > length(p.x) || (j <= length(q.x) && q.x[j] < p.x[i])
-            if !isapproxzero(q.a[j], ztol=ztol)
+            if !isapproxzero(q.a[j], ztol = ztol)
                 return false
             end
             j += 1
         elseif j > length(q.x) || p.x[i] < q.x[j]
-            if !isapproxzero(p.a[i], ztol=ztol)
+            if !isapproxzero(p.a[i], ztol = ztol)
                 return false
             end
             i += 1
         else
-            if !isapprox(p.a[i], q.a[j], rtol=rtol, atol=atol)
+            if !isapprox(p.a[i], q.a[j], rtol = rtol, atol = atol)
                 return false
             end
             i += 1
             j += 1
         end
     end
-    true
+    return true
 end

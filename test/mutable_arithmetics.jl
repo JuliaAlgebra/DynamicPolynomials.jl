@@ -22,7 +22,7 @@ using DynamicPolynomials
     @test nterms(p) == 6
     @test issorted(monomials(p))
     @test p == T(2)x^3 + T(5)x^2 + T(4)x * y + T(4)y^2 + T(5)x + T(2)
-    q = T(5)z^3 + T(1)x*z + T(4)z^2 + T(3)z
+    q = T(5)z^3 + T(1)x * z + T(4)z^2 + T(3)z
     @test p === MA.add!!(p, q)
     @test nterms(p) == 10
     @test issorted(monomials(p))
@@ -31,9 +31,7 @@ using DynamicPolynomials
     @testset "Issue #62" begin
         @polyvar x y
         p = x^2 + x + 1
-        q = rem(p, [x^2-y])
-        @test q == x + y + 1 
+        q = rem(p, [x^2 - y])
+        @test q == x + y + 1
     end
 end
-
-

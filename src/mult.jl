@@ -10,8 +10,8 @@ function insertvar(v::Vector{PolyVar{C}}, x::PolyVar{C}, i::Int) where {C}
     n = length(v)
     I = 1:i-1
     J = i:n
-    K = J.+1
-    w = Vector{PolyVar{C}}(undef, n+1)
+    K = J .+ 1
+    w = Vector{PolyVar{C}}(undef, n + 1)
     w[I] = v[I]
     w[i] = x
     w[K] = v[J]
@@ -21,8 +21,8 @@ function insertvar(z::Vector{Int}, x::PolyVar, i::Int)
     n = length(z)
     I = 1:i-1
     J = i:n
-    K = J.+1
-    newz = Vector{Int}(undef, n+1)
+    K = J .+ 1
+    newz = Vector{Int}(undef, n + 1)
     newz[I] = z[I]
     newz[i] = 1
     newz[K] = z[J]
@@ -35,22 +35,31 @@ end
 include("cmult.jl")
 include("ncmult.jl")
 
-MP.left_constant_mult(α, x::Monomial)   = MP.term(α, MA.mutable_copy(x))
+MP.left_constant_mult(α, x::Monomial) = MP.term(α, MA.mutable_copy(x))
 
-function zero_with_variables(::Type{Polynomial{C,T}}, vars::Vector{PolyVar{C}}) where{C, T}
-    Polynomial(T[], empty_monomial_vector(vars))
+function zero_with_variables(
+    ::Type{Polynomial{C,T}},
+    vars::Vector{PolyVar{C}},
+) where {C,T}
+    return Polynomial(T[], empty_monomial_vector(vars))
 end
 
 # I do not want to cast x to TermContainer because that would force the promotion of eltype(q) with Int
 function Base.:(*)(x::DMonomialLike, p::Polynomial)
-    Polynomial(MA.mutable_copy(p.a), x*p.x)
+    return Polynomial(MA.mutable_copy(p.a), x * p.x)
 end
 function Base.:(*)(x::DMonomialLike{false}, p::Polynomial)
     # Order may change, e.g. y * (x + y) = y^2 + yx
-    Polynomial(monomial_vector(MA.mutable_copy(p.a), [x*m for m in p.x])...)
+    return Polynomial(
+        monomial_vector(MA.mutable_copy(p.a), [x * m for m in p.x])...,
+    )
 end
 
-function _term_poly_mult(t::Term{C, S}, p::Polynomial{C, T}, op::Function) where {C, S, T}
+function _term_poly_mult(
+    t::Term{C,S},
+    p::Polynomial{C,T},
+    op::Function,
+) where {C,S,T}
     U = MA.promote_operation(op, S, T)
     if iszero(t)
         zero(Polynomial{C,U})
@@ -70,10 +79,14 @@ end
 Base.:(*)(p::Polynomial, t::Term) = _term_poly_mult(t, p, (α, β) -> β * α)
 Base.:(*)(t::Term, p::Polynomial) = _term_poly_mult(t, p, *)
 _sumprod(a, b) = a * b + a * b
-function _mul(::Type{T}, p::AbstractPolynomialLike, q::AbstractPolynomialLike) where T
+function _mul(
+    ::Type{T},
+    p::AbstractPolynomialLike,
+    q::AbstractPolynomialLike,
+) where {T}
     return _mul(T, polynomial(p), polynomial(q))
 end
-function _mul(::Type{T}, p::Polynomial{true}, q::Polynomial{true}) where T
+function _mul(::Type{T}, p::Polynomial{true}, q::Polynomial{true}) where {T}
     samevars = _vars(p) == _vars(q)
     if samevars
         allvars = copy(_vars(p))
@@ -100,7 +113,7 @@ function _mul(::Type{T}, p::Polynomial{true}, q::Polynomial{true}) where T
     end
     return allvars, a, Z
 end
-function Base.:(*)(p::Polynomial{true, S}, q::Polynomial{true, T}) where {S, T}
+function Base.:(*)(p::Polynomial{true,S}, q::Polynomial{true,T}) where {S,T}
     PT = MA.promote_operation(*, typeof(p), typeof(q))
     if iszero(p) || iszero(q)
         zero(PT)
@@ -108,11 +121,16 @@ function Base.:(*)(p::Polynomial{true, S}, q::Polynomial{true, T}) where {S, T}
         polynomialclean(_mul(MP.coefficient_type(PT), p, q)...)
     end
 end
-function MA.operate_to!(p::Polynomial{false, T}, ::typeof(*), q1::MP.AbstractPolynomialLike, q2::MP.AbstractPolynomialLike) where T
+function MA.operate_to!(
+    p::Polynomial{false,T},
+    ::typeof(*),
+    q1::MP.AbstractPolynomialLike,
+    q2::MP.AbstractPolynomialLike,
+) where {T}
     if iszero(q1) || iszero(q2)
         MA.operate!(zero, p)
     else
-        ts = Term{false, T}[]
+        ts = Term{false,T}[]
         MP.mul_to_terms!(ts, q1, q2)
         # TODO do better than create tmp
         tmp = polynomial!(ts)
@@ -122,14 +140,19 @@ function MA.operate_to!(p::Polynomial{false, T}, ::typeof(*), q1::MP.AbstractPol
         return p
     end
 end
-function MA.operate_to!(p::Polynomial{true, T}, ::typeof(*), q1::MP.AbstractPolynomialLike, q2::MP.AbstractPolynomialLike) where T
+function MA.operate_to!(
+    p::Polynomial{true,T},
+    ::typeof(*),
+    q1::MP.AbstractPolynomialLike,
+    q2::MP.AbstractPolynomialLike,
+) where {T}
     if iszero(q1) || iszero(q2)
         MA.operate!(zero, p)
     else
         polynomialclean_to!(p, _mul(T, q1, q2)...)
     end
 end
-function MA.operate!(::typeof(*), p::Polynomial{C}, q::Polynomial{C}) where C
+function MA.operate!(::typeof(*), p::Polynomial{C}, q::Polynomial{C}) where {C}
     if iszero(q)
         return MA.operate!(zero, p)
     elseif nterms(q) == 1

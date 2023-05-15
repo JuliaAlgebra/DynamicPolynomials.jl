@@ -3,8 +3,10 @@ function MP.divides(m1::Monomial, m2::Monomial)
     v1 = variables(m1)
     e2 = exponents(m2)
     v2 = variables(m2)
-    i = 1; lI = length(e1)
-    j = 1; lJ = length(e2)
+    i = 1
+    lI = length(e1)
+    j = 1
+    lJ = length(e2)
     while i <= lI || j <= lJ
         if i > lI || (j <= lJ && v2[j] > v1[i])
             j += 1

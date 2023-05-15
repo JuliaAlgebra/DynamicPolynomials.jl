@@ -1,6 +1,6 @@
 export Monomial
 
-const TupOrVec{T} = Union{AbstractVector{T}, Tuple{Vararg{T}}}
+const TupOrVec{T} = Union{AbstractVector{T},Tuple{Vararg{T}}}
 
 # Invariant:
 # vars is increasing
@@ -11,24 +11,30 @@ struct Monomial{C} <: AbstractMonomial
 
     function Monomial{C}(vars::Vector{PolyVar{C}}, z::Vector{Int}) where {C}
         if length(vars) != length(z)
-            throw(ArgumentError("There should be as many variables as exponents"))
+            throw(
+                ArgumentError("There should be as many variables as exponents"),
+            )
         end
-        new(vars, z)
+        return new(vars, z)
     end
 end
 
-Monomial{C}(vars::Tuple{Vararg{PolyVar{C}}}, z::Vector{Int}) where C = Monomial{C}([vars...], z)
+function Monomial{C}(vars::Tuple{Vararg{PolyVar{C}}}, z::Vector{Int}) where {C}
+    return Monomial{C}([vars...], z)
+end
 
-iscomm(::Type{Monomial{C}}) where C = C
-Monomial{C}() where C = Monomial{C}(PolyVar{C}[], Int[])
-Monomial(vars::TupOrVec{PolyVar{C}}, z::Vector{Int}) where C = Monomial{C}(vars, z)
-function Base.convert(::Type{Monomial{C}}, x::PolyVar{C}) where C
+iscomm(::Type{Monomial{C}}) where {C} = C
+Monomial{C}() where {C} = Monomial{C}(PolyVar{C}[], Int[])
+function Monomial(vars::TupOrVec{PolyVar{C}}, z::Vector{Int}) where {C}
+    return Monomial{C}(vars, z)
+end
+function Base.convert(::Type{Monomial{C}}, x::PolyVar{C}) where {C}
     return Monomial{C}([x], [1])
 end
-Monomial(x::PolyVar{C}) where C = convert(Monomial{C}, x)
-function MP.convert_constant(::Type{Monomial{C}}, α) where C
+Monomial(x::PolyVar{C}) where {C} = convert(Monomial{C}, x)
+function MP.convert_constant(::Type{Monomial{C}}, α) where {C}
     α == 1 || error("Cannot convert $α to a Monomial{$C} as it is not one")
-    Monomial{C}(PolyVar{C}[], Int[])
+    return Monomial{C}(PolyVar{C}[], Int[])
 end
 
 # defaults to commutative so that `Monomial(1)` is consistent with TypedPolynomials
@@ -41,7 +47,7 @@ Base.copy(m::Monomial) = MA.mutable_copy(m)
 # Generate canonical reperesentation by removing variables that are not used
 function canonical(m::Monomial)
     list = m.z .> 0
-    Monomial(_vars(m)[list], m.z[list])
+    return Monomial(_vars(m)[list], m.z[list])
 end
 function Base.hash(x::Monomial, u::UInt)
     cx = canonical(x)
