@@ -7,7 +7,7 @@ function Base.setindex!(sv::SafeValues, v, i::Int)
     return sv.values[i] = v
 end
 
-function fillmap!(vals, vars::Vector{Variable{false}}, s::MP.Substitution)
+function fillmap!(vals, vars::Vector{<:Variable{<:NonCommutative}}, s::MP.Substitution)
     for j in eachindex(vars)
         if vars[j] == s.first
             vals[j] = s.second
@@ -64,11 +64,11 @@ function _subsmap(::MP.Eval, vars, s::MP.Substitutions)
 end
 function _subsmap(
     ::MP.Subs,
-    vars::Vector{Variable{C}},
+    vars::Vector{Variable{V,M}},
     s::MP.Substitutions,
-) where {C}
+) where {V,M}
     # Some variable may not be replaced
-    vals = Vector{promote_type(_substype(s), Variable{C})}(undef, length(vars))
+    vals = Vector{promote_type(_substype(s), Variable{V,M})}(undef, length(vars))
     Future.copy!(vals, vars)
     fillmap!(vals, vars, s...)
     return vals
@@ -101,12 +101,12 @@ end
 
 _subs(st, ::Variable, vals) = monoeval([1], vals::AbstractVector)
 _subs(st, m::Monomial, vals) = monoeval(m.z, vals::AbstractVector)
-_subs(st, t::Term, vals) = t.α * monoeval(t.x.z, vals::AbstractVector)
+_subs(st, t::_Term, vals) = MP.coefficient(t) * monoeval(MP.monomial(t).z, vals::AbstractVector)
 function _subs(
     ::MP.Eval,
-    p::Polynomial{C,T},
+    p::Polynomial{V,M,T},
     vals::AbstractVector{S},
-) where {C,T,S}
+) where {V,M,T,S}
     # I need to check for iszero otherwise I get : ArgumentError: reducing over an empty collection is not allowed
     if iszero(p)
         zero(Base.promote_op(*, S, T))
@@ -116,13 +116,13 @@ function _subs(
 end
 function _subs(
     ::MP.Subs,
-    p::Polynomial{C,T},
+    p::Polynomial{V,M,T},
     vals::AbstractVector{S},
-) where {C,T,S}
+) where {V,M,T,S}
     Tout = MA.promote_operation(*, T, MP.coefficient_type(S))
     q = zero_with_variables(
-        Polynomial{C,Tout},
-        mergevars_of(Variable{C}, vals)[1],
+        Polynomial{V,M,Tout},
+        mergevars_of(Variable{V,M}, vals)[1],
     )
     for i in 1:length(p.a)
         MA.operate!(+, q, p.a[i] * monoeval(p.x.Z[i], vals))
@@ -133,11 +133,11 @@ end
 function MA.promote_operation(
     ::typeof(MP.substitute),
     ::Type{MP.Subs},
-    ::Type{Monomial{C}},
-    ::Type{Pair{Variable{C},T}},
-) where {C,T}
+    ::Type{Monomial{V,M}},
+    ::Type{Pair{Variable{V,M},T}},
+) where {V,M,T}
     U = MA.promote_operation(^, T, Int)
-    return Term{C,U}
+    return _Term{V,M,U}
 end
 
 function MP.substitute(
@@ -145,12 +145,12 @@ function MP.substitute(
     p::PolyType,
     s::MP.Substitutions,
 )
-    return _subs(st, p, subsmap(st, _vars(p), s))
+    return _subs(st, p, subsmap(st, MP.variables(p), s))
 end
 
 (v::Variable)(s::MP.AbstractSubstitution...) = MP.substitute(MP.Eval(), v, s)
 (m::Monomial)(s::MP.AbstractSubstitution...) = MP.substitute(MP.Eval(), m, s)
-(t::Term)(s::MP.AbstractSubstitution...) = MP.substitute(MP.Eval(), t, s)
+(t::_Term)(s::MP.AbstractSubstitution...) = MP.substitute(MP.Eval(), t, s)
 (p::Polynomial)(s::MP.AbstractSubstitution...) = MP.substitute(MP.Eval(), p, s)
 
 (p::Variable)(x::Number) = x
@@ -161,13 +161,13 @@ function (p::Monomial)(x::AbstractVector{<:Number})
     return MP.substitute(MP.Eval(), p, variables(p) => x)
 end
 (p::Monomial)(x::Number...) = MP.substitute(MP.Eval(), p, variables(p) => x)
-function (p::Term)(x::NTuple{N,<:Number}) where {N}
+function (p::_Term)(x::NTuple{N,<:Number}) where {N}
     return MP.substitute(MP.Eval(), p, variables(p) => x)
 end
-function (p::Term)(x::AbstractVector{<:Number})
+function (p::_Term)(x::AbstractVector{<:Number})
     return MP.substitute(MP.Eval(), p, variables(p) => x)
 end
-(p::Term)(x::Number...) = MP.substitute(MP.Eval(), p, variables(p) => x)
+(p::_Term)(x::Number...) = MP.substitute(MP.Eval(), p, variables(p) => x)
 function (p::Polynomial)(x::NTuple{N,<:Number}) where {N}
     return MP.substitute(MP.Eval(), p, variables(p) => x)
 end

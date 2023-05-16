@@ -31,7 +31,7 @@ function canonical(m::MonomialVector)
     for z in m.Z
         v = [v[i] || z[i] > 0 for i in eachindex(v)]
     end
-    return MonomialVector(_vars(m)[v], Vector{Int}[z[v] for z in m.Z])
+    return MonomialVector(MP.variables(m)[v], Vector{Int}[z[v] for z in m.Z])
 end
 
 function Base.hash(m::MonomialVector, u::UInt)
@@ -39,9 +39,9 @@ function Base.hash(m::MonomialVector, u::UInt)
     if length(cm.Z) == 0
         hash([], u)
     elseif length(cm.Z) == 1
-        hash(Monomial(_vars(cm), cm.Z[1]), u)
+        hash(Monomial(MP.variables(cm), cm.Z[1]), u)
     else
-        hash(_vars(cm), hash(cm.Z, hash(u)))
+        hash(MP.variables(cm), hash(cm.Z, hash(u)))
     end
 end
 
@@ -89,7 +89,7 @@ function MultivariatePolynomials.maxdegree(x::MonomialVector)
     return isempty(x) ? 0 : maximum(sum.(x.Z))
 end
 
-_vars(m::Union{Monomial,MonomialVector}) = m.vars
+MP.variables(m::Union{Monomial,MonomialVector}) = m.vars
 
 # Recognize arrays of monomials of this module
 # [x, y] -> Vector{Variable}
@@ -106,7 +106,7 @@ function MP.empty_monomial_vector(
 ) where {V,M}
     return MonomialVector{V,M}(vars, Vector{Int}[])
 end
-MP.empty_monomial_vector(t::DMonoVecElemNonConstant) = emptymonovec(_vars(t))
+MP.empty_monomial_vector(t::DMonoVecElemNonConstant) = emptymonovec(MP.variables(t))
 function MP.empty_monomial_vector(
     ::Type{<:DMonoVecElemNonConstant{V,M}},
 ) where {V,M}
@@ -181,7 +181,7 @@ function MonomialVector(
     filter::Function = x -> true,
 )
     vars = unique!(sort(vars, rev = true))
-    return MonomialVector{V,M}(
+    return MonomialVector(
         vars,
         getZfordegs(
             length(vars),
@@ -230,29 +230,28 @@ end
 #    Z = getZfordegs(length(vars), degs, true, z -> filter(Monomial(vars, z)))
 #    [Monomial{true}(vars, z) for z in Z]
 #end
-#function MP.monomials(vars::TupOrVec{Variable{false}}, degs::AbstractVector{Int}, filter::Function = x->true)
+#function MP.monomials(vars::TupOrVec{<:Variable{<:NonCommutative}}, degs::AbstractVector{Int}, filter::Function = x->true)
 #    Z = getZfordegs(length(vars), degs, false, z -> filter(Monomial(vars, z)))
 #    v = isempty(Z) ? vars : getvarsforlength(vars, length(first(Z)))
-#    [Monomial{false}(v, z) for z in Z]
+#    [Monomial(v, z) for z in Z]
 #end
 #MP.monomials(vars::TupOrVec{PV}, degs::Int, filter::Function = x->true) where {PV<:Variable} = monomials(vars, [degs], filter)
 
 function buildZvarsvec(::Type{PV}, X::DMonoVec) where {PV<:Variable}
     varsvec = Vector{PV}[
-        (isa(x, DMonoVecElemNonConstant) ? _vars(x) : Variable[]) for x in X
+        (isa(x, DMonoVecElemNonConstant) ? MP.variables(x) : Variable[]) for x in X
     ]
     allvars, maps = mergevars(varsvec)
     nvars = length(allvars)
     Z = [zeros(Int, nvars) for i in 1:length(X)]
-    offset = 0
     for (i, x) in enumerate(X)
         if isa(x, Variable)
             @assert length(maps[i]) == 1
             z = [1]
         elseif isa(x, Monomial)
             z = x.z
-        elseif isa(x, Term)
-            z = x.x.z
+        elseif isa(x, _Term)
+            z = MP.monomial(x).z
         else
             @assert isa(x, Int)
             z = Int[]

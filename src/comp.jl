@@ -1,11 +1,11 @@
 import Base.==
 
-#Base.iszero(t::Term) = iszero(t.α)
+#Base.iszero(t::Term) = iszero(MP.coefficient(t))
 Base.iszero(p::Polynomial) = isempty(p)
 
-# TODO This should be in Base with T instead of Variable{C}.
+# TODO This should be in Base with T instead of Variable{V,M}.
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/3
-function (==)(x::Vector{Variable{C}}, y::Vector{Variable{C}}) where {C}
+function (==)(x::Vector{Variable{V,M}}, y::Vector{Variable{V,M}}) where {V,M}
     if length(x) != length(y)
         false
     else
@@ -55,7 +55,7 @@ function _samevars_grlex(x::Vector{Int}, y::Vector{Int})
         return 0
     end
 end
-function mycomp(x::Monomial{C}, y::Monomial{C}) where {C}
+function mycomp(x::Monomial{V,M}, y::Monomial{V,M}) where {V,M}
     degx = degree(x)
     degy = degree(y)
     if degx != degy
@@ -88,28 +88,28 @@ function mycomp(x::Monomial{C}, y::Monomial{C}) where {C}
     end
 end
 
-function (==)(x::Monomial{C}, y::Monomial{C}) where {C}
+function (==)(x::Monomial{V,M}, y::Monomial{V,M}) where {V,M}
     return mycomp(x, y) == 0
 end
-(==)(x::Variable{C}, y::Monomial{C}) where {C} = convert(Monomial{C}, x) == y
+(==)(x::Variable{V,M}, y::Monomial{V,M}) where {V,M} = convert(Monomial{V,M}, x) == y
 
 # graded lex ordering
-function Base.isless(x::Monomial{C}, y::Monomial{C}) where {C}
+function Base.isless(x::Monomial{V,M}, y::Monomial{V,M}) where {V,M}
     return mycomp(x, y) < 0
 end
-function Base.isless(x::Monomial{C}, y::Variable{C}) where {C}
-    return isless(x, convert(Monomial{C}, y))
+function Base.isless(x::Monomial{V,M}, y::Variable{V,M}) where {V,M}
+    return isless(x, convert(Monomial{V,M}, y))
 end
-function Base.isless(x::Variable{C}, y::Monomial{C}) where {C}
-    return isless(convert(Monomial{C}, x), y)
+function Base.isless(x::Variable{V,M}, y::Monomial{V,M}) where {V,M}
+    return isless(convert(Monomial{V,M}, x), y)
 end
 
 # Comparison of MonomialVector
-function (==)(x::MonomialVector{C}, y::MonomialVector{C}) where {C}
+function (==)(x::MonomialVector{V,M}, y::MonomialVector{V,M}) where {V,M}
     if length(x.Z) != length(y.Z)
         return false
     end
-    allvars, maps = mergevars([_vars(x), _vars(y)])
+    allvars, maps = mergevars([MP.variables(x), MP.variables(y)])
     # Should be sorted in the same order since the non-common
     # polyvar should have exponent 0
     for (a, b) in zip(x.Z, y.Z)
@@ -127,7 +127,7 @@ end
 (==)(x::MonomialVector, mv::AbstractVector) = x == monomial_vector(mv)
 
 # Comparison of Term
-function (==)(p::Polynomial{C}, q::Polynomial{C}) where {C}
+function (==)(p::Polynomial{V,M}, q::Polynomial{V,M}) where {V,M}
     # terms should be sorted and without zeros
     if length(p) != length(q)
         return false
@@ -165,12 +165,12 @@ function grlex(x::Vector{Int}, y::Vector{Int})
 end
 
 function Base.isapprox(
-    p::Polynomial{C,S},
-    q::Polynomial{C,T};
+    p::Polynomial{V,M,S},
+    q::Polynomial{V,M,T};
     rtol::Real = Base.rtoldefault(S, T, 0),
     atol::Real = 0,
     ztol::Real = iszero(atol) ? Base.rtoldefault(S, T, 0) : atol,
-) where {C,S,T}
+) where {V,M,S,T}
     i = j = 1
     while i <= length(p.x) || j <= length(q.x)
         if i > length(p.x) || (j <= length(q.x) && q.x[j] < p.x[i])

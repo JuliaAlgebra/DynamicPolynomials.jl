@@ -51,8 +51,8 @@ function multiplyvar(
     end
 end
 function multiplyvar(
-    x::Variable{false},
-    v::Vector{Variable{false}},
+    x::Variable{<:NonCommutative},
+    v::Vector{<:Variable{<:NonCommutative}},
     z::Vector{Int},
 )
     i = 1
@@ -93,16 +93,16 @@ function multiplyvar(
         end
     end
 end
-function Base.:(*)(x::Variable{false}, y::Monomial{false})
+function Base.:(*)(x::Variable{<:NonCommutative}, y::Monomial{<:NonCommutative})
     w, z = multiplyvar(x, y.vars, y.z)
-    return Monomial{false}(w, z)
+    return Monomial(w, z)
 end
-function Base.:(*)(y::Monomial{false}, x::Variable{false})
+function Base.:(*)(y::Monomial{<:NonCommutative}, x::Variable{<:NonCommutative})
     w, z = multiplyvar(y.vars, y.z, x)
-    return Monomial{false}(w, z)
+    return Monomial(w, z)
 end
 
-function Base.:(*)(x::Monomial{false}, y::Monomial{false})
+function Base.:(*)(x::Monomial{V,M}, y::Monomial{V,M}) where {V<:NonCommutative,M}
     i = findlast(z -> z > 0, x.z)
     if i === nothing || i == 0
         return y
@@ -118,14 +118,14 @@ function Base.:(*)(x::Monomial{false}, y::Monomial{false})
         w = [x.vars[1:i]; y.vars[j:end]]
         z = [x.z[1:i]; y.z[j:end]]
     end
-    return Monomial{false}(w, z)
+    return Monomial(w, z)
 end
 
-function Base.:(*)(y::MonomialVector{false}, x::DMonomialLike{false})
-    return MonomialVector{false}([yi * x for yi in y])
+function Base.:(*)(y::MonomialVector{V,M}, x::DMonomialLike{V,M}) where {V<:NonCommutative,M}
+    return MonomialVector{V,M}([yi * x for yi in y])
 end
-function Base.:(*)(x::DMonomialLike{false}, y::MonomialVector{false})
+function Base.:(*)(x::DMonomialLike{V,M}, y::MonomialVector{V,M}) where {V<:NonCommutative,M}
     # The order may change
     # Example: y * [x^2, y^2] == [y^3, yx^2]
-    return MonomialVector{false}([x * yi for yi in y])
+    return MonomialVector{V,M}([x * yi for yi in y])
 end

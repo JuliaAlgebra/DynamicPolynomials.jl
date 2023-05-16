@@ -30,7 +30,7 @@ function MP.variable_union_type(
 end
 MP.constant_monomial(::Type{<:PolyType{V,M}}) where {V,M} = Monomial{V,M}()
 function MP.constant_monomial(p::PolyType)
-    return Monomial(_vars(p), zeros(Int, nvariables(p)))
+    return Monomial(MP.variables(p), zeros(Int, nvariables(p)))
 end
 MP.monomial_type(::Type{<:PolyType{V,M}}) where {V,M} = Monomial{V,M}
 MP.monomial_type(::PolyType{V,M}) where {V,M} = Monomial{V,M}
@@ -38,15 +38,15 @@ MP.monomial_type(::PolyType{V,M}) where {V,M} = Monomial{V,M}
 #    return Monomial{V,M}(vars, zeros(Int, length(vars)))
 #end
 function MP.term_type(::Union{TermPoly{V,M,T},Type{<:TermPoly{V,M,T}}}) where {V,M,T}
-    return Term{V,M,T}
+    return _Term{V,M,T}
 end
 function MP.term_type(
     ::Union{PolyType{V,M},Type{<:PolyType{V,M}}},
     ::Type{T},
 ) where {V,M,T}
-    return Term{V,M,T}
+    return _Term{V,M,T}
 end
-MP.term_type(::Type{Polynomial{V,M}}) where {V,M} = Term{V,M}
+MP.term_type(::Type{Polynomial{V,M}}) where {V,M} = _Term{V,M}
 MP.polynomial_type(::Type{_Term{V,M}}) where {V,M} = Polynomial{V,M}
 MP.polynomial_type(::Type{_Term{V,M,T}}) where {T,V,M} = Polynomial{V,M,T}
 function MP.polynomial_type(
@@ -55,38 +55,33 @@ function MP.polynomial_type(
 ) where {V,M,T}
     return Polynomial{V,M,T}
 end
-_vars(p::AbstractArray{<:PolyType}) = mergevars(_vars.(p))[1]
-function MP.variables(
-    p::Union{PolyType,MonomialVector,AbstractArray{<:PolyType}},
-)
-    return _vars(p)
-end # tuple(_vars(p))
+MP.variables(p::AbstractArray{<:PolyType}) = mergevars(MP.variables.(p))[1]
 function MP.nvariables(
     p::Union{PolyType,MonomialVector,AbstractArray{<:PolyType}},
 )
-    return length(_vars(p))
+    return length(MP.variables(p))
 end
 function MP.similar_variable(
-    ::Union{PolyType{V,M},Type{<:PolyType{V,M}}},
+    P::Union{PolyType{V,M},Type{<:PolyType{V,M}}},
     ::Type{Val{S}},
 ) where {V,M,S}
-    return Variable{V,M}(string(S))
+    return MP.similar_variable(P, S)
 end
 function MP.similar_variable(
     ::Union{PolyType{V,M},Type{<:PolyType{V,M}}},
     s::Symbol,
 ) where {V,M}
-    return Variable{V,M}(string(s))
+    return Variable(string(s), V, M)
 end
 
 include("promote.jl")
 
 include("operators.jl")
 include("comp.jl")
-#
-#include("diff.jl")
-#include("subs.jl")
-#
-#include("div.jl")
+
+include("diff.jl")
+include("subs.jl")
+
+include("div.jl")
 
 end # module

@@ -49,7 +49,7 @@ end
 # Inspired from `JuMP.Containers._extract_kw_args`
 function _extract_kw_args(args, variable_order)
     positional_args = Any[]
-    monomial_order = :($(MP.Graded(MP.LexOrder())))
+    monomial_order = :($(MP.Graded{MP.LexOrder}))
     for arg in args
         if Base.isexpr(arg, :(=))
             if arg.args[1] == :variable_order
@@ -114,25 +114,23 @@ function instantiate(::Type{NonCommutative{O}}) where {O}
     return NonCommutative(instantiate(O))
 end
 
-struct Variable{V,O} <: AbstractVariable
+struct Variable{V,M} <: AbstractVariable
     name::String
     variable_order::V
-    monomial_order::O
 
     function Variable(
         name::AbstractString,
         ::Type{V},
-        monomial_order::MP.AbstractMonomialOrdering,
-    ) where {V<:AbstractVariableOrdering}
-        return new{V,typeof(monomial_order)}(
+        ::Type{M},
+    ) where {V<:AbstractVariableOrdering,M<:MP.AbstractMonomialOrdering}
+        return new{V,M}(
             convert(String, name),
             instantiate(V),
-            monomial_order,
         )
     end
 end
 
-Base.hash(x::Variable, u::UInt) = hash(x.id, u)
+Base.hash(x::Variable, u::UInt) = hash(x.variable_order.order.id, u)
 Base.broadcastable(x::Variable) = Ref(x)
 
 MP.name(v::Variable) = v.name
@@ -146,7 +144,7 @@ function MP.name_base_indices(v::Variable)
 end
 
 MP.monomial(v::Variable) = Monomial(v)
-_vars(v::Variable) = [v]
+MP.variables(v::Variable) = [v]
 
 iscomm(::Type{Variable{C}}) where {C} = C
 
@@ -186,8 +184,8 @@ function mergevars(varsvec::Vector{Vector{PV}}) where {PV<:Variable}
     maps = mergevars_to!(vars, varsvec)
     return vars, maps
 end
-function mergevars_of(::Type{Variable{C}}, polys::AbstractVector) where {C}
-    varsvec = Vector{Variable{C}}[variables(p) for p in polys if p isa PolyType]
+function mergevars_of(::Type{Variable{V,M}}, polys::AbstractVector) where {V,M}
+    varsvec = Vector{Variable{V,M}}[variables(p) for p in polys if p isa PolyType]
     # TODO avoid computing `maps`
     return mergevars(varsvec)
 end

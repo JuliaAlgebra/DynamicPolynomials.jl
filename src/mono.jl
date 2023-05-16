@@ -39,23 +39,28 @@ function Base.convert(::Type{Monomial{V,M}}, x::Variable{V,M}) where {V,M}
 end
 Monomial(x::Variable{V,M}) where {V,M} = convert(Monomial{V,M}, x)
 function MP.convert_constant(::Type{Monomial{V,M}}, α) where {V,M}
-    isone(α) || error("Cannot convert $α to a Monomial{$C} as it is not one")
+    isone(α) || error("Cannot convert `$α` to a `Monomial{$V,$M}` as it is not one")
     return Monomial{V,M}(Variable{V,M}[], Int[])
 end
 
 # defaults to commutative so that `Monomial(1)` is consistent with TypedPolynomials
 function Monomial(α::Number)
-    return convert(Monomial{Commutative{CreationOrder},Graded(LexOrder)}, α)
+    return convert(Monomial{Commutative{CreationOrder},Graded{LexOrder}}, α)
 end
 
 Base.broadcastable(m::Monomial) = Ref(m)
 MA.mutable_copy(m::M) where {M<:Monomial} = M(copy(m.vars), copy(m.z))
 Base.copy(m::Monomial) = MA.mutable_copy(m)
 
+function MA.operate!(::typeof(constant_monomial), mono::Monomial)
+    MA.operate!(zero, mono.z)
+    return mono
+end
+
 # Generate canonical reperesentation by removing variables that are not used
 function canonical(m::Monomial)
     list = m.z .> 0
-    return Monomial(_vars(m)[list], m.z[list])
+    return Monomial(MP.variables(m)[list], m.z[list])
 end
 function Base.hash(x::Monomial, u::UInt)
     cx = canonical(x)
@@ -64,13 +69,13 @@ function Base.hash(x::Monomial, u::UInt)
     elseif nvariables(cx) == 1 && cx.z[1] == 1
         hash(cx.vars[1], u)
     else # TODO reduce power in MP
-        hash(_vars(cx), hash(cx.z, u))
+        hash(MP.variables(cx), hash(cx.z, u))
     end
 end
 
 MP.exponents(m::Monomial) = m.z
 # /!\ vars not copied, do not mess with vars
-_vars(m::Union{Monomial}) = m.vars
+MP.variables(m::Union{Monomial}) = m.vars
 
 MP.monomial(m::Monomial) = m
 # Does m1 divides m2 ?

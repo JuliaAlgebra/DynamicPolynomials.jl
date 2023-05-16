@@ -46,12 +46,12 @@ function Base.one(::Type{Polynomial{V,M,T}}) where {V,M,T}
     return Polynomial([one(T)], MonomialVector{V,M}(Variable{V,M}[], [Int[]]))
 end
 function Base.zero(p::Polynomial{V,M,T}) where {V,M,T}
-    return Polynomial(T[], empty_monomial_vector(copy(_vars(p))))
+    return Polynomial(T[], empty_monomial_vector(copy(MP.variables(p))))
 end
 function Base.one(p::Polynomial{V,M,T}) where {V,M,T}
     return Polynomial(
         [one(T)],
-        MonomialVector(copy(_vars(p)), [zeros(Int, nvariables(p))]),
+        MonomialVector(copy(MP.variables(p)), [zeros(Int, nvariables(p))]),
     )
 end
 
@@ -140,7 +140,7 @@ function Base.iterate(p::Polynomial, state::Int)
     return state < length(p) ? (p[state+1], state + 1) : nothing
 end
 #eltype(::Type{Polynomial{V,M,T}}) where {V,M,T} = T
-Base.getindex(p::Polynomial, I::Int) = _Term(p.a[I[1]], p.x[I[1]])
+Base.getindex(p::Polynomial, I::Int) = MP.term(p.a[I[1]], p.x[I[1]])
 
 #Base.transpose(p::Polynomial) = Polynomial(map(transpose, p.a), p.x) # FIXME invalid age range update
 
@@ -157,12 +157,12 @@ function Base.iterate(p::TermIterator, state::Int)
     return state < length(p) ? (p[state+1], state + 1) : nothing
 end
 
-Base.getindex(p::TermIterator, I::Int) = _Term(p.p.a[I[1]], p.p.x[I[1]])
+Base.getindex(p::TermIterator, I::Int) = MP.term(p.p.a[I[1]], p.p.x[I[1]])
 
 MP.terms(p::Polynomial) = TermIterator(p)
 MP.coefficients(p::Polynomial) = p.a
 MP.monomials(p::Polynomial) = p.x
-_vars(p::Polynomial) = _vars(p.x)
+MP.variables(p::Polynomial) = MP.variables(p.x)
 
 MP.extdegree(p::Polynomial) = extdegree(p.x)
 MP.mindegree(p::Polynomial) = mindegree(p.x)
@@ -189,10 +189,10 @@ function MP.remove_monomials(p::Polynomial, x::MonomialVector)
     j = 1
     I = Int[]
     for (i, t) in enumerate(p)
-        while j <= length(x) && x[j] < t.x
+        while j <= length(x) && x[j] < MP.monomial(t)
             j += 1
         end
-        if j > length(x) || x[j] != t.x
+        if j > length(x) || x[j] != MP.monomial(t)
             push!(I, i)
         end
     end
@@ -301,7 +301,7 @@ function MP.polynomial(
                     end
                 end
             end
-            v = _vars(mv)
+            v = MP.variables(mv)
         else
             N = n^2
             x = Vector{Monomial{V,M}}(undef, N)
@@ -321,7 +321,7 @@ function MP.polynomial(
                 end
             end
             a, X = monomial_vector(a, x)
-            v = _vars(X)
+            v = MP.variables(X)
             Z = X.Z
         end
         polynomialclean(v, a, Z)

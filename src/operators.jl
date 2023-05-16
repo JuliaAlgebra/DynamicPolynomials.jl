@@ -30,21 +30,21 @@ function _plusorminus_to!(
     while i <= nterms(p) || j <= nterms(q)
         z = zeros(Int, nvars)
         if j > nterms(q) ||
-           (i <= nterms(p) && _getindex(p, i).x < _getindex(q, j).x)
+           (i <= nterms(p) && MP.monomial(_getindex(p, i)) < MP.monomial(_getindex(q, j)))
             t = _getindex(p, i)
-            z[maps[1]] = t.x.z
-            α = MA.scaling_convert(U, MA.copy_if_mutable(t.α))
+            z[maps[1]] = MP.monomial(t).z
+            α = MA.scaling_convert(U, MA.copy_if_mutable(MP.coefficient(t)))
             i += 1
-        elseif i > nterms(p) || _getindex(q, j).x < _getindex(p, i).x
+        elseif i > nterms(p) || MP.monomial(_getindex(q, j)) < MP.monomial(_getindex(p, i))
             t = _getindex(q, j)
-            z[maps[2]] = t.x.z
-            α = MA.scaling_convert(U, MA.operate(op, t.α))
+            z[maps[2]] = MP.monomial(t).z
+            α = MA.scaling_convert(U, MA.operate(op, MP.coefficient(t)))
             j += 1
         else
             t = _getindex(p, i)
-            z[maps[1]] = t.x.z
+            z[maps[1]] = MP.monomial(t).z
             s = _getindex(q, j)
-            α = op(t.α, s.α)
+            α = op(MP.coefficient(t), MP.coefficient(s))
             i += 1
             j += 1
         end
@@ -57,7 +57,7 @@ function plusorminus(
     q::TermPoly{V,M,T},
     op::Function,
 ) where {V,M,S,T}
-    varsvec = [_vars(p), _vars(q)]
+    varsvec = [MP.variables(p), MP.variables(q)]
     allvars, maps = mergevars(varsvec)
     U = MA.promote_operation(op, S, T)
     a = U[]
@@ -86,7 +86,7 @@ function MA.operate_to!(
             "Cannot call `operate_to!(output, $op, p, q)` with `output` equal to `p` or `q`, call `operate!` instead.",
         )
     end
-    varsvec = [_vars(p), _vars(q)]
+    varsvec = [MP.variables(p), MP.variables(q)]
     allvars, maps = mergevars(varsvec)
     Future.copy!(output.x.vars, allvars)
     empty!(output.a)
@@ -105,8 +105,8 @@ end
 const _NoVarTerm{T} = Tuple{T,Vector{Int}}
 function MA.operate!(
     op::Union{typeof(+),typeof(-)},
-    p::Polynomial{false},
-    q::Polynomial{false},
+    p::Polynomial{<:NonCommutative},
+    q::Polynomial{<:NonCommutative},
 )
     return MA.operate_to!(p, op, MA.copy(p), q)
 end
@@ -116,13 +116,13 @@ function MA.operate!(
     p::Polynomial{V},
     q::Polynomial{V},
 ) where {V<:Commutative}
-    if _vars(p) != _vars(q)
-        varsvec = [_vars(p), _vars(q)]
+    if MP.variables(p) != MP.variables(q)
+        varsvec = [MP.variables(p), MP.variables(q)]
         allvars, maps = mergevars(varsvec)
-        if length(allvars) != length(_vars(p))
+        if length(allvars) != length(MP.variables(p))
             _add_variables!(p.x, allvars, maps[1])
         end
-        if length(allvars) == length(_vars(q))
+        if length(allvars) == length(MP.variables(q))
             rhs = q
         else
             # We could avoid promoting `q` to the same variables
@@ -150,7 +150,7 @@ function MA.operate!(
         push!(p.a, t[1])
         return push!(p.x.Z, t[2])
     end
-    compare_monomials(t::_NoVarTerm, j::Int) = samevars_grlex(q.x.Z[j], t[2])
+    compare_monomials(t::_NoVarTerm, j::Int) = _samevars_grlex(q.x.Z[j], t[2])
     compare_monomials(i::Int, j::Int) = compare_monomials(get1(i), j)
     combine(i::Int, j::Int) = p.a[i] = MA.operate!!(op, p.a[i], q.a[j])
     combine(t::_NoVarTerm, j::Int) = (MA.operate!!(op, t[1], q.a[j]), t[2])
@@ -179,14 +179,14 @@ end
 Base.:(+)(x::TermPoly{V,M}, y::TermPoly{V,M}) where {V,M} = plusorminus(x, y, +)
 Base.:(-)(x::TermPoly{V,M}, y::TermPoly{V,M}) where {V,M} = plusorminus(x, y, -)
 function Base.:(+)(x::TermPoly{V,M}, y::Union{Monomial,Variable}) where {V,M}
-    return x + _Term{V,M}(y)
+    return x + MP.term(y)
 end
 function Base.:(+)(x::Union{Monomial,Variable}, y::TermPoly{V,M}) where {V,M}
-    return _Term{V,M}(x) + y
+    return MP.term(x) + y
 end
 
-Base.:(-)(x::TermPoly{T}, y::DMonomialLike) where {T} = x - _Term{T}(y)
-Base.:(-)(x::DMonomialLike, y::TermPoly{T}) where {T} = _Term{T}(x) - y
+Base.:(-)(x::TermPoly{V,M,T}, y::DMonomialLike{V,M}) where {V,M,T} = x - convert(MP.term_type(y, T), y)
+Base.:(-)(x::DMonomialLike{V,M}, y::TermPoly{V,M,T}) where {V,M,T} = convert(MP.term_type(x, T), x) - y
 
 # `MA.operate(-, p)` redirects to `-p` as it assumes that `-p` can be modified
 # through the MA API without modifying `p`. We should either copy `p.x` here

@@ -65,15 +65,15 @@ function _term_poly_mult(
         zero(Polynomial{V,M,U})
     else
         n = nterms(p)
-        allvars, maps = mergevars([t.x.vars, p.x.vars])
+        allvars, maps = mergevars([MP.monomial(t).vars, p.x.vars])
         nv = length(allvars)
         # Necessary to annotate the type in case it is empty
         Z = Vector{Int}[zeros(Int, nv) for i in 1:n]
         for i in 1:n
-            Z[i][maps[1]] = t.x.z
+            Z[i][maps[1]] = MP.monomial(t).z
             Z[i][maps[2]] += p.x.Z[i]
         end
-        Polynomial(op.(t.α, p.a), MonomialVector(allvars, Z))
+        Polynomial(op.(MP.coefficient(t), p.a), MonomialVector(allvars, Z))
     end
 end
 Base.:(*)(p::Polynomial, t::_Term) = _term_poly_mult(t, p, (α, β) -> β * α)
@@ -87,11 +87,11 @@ function _mul(
     return _mul(T, polynomial(p), polynomial(q))
 end
 function _mul(::Type{T}, p::Polynomial{<:Commutative}, q::Polynomial{<:Commutative}) where {T}
-    samevars = _vars(p) == _vars(q)
+    samevars = MP.variables(p) == MP.variables(q)
     if samevars
-        allvars = copy(_vars(p))
+        allvars = copy(MP.variables(p))
     else
-        allvars, maps = mergevars([_vars(p), _vars(q)])
+        allvars, maps = mergevars([MP.variables(p), MP.variables(q)])
     end
     N = length(p) * length(q)
     Z = Vector{Vector{Int}}(undef, N)
@@ -100,15 +100,15 @@ function _mul(::Type{T}, p::Polynomial{<:Commutative}, q::Polynomial{<:Commutati
     for u in p
         for v in q
             if samevars
-                z = u.x.z + v.x.z
+                z = MP.monomial(u).z + MP.monomial(v).z
             else
                 z = zeros(Int, length(allvars))
-                z[maps[1]] += u.x.z
-                z[maps[2]] += v.x.z
+                z[maps[1]] += MP.monomial(u).z
+                z[maps[2]] += MP.monomial(v).z
             end
             i += 1
             Z[i] = z
-            a[i] = u.α * v.α
+            a[i] = MP.coefficient(u) * MP.coefficient(v)
         end
     end
     return allvars, a, Z
