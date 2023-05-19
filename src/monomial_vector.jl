@@ -106,7 +106,7 @@ function MP.empty_monomial_vector(
 ) where {V,M}
     return MonomialVector{V,M}(vars, Vector{Int}[])
 end
-MP.empty_monomial_vector(t::DMonoVecElemNonConstant) = emptymonovec(MP.variables(t))
+MP.empty_monomial_vector(t::DMonoVecElemNonConstant) = empty_monomial_vector(MP.variables(t))
 function MP.empty_monomial_vector(
     ::Type{<:DMonoVecElemNonConstant{V,M}},
 ) where {V,M}
