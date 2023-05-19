@@ -40,7 +40,7 @@ end
 # Comparison of Monomial
 
 # graded lex ordering
-function _samevars_grlex(x::Vector{Int}, y::Vector{Int})
+function _exponents_compare(x::Vector{Int}, y::Vector{Int}, ::Type{MP.Graded{MP.LexOrder}})
     @assert length(x) == length(y)
     degx = sum(x)
     degy = sum(y)
@@ -55,11 +55,16 @@ function _samevars_grlex(x::Vector{Int}, y::Vector{Int})
         return 0
     end
 end
-function mycomp(x::Monomial{V,M}, y::Monomial{V,M}) where {V,M}
+
+function MP.compare(x::Monomial{V,M}, y::Monomial{V,M}) where {V,M}
+    return MP.compare(x, y, M)
+end
+
+function MP.compare(x::Monomial{V}, y::Monomial{V}, ::Type{MP.Graded{MP.LexOrder}}) where {V}
     degx = degree(x)
     degy = degree(y)
     if degx != degy
-        degx - degy
+        return degx - degy
     else
         i = j = 1
         # since they have the same degree,
@@ -84,18 +89,18 @@ function mycomp(x::Monomial{V,M}, y::Monomial{V,M}) where {V,M}
                 j += 1
             end
         end
-        0
+        return 0
     end
 end
 
 function (==)(x::Monomial{V,M}, y::Monomial{V,M}) where {V,M}
-    return mycomp(x, y) == 0
+    return MP.compare(x, y) == 0
 end
 (==)(x::Variable{V,M}, y::Monomial{V,M}) where {V,M} = convert(Monomial{V,M}, x) == y
 
 # graded lex ordering
 function Base.isless(x::Monomial{V,M}, y::Monomial{V,M}) where {V,M}
-    return mycomp(x, y) < 0
+    return MP.compare(x, y) < 0
 end
 function Base.isless(x::Monomial{V,M}, y::Variable{V,M}) where {V,M}
     return isless(x, convert(Monomial{V,M}, y))
@@ -146,7 +151,7 @@ function (==)(p::Polynomial{V,M}, q::Polynomial{V,M}) where {V,M}
     return true
 end
 
-function grlex(x::Vector{Int}, y::Vector{Int})
+function _exponents_isless(x::Vector{Int}, y::Vector{Int}, ::Type{MP.Graded{MP.LexOrder}})
     @assert length(x) == length(y)
     degx = sum(x)
     degy = sum(y)

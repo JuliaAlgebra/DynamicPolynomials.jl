@@ -110,6 +110,12 @@ function MA.operate!(
 )
     return MA.operate_to!(p, op, MA.copy(p), q)
 end
+
+
+function __exponents_compare(q::Polynomial{V,M}, j, e) where {V,M}
+    return _exponents_compare(q.x.Z[j], e, M)
+end
+
 # TODO need to check that this also works for non-commutative
 function MA.operate!(
     op::Union{typeof(+),typeof(-)},
@@ -150,7 +156,7 @@ function MA.operate!(
         push!(p.a, t[1])
         return push!(p.x.Z, t[2])
     end
-    compare_monomials(t::_NoVarTerm, j::Int) = _samevars_grlex(q.x.Z[j], t[2])
+    compare_monomials(t::_NoVarTerm, j::Int) = __exponents_compare(q, j, t[2])
     compare_monomials(i::Int, j::Int) = compare_monomials(get1(i), j)
     combine(i::Int, j::Int) = p.a[i] = MA.operate!!(op, p.a[i], q.a[j])
     combine(t::_NoVarTerm, j::Int) = (MA.operate!!(op, t[1], q.a[j]), t[2])

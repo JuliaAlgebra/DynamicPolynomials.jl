@@ -11,7 +11,11 @@ struct MonomialVector{V,M} <: AbstractVector{Monomial{V,M}}
     ) where {V,M}
         @assert !iscomm(V) || issorted(vars, rev = true)
         @assert all(z -> length(z) == length(vars), Z)
-        @assert issorted(Z, lt = grlex)
+
+        _isless = let M = M
+            (a, b) -> _exponents_isless(a, b, M)
+        end
+        @assert issorted(Z, lt = _isless)
         return new{V,M}(vars, Z)
     end
 end
@@ -264,7 +268,10 @@ end
 MP.sort_monomial_vector(X::MonomialVector) = (1:length(X), X)
 function _sort_monomial_vector(X::DMonoVec{V,M}) where {V,M}
     allvars, Z = buildZvarsvec(Variable{V,M}, X)
-    σ = sortperm(Z, lt = grlex)
+    _isless = let M = M
+        (a, b) -> _exponents_isless(a, b, M)
+    end
+    σ = sortperm(Z, lt = _isless)
     return allvars, Z, σ
 end
 function _removedups!(Z::Vector{Vector{Int}}, σ::Vector{Int})
@@ -283,7 +290,10 @@ end
 
 function MonomialVector{V,M}(X::DMonoVec{V,M}) where {V,M}
     allvars, Z = buildZvarsvec(Variable{V,M}, X)
-    sort!(Z, lt = grlex)
+    _isless = let M = M
+        (a, b) -> _exponents_isless(a, b, M)
+    end
+    sort!(Z, lt = _isless)
     dups = findall(i -> Z[i] == Z[i-1], 2:length(Z))
     deleteat!(Z, dups)
     return MonomialVector{V,M}(allvars, Z)

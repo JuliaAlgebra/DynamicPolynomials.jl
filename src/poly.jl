@@ -220,8 +220,12 @@ function removedups_to!(
     Z::Vector{Vector{Int}},
     adup::Vector{T},
     Zdup::Vector{Vector{Int}},
-) where {T}
-    σ = sortperm(Zdup, lt = grlex)
+    ::Type{M},
+) where {T,M}
+    _isless = let M = M
+        (a, b) -> _exponents_isless(a, b, M)
+    end
+    σ = sortperm(Zdup, lt = _isless)
     i = 0
     j = 1
     while j <= length(adup)
@@ -243,7 +247,7 @@ function polynomialclean(
 ) where {V,M,T}
     Z = Vector{Int}[]
     a = T[]
-    removedups_to!(a, Z, adup, Zdup)
+    removedups_to!(a, Z, adup, Zdup, M)
     return Polynomial{V,M,T}(a, MonomialVector{V,M}(vars, Z))
 end
 function polynomialclean_to!(
@@ -255,7 +259,7 @@ function polynomialclean_to!(
     Future.copy!(p.x.vars, vars)
     empty!(p.a)
     empty!(p.x.Z)
-    removedups_to!(p.a, p.x.Z, adup, Zdup)
+    removedups_to!(p.a, p.x.Z, adup, Zdup, M)
     _remove_zeros!(p)
     return p
 end
