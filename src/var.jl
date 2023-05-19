@@ -51,7 +51,7 @@ function _extract_kw_args(args, variable_order)
     positional_args = Any[]
     monomial_order = :($(MP.Graded{MP.LexOrder}))
     for arg in args
-        if Base.isexpr(arg, :(=))
+        if Base.Meta.isexpr(arg, :(=))
             if arg.args[1] == :variable_order
                 variable_order = arg.args[2]
             elseif arg.args[1] == :monomial_order
