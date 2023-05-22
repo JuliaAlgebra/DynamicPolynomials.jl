@@ -40,16 +40,16 @@ using Test
         @test DynamicPolynomials.MP.variable_union_type(y + 1) == PolyVar{false}
     end
     @testset "PolyVar" begin
-        @test zeroterm(PolyVar{true}) == 0
+        @test zero_term(PolyVar{true}) == 0
         @test zero(PolyVar{true}) == 0
         @test one(PolyVar{false}) == 1
         @polyvar x
-        @test zeroterm(x) isa Term{true, Int}
+        @test zero_term(x) isa Term{true, Int}
         @test zero(x) isa Polynomial{true, Int}
         @test one(x) isa Monomial{true}
     end
     @testset "Monomial" begin
-        @test zeroterm(Monomial{false}) == 0
+        @test zero_term(Monomial{false}) == 0
         @test zero(Monomial{false}) == 0
         @test one(Monomial{true}) == 1
         if VERSION ≥ v"0.7-"
@@ -65,7 +65,7 @@ using Test
         end
         @polyvar x
         @test_throws ArgumentError Monomial{true}([x], [1,0])
-        @test zeroterm(x^2) isa Term{true, Int}
+        @test zero_term(x^2) isa Term{true, Int}
         @test zero(x^2) isa Polynomial{true, Int}
         @test one(x^2) isa Monomial{true}
 
@@ -76,20 +76,19 @@ using Test
     @testset "MonomialVector" begin
         @polyvar x y
         @test_throws AssertionError MonomialVector{true}([x], [[1], [1,0]])
-        @test_throws AssertionError monomials([y, x], 1:2) # should be [x, y]
         X = MonomialVector([x, 1, x*y])
         @test variables(X) == [x, y]
         @test X.Z == [[0, 0], [1, 0], [1, 1]]
         @test MonomialVector{true}([1]) isa MonomialVector{true}
         @test MonomialVector{false}([1]) isa MonomialVector{false}
         a = [1, 5, 3]
-        b, Y = monovec(a, X)
+        b, Y = monomial_vector(a, X)
         @test b === a
         @test Y === X
-        σ, Y = sortmonovec(X)
+        σ, Y = sort_monomial_vector(X)
         @test σ == 1:length(X)
         @test Y === X
-        XX = @inferred mergemonovec([X, X])
+        XX = @inferred merge_monomial_vectors([X, X])
         @test XX isa MonomialVector{true}
         @test X == XX
 
@@ -137,18 +136,18 @@ using Test
     end
     @testset "TODO remove when added to MP" begin
         @polyvar x y
-        @test x == DynamicPolynomials.MP.mapexponents!(div, x^1, x * y^2)
+        @test x == DynamicPolynomials.MP.map_exponents!(div, x^1, x * y^2)
         for z in [x * y, x^2, y^2]
-            @test y == DynamicPolynomials.MP.mapexponents_to!(z, -, x * y^2, x * y)
+            @test y == DynamicPolynomials.MP.map_exponents_to!(z, -, x * y^2, x * y)
         end
     end
     # TODO add to MP
     @testset "Indexing with boolean" begin
         @polyvar x y
         X = monomials([x, y], 2)
-        @test X[[true, false, true]] == monovec([x^2, y^2])
+        @test X[[true, false, true]] == monomial_vector([x^2, y^2])
         X = monomials([x, y], 0:1)
-        @test filter(mono -> degree(mono) == 1, X) == monovec([x, y])
-        @test filter(mono -> degree(mono) == 0, X) == monovec([x^0])
+        @test filter(mono -> degree(mono) == 1, X) == monomial_vector([x, y])
+        @test filter(mono -> degree(mono) == 0, X) == monomial_vector([x^0])
     end
 end

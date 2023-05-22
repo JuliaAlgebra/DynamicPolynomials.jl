@@ -34,15 +34,15 @@ MA.mutable_copy(p::Polynomial{C, T}) where {C, T} = Polynomial{C, T}(MA.mutable_
 Base.copy(p::Polynomial) = MA.mutable_copy(p)
 Base.zero(::Type{Polynomial{C, T}}) where {C, T} = Polynomial(T[], MonomialVector{C}())
 Base.one(::Type{Polynomial{C, T}}) where {C, T} = Polynomial([one(T)], MonomialVector{C}(PolyVar{C}[], [Int[]]))
-Base.zero(p::Polynomial{C, T}) where {C, T} = Polynomial(T[], emptymonovec(copy(_vars(p))))
+Base.zero(p::Polynomial{C, T}) where {C, T} = Polynomial(T[], empty_monomial_vector(copy(_vars(p))))
 Base.one(p::Polynomial{C, T}) where {C, T} = Polynomial([one(T)], MonomialVector(copy(_vars(p)), [zeros(Int, nvariables(p))]))
 
 Polynomial{C, T}(a::AbstractVector, x::MonomialVector) where {C, T} = Polynomial{C, T}(Vector{T}(a), x)
-Polynomial{C, T}(a::AbstractVector, X::DMonoVec) where {C, T} = Polynomial{C, T}(monovec(a, X)...)
+Polynomial{C, T}(a::AbstractVector, X::Dmonomial_vector) where {C, T} = Polynomial{C, T}(monomial_vector(a, X)...)
 Polynomial{C}(a::Vector{T}, x) where {C, T} = Polynomial{C, T}(a, x)
-Polynomial(af::Union{Function, Vector}, x::DMonoVec{C}) where {C} = Polynomial{C}(af, x)
+Polynomial(af::Union{Function, Vector}, x::Dmonomial_vector{C}) where {C} = Polynomial{C}(af, x)
 
-# TODO Remove with MP v0.2.8
+# This is called by the default implementation of `Base.oneunit`, still in Julia v1.8 at least
 Polynomial{C, T}(p::Polynomial{C, T}) where {C, T} = p
 
 Base.convert(::Type{Polynomial{C, T}}, p::Polynomial{C, T}) where {C, T} = p
@@ -72,7 +72,7 @@ function Polynomial{C, T}(f::Function, x::MonomialVector{C}) where {C, T}
     Polynomial{C, T}(a, x)
 end
 function Polynomial{C, T}(f::Function, x::AbstractVector) where {C, T}
-    σ, X = sortmonovec(x)
+    σ, X = sort_monomial_vector(x)
     a = T[f(i) for i in σ]
     if length(x) > length(X)
         rev = Dict(X[j] => j for j in eachindex(σ))
@@ -90,8 +90,8 @@ Polynomial{C}(f::Function, x) where {C} = Polynomial{C, Base.promote_op(f, Int)}
 #Base.convert(::Type{PolyType{C}}, p::TermContainer{C}) where {C} = p
 
 # needed to build [p Q; Q p] where p is a polynomial and Q is a matpolynomial in Julia v0.5
-#Base.convert(::Type{TermType{C}}, p::TermContainer{C}) where {C} = p
-#Base.convert(::Type{TermType{C, T}}, p::TermContainer{C, T}) where {C, T} = p
+#Base.convert(::Type{term_type{C}}, p::TermContainer{C}) where {C} = p
+#Base.convert(::Type{term_type{C, T}}, p::TermContainer{C, T}) where {C, T} = p
 
 Base.length(p::Polynomial) = length(p.a)
 Base.isempty(p::Polynomial) = isempty(p.a)
@@ -128,19 +128,19 @@ MP.extdegree(p::Polynomial) = extdegree(p.x)
 MP.mindegree(p::Polynomial) = mindegree(p.x)
 MP.maxdegree(p::Polynomial) = maxdegree(p.x)
 
-MP.leadingcoefficient(p::Polynomial{C, T}) where {C, T} = iszero(p) ? zero(T) : last(p.a)
-MP.leadingmonomial(p::Polynomial) = iszero(p) ? constantmonomial(p) : last(p.x)
-MP.leadingterm(p::Polynomial) = iszero(p) ? zeroterm(p) : last(terms(p))
+MP.leading_coefficient(p::Polynomial{C, T}) where {C, T} = iszero(p) ? zero(T) : last(p.a)
+MP.leading_monomial(p::Polynomial) = iszero(p) ? constant_monomial(p) : last(p.x)
+MP.leading_term(p::Polynomial) = iszero(p) ? zero_term(p) : last(terms(p))
 
-function MP.removeleadingterm(p::Polynomial)
+function MP.remove_leading_term(p::Polynomial)
     Polynomial(p.a[1:end-1], p.x[1:end-1])
 end
-function MA.operate!(::typeof(MP.removeleadingterm), p::Polynomial)
+function MA.operate!(::typeof(MP.remove_leading_term), p::Polynomial)
     pop!(p.a)
     pop!(p.x)
     return p
 end
-function MP.removemonomials(p::Polynomial, x::MonomialVector)
+function MP.remove_monomials(p::Polynomial, x::MonomialVector)
     # use the fact that monomials are sorted to do this O(n) instead of O(n^2)
     j = 1
     I = Int[]
@@ -154,7 +154,7 @@ function MP.removemonomials(p::Polynomial, x::MonomialVector)
     end
     Polynomial(p.a[I], p.x[I])
 end
-MP.removemonomials(p::Polynomial, x::Vector) = removemonomials(p, MonomialVector(x))
+MP.remove_monomials(p::Polynomial, x::Vector) = remove_monomials(p, MonomialVector(x))
 
 function _remove_zeros!(p::Polynomial)
     zeroidx = Int[]
@@ -201,8 +201,8 @@ function polynomialclean_to!(p::Polynomial{C, T}, vars::Vector{PolyVar{C}}, adup
     return p
 end
 
-MP.polynomial!(a::Vector, x::DMonoVec, ::MP.ListState) = Polynomial(a, x)
-MP.polynomial(a::AbstractVector, x::DMonoVec, s::MP.ListState) = MP.polynomial!(collect(a), MA.mutable_copy(x), s)
+MP.polynomial!(a::Vector, x::Dmonomial_vector, ::MP.ListState) = Polynomial(a, x)
+MP.polynomial(a::AbstractVector, x::Dmonomial_vector, s::MP.ListState) = MP.polynomial!(collect(a), MA.mutable_copy(x), s)
 
 #MP.polynomial(f::Function, x::AbstractVector) = Polynomial(f, x)
 #MP.polynomial(ts::AbstractVector{Term{C, T}}) where {C, T} = Polynomial(coefficient.(ts), monomial.(ts)) # FIXME invalid age range update
@@ -251,7 +251,7 @@ function MP.polynomial(Q::AbstractMatrix, mv::MonomialVector{C}, ::Type{T}) wher
                     end
                 end
             end
-            a, X = monovec(a, x)
+            a, X = monomial_vector(a, x)
             v = _vars(X)
             Z = X.Z
         end
@@ -270,18 +270,18 @@ function MA.operate!(::typeof(one), p::Polynomial{C, T}) where {C, T}
         push!(p.x.Z, zeros(Int, length(p.x.vars)))
     else
         resize!(p.a, 1)
-        MA.operate!(one, p.a[1])
+        p.a[1] = MA.operate!!(one, p.a[1])
         resize!(p.x.Z, 1)
         MA.operate!(zero, p.x.Z[1])
     end
     return p
 end
 
-function MP.mapcoefficients(f::Function, p::Polynomial; nonzero = false)
+function MP.map_coefficients(f::Function, p::Polynomial; nonzero = false)
     return Polynomial(map(f, p.a), MA.mutable_copy(p.x))
 end
 
-function MP.mapcoefficients!(f::Function, p::Polynomial; nonzero = false)
+function MP.map_coefficients!(f::Function, p::Polynomial; nonzero = false)
     map!(f, p.a, p.a)
     if !nonzero
         _remove_zeros!(p)
@@ -289,10 +289,10 @@ function MP.mapcoefficients!(f::Function, p::Polynomial; nonzero = false)
     return p
 end
 
-function MP.mapcoefficients_to!(output::Polynomial, f::Function, t::MP.AbstractTermLike; nonzero = false)
-    return MP.mapcoefficients_to!(output, f, polynomial(t); nonzero = nonzero)
+function MP.map_coefficients_to!(output::Polynomial, f::Function, t::MP.AbstractTermLike; nonzero = false)
+    return MP.map_coefficients_to!(output, f, polynomial(t); nonzero = nonzero)
 end
-function MP.mapcoefficients_to!(output::Polynomial, f::Function, p::Polynomial; nonzero = false)
+function MP.map_coefficients_to!(output::Polynomial, f::Function, p::Polynomial; nonzero = false)
     resize!(output.a, length(p.a))
     map!(f, output.a, p.a)
     Future.copy!(output.x.vars, p.x.vars)
@@ -305,4 +305,13 @@ function MP.mapcoefficients_to!(output::Polynomial, f::Function, p::Polynomial; 
         _remove_zeros!(output)
     end
     return output
+end
+
+function MP.map_exponents(f::Function, p::Polynomial, m::DMonomialLike)
+    return Polynomial(MA.mutable_copy(p.a), MP.map_exponents(f, p.x, m))
+end
+
+function MP.map_exponents!(f::Function, p::Polynomial, m::DMonomialLike)
+    MP.map_exponents!(f, p.x, m)
+    return p
 end
