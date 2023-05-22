@@ -169,23 +169,27 @@ function getZfordegs(
     n,
     degs::AbstractVector{Int},
     ::Type{V},
+    ::Type{M},
     filter::Function,
-) where {V}
+) where {V,M}
     Z = Vector{Vector{Int}}()
     # For non-commutative, lower degree need to create a vector of exponent as large as for the highest degree
     maxdeg = isempty(degs) ? 0 : maximum(degs)
     for deg in sort(degs)
         fillZfordeg!(Z, n, deg, V, filter, maxdeg)
     end
-    @assert issorted(Z, lt = grlex)
+    _isless = let M = M
+        (a, b) -> MP.compare(a, b, M) < 0
+    end
+    @assert issorted(Z, lt = _isless)
     return Z
 end
 
 function MonomialVector(
-    vars::Vector{<:Variable{<:Commutative}},
+    vars::Vector{<:Variable{<:Commutative,M}},
     degs::AbstractVector{Int},
     filter::Function = x -> true,
-)
+) where {M}
     vars = unique!(sort(vars, rev = true))
     return MonomialVector(
         vars,
@@ -193,6 +197,7 @@ function MonomialVector(
             length(vars),
             degs,
             Commutative,
+            M,
             z -> filter(Monomial(vars, z)),
         ),
     )
@@ -203,15 +208,16 @@ function getvarsforlength(vars::Vector{<:Variable{<:NonCommutative}}, len::Int)
     return map(i -> vars[((i-1)%n)+1], 1:len)
 end
 function MonomialVector(
-    vars::Vector{<:Variable{<:NonCommutative}},
+    vars::Vector{<:Variable{<:NonCommutative,M}},
     degs::AbstractVector{Int},
     filter::Function = x -> true,
-)
+) where {M}
     vars = unique!(sort(vars, rev = true))
     Z = getZfordegs(
         length(vars),
         degs,
         NonCommutative,
+        M,
         z -> filter(Monomial(getvarsforlength(vars, length(z)), z)),
     )
     v = isempty(Z) ? vars : getvarsforlength(vars, length(first(Z)))
