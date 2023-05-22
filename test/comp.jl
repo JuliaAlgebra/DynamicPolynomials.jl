@@ -5,7 +5,13 @@
     @test z != x
 end
 @testset "README example" begin
-    p(x, y, z) = sprint(show, MIME"text/plain"(), 4x*y^2*z + 4z^2 - 5x^3 + 7x^2*z^2)
+    function p(x, y, z)
+        return sprint(
+            show,
+            MIME"text/plain"(),
+            4x * y^2 * z + 4z^2 - 5x^3 + 7x^2 * z^2,
+        )
+    end
     @polyvar x y z monomial_order = LexOrder
     @test p(x, y, z) == "4z² + 4xy²z + 7x²z² - 5x³"
     @polyvar x y z

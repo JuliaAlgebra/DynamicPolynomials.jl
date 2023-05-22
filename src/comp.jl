@@ -43,7 +43,11 @@ function MP.compare(x::Monomial{V,M}, y::Monomial{V,M}) where {V,M}
     return MP.compare(x, y, M)
 end
 
-function MP.compare(x::Monomial{V}, y::Monomial{V}, ::Type{MP.InverseLexOrder}) where {V}
+function MP.compare(
+    x::Monomial{V},
+    y::Monomial{V},
+    ::Type{MP.InverseLexOrder},
+) where {V}
     i = MP.nvariables(x)
     j = MP.nvariables(y)
     @inbounds while i >= 1 && j >= 1
@@ -69,7 +73,11 @@ function MP.compare(x::Monomial{V}, y::Monomial{V}, ::Type{MP.InverseLexOrder}) 
     return 0
 end
 
-function MP.compare(x::Monomial{V}, y::Monomial{V}, ::Type{MP.LexOrder}) where {V}
+function MP.compare(
+    x::Monomial{V},
+    y::Monomial{V},
+    ::Type{MP.LexOrder},
+) where {V}
     i = j = 1
     @inbounds while i <= nvariables(x) && j <= nvariables(y)
         if x.vars[i] > y.vars[j]
@@ -97,7 +105,9 @@ end
 function (==)(x::Monomial{V,M}, y::Monomial{V,M}) where {V,M}
     return MP.compare(x, y) == 0
 end
-(==)(x::Variable{V,M}, y::Monomial{V,M}) where {V,M} = convert(Monomial{V,M}, x) == y
+function (==)(x::Variable{V,M}, y::Monomial{V,M}) where {V,M}
+    return convert(Monomial{V,M}, x) == y
+end
 
 # graded lex ordering
 function Base.isless(x::Monomial{V,M}, y::Monomial{V,M}) where {V,M}

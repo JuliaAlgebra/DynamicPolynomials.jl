@@ -1,4 +1,7 @@
-function Base.:(*)(x::Variable{V,M}, y::Variable{V,M}) where {V<:NonCommutative,M}
+function Base.:(*)(
+    x::Variable{V,M},
+    y::Variable{V,M},
+) where {V<:NonCommutative,M}
     if x === y
         Monomial{V,M}([x], [2])
     else
@@ -102,7 +105,10 @@ function Base.:(*)(y::Monomial{<:NonCommutative}, x::Variable{<:NonCommutative})
     return Monomial(w, z)
 end
 
-function Base.:(*)(x::Monomial{V,M}, y::Monomial{V,M}) where {V<:NonCommutative,M}
+function Base.:(*)(
+    x::Monomial{V,M},
+    y::Monomial{V,M},
+) where {V<:NonCommutative,M}
     i = findlast(z -> z > 0, x.z)
     if i === nothing || i == 0
         return y
@@ -121,10 +127,16 @@ function Base.:(*)(x::Monomial{V,M}, y::Monomial{V,M}) where {V<:NonCommutative,
     return Monomial(w, z)
 end
 
-function Base.:(*)(y::MonomialVector{V,M}, x::DMonomialLike{V,M}) where {V<:NonCommutative,M}
+function Base.:(*)(
+    y::MonomialVector{V,M},
+    x::DMonomialLike{V,M},
+) where {V<:NonCommutative,M}
     return MonomialVector{V,M}([yi * x for yi in y])
 end
-function Base.:(*)(x::DMonomialLike{V,M}, y::MonomialVector{V,M}) where {V<:NonCommutative,M}
+function Base.:(*)(
+    x::DMonomialLike{V,M},
+    y::MonomialVector{V,M},
+) where {V<:NonCommutative,M}
     # The order may change
     # Example: y * [x^2, y^2] == [y^3, yx^2]
     return MonomialVector{V,M}([x * yi for yi in y])

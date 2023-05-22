@@ -29,13 +29,16 @@ function _plusorminus_to!(
     i = j = 1
     while i <= nterms(p) || j <= nterms(q)
         z = zeros(Int, nvars)
-        if j > nterms(q) ||
-           (i <= nterms(p) && MP.monomial(_getindex(p, i)) < MP.monomial(_getindex(q, j)))
+        if j > nterms(q) || (
+            i <= nterms(p) &&
+            MP.monomial(_getindex(p, i)) < MP.monomial(_getindex(q, j))
+        )
             t = _getindex(p, i)
             z[maps[1]] = MP.monomial(t).z
             α = MA.scaling_convert(U, MA.copy_if_mutable(MP.coefficient(t)))
             i += 1
-        elseif i > nterms(p) || MP.monomial(_getindex(q, j)) < MP.monomial(_getindex(p, i))
+        elseif i > nterms(p) ||
+               MP.monomial(_getindex(q, j)) < MP.monomial(_getindex(p, i))
             t = _getindex(q, j)
             z[maps[2]] = MP.monomial(t).z
             α = MA.scaling_convert(U, MA.operate(op, MP.coefficient(t)))
@@ -110,7 +113,6 @@ function MA.operate!(
 )
     return MA.operate_to!(p, op, MA.copy(p), q)
 end
-
 
 function _exponents_compare(q::Polynomial{V,M}, j, e) where {V,M}
     return MP.compare(q.x.Z[j], e, M)
@@ -191,8 +193,12 @@ function Base.:(+)(x::Union{Monomial,Variable}, y::TermPoly{V,M}) where {V,M}
     return MP.term(x) + y
 end
 
-Base.:(-)(x::TermPoly{V,M,T}, y::DMonomialLike{V,M}) where {V,M,T} = x - convert(MP.term_type(y, T), y)
-Base.:(-)(x::DMonomialLike{V,M}, y::TermPoly{V,M,T}) where {V,M,T} = convert(MP.term_type(x, T), x) - y
+function Base.:(-)(x::TermPoly{V,M,T}, y::DMonomialLike{V,M}) where {V,M,T}
+    return x - convert(MP.term_type(y, T), y)
+end
+function Base.:(-)(x::DMonomialLike{V,M}, y::TermPoly{V,M,T}) where {V,M,T}
+    return convert(MP.term_type(x, T), x) - y
+end
 
 # `MA.operate(-, p)` redirects to `-p` as it assumes that `-p` can be modified
 # through the MA API without modifying `p`. We should either copy `p.x` here

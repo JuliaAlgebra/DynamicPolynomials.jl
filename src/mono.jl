@@ -39,7 +39,8 @@ function Base.convert(::Type{Monomial{V,M}}, x::Variable{V,M}) where {V,M}
 end
 Monomial(x::Variable{V,M}) where {V,M} = convert(Monomial{V,M}, x)
 function MP.convert_constant(::Type{Monomial{V,M}}, α) where {V,M}
-    isone(α) || error("Cannot convert `$α` to a `Monomial{$V,$M}` as it is not one")
+    isone(α) ||
+        error("Cannot convert `$α` to a `Monomial{$V,$M}` as it is not one")
     return Monomial{V,M}(Variable{V,M}[], Int[])
 end
 

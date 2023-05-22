@@ -4,7 +4,10 @@ function MP.promote_rule_constant(
 ) where {V,M,T}
     return _Term{V,M,promote_type(T, Int)}
 end
-function MP.promote_rule_constant(::Type{S}, ::Type{_Term{V,M,T}}) where {S,V,M,T}
+function MP.promote_rule_constant(
+    ::Type{S},
+    ::Type{_Term{V,M,T}},
+) where {S,V,M,T}
     return _Term{V,M,promote_type(S, T)}
 end
 function MP.promote_rule_constant(
@@ -15,8 +18,18 @@ function MP.promote_rule_constant(
 end
 MP.promote_rule_constant(::Type, ::Type{_Term{V,M}}) where {V,M} = Any
 MP.promote_rule_constant(::Type, ::Type{Polynomial{V,M}}) where {V,M} = Any
-Base.promote_rule(::Type{_Term{V,M}}, ::Type{_Term{V,M,T}}) where {V,M,T} = _Term{V,M}
-Base.promote_rule(::Type{_Term{V,M,T}}, ::Type{_Term{V,M}}) where {V,M,T} = _Term{V,M}
+function Base.promote_rule(
+    ::Type{_Term{V,M}},
+    ::Type{_Term{V,M,T}},
+) where {V,M,T}
+    return _Term{V,M}
+end
+function Base.promote_rule(
+    ::Type{_Term{V,M,T}},
+    ::Type{_Term{V,M}},
+) where {V,M,T}
+    return _Term{V,M}
+end
 function Base.promote_rule(
     ::Type{_Term{V,M}},
     ::Type{<:DMonomialLike{V,M}},

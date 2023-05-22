@@ -6,7 +6,11 @@ end
 function multiplyexistingvar(i::Int, Z::Vector{Vector{Int}})
     return Vector{Int}[multiplyexistingvar(i, z) for z in Z]
 end
-function insertvar(v::Vector{Variable{V,M}}, x::Variable{V,M}, i::Int) where {V,M}
+function insertvar(
+    v::Vector{Variable{V,M}},
+    x::Variable{V,M},
+    i::Int,
+) where {V,M}
     n = length(v)
     I = 1:i-1
     J = i:n
@@ -86,7 +90,11 @@ function _mul(
 ) where {T}
     return _mul(T, polynomial(p), polynomial(q))
 end
-function _mul(::Type{T}, p::Polynomial{<:Commutative}, q::Polynomial{<:Commutative}) where {T}
+function _mul(
+    ::Type{T},
+    p::Polynomial{<:Commutative},
+    q::Polynomial{<:Commutative},
+) where {T}
     samevars = MP.variables(p) == MP.variables(q)
     if samevars
         allvars = copy(MP.variables(p))
@@ -113,7 +121,10 @@ function _mul(::Type{T}, p::Polynomial{<:Commutative}, q::Polynomial{<:Commutati
     end
     return allvars, a, Z
 end
-function Base.:(*)(p::Polynomial{V,M,S}, q::Polynomial{V,M,T}) where {V<:Commutative,M,S,T}
+function Base.:(*)(
+    p::Polynomial{V,M,S},
+    q::Polynomial{V,M,T},
+) where {V<:Commutative,M,S,T}
     PT = MA.promote_operation(*, typeof(p), typeof(q))
     if iszero(p) || iszero(q)
         zero(PT)
@@ -152,7 +163,11 @@ function MA.operate_to!(
         polynomialclean_to!(p, _mul(T, q1, q2)...)
     end
 end
-function MA.operate!(::typeof(*), p::Polynomial{V,M}, q::Polynomial{V,M}) where {V,M}
+function MA.operate!(
+    ::typeof(*),
+    p::Polynomial{V,M},
+    q::Polynomial{V,M},
+) where {V,M}
     if iszero(q)
         return MA.operate!(zero, p)
     elseif nterms(q) == 1

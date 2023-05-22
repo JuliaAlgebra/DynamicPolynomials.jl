@@ -123,10 +123,7 @@ struct Variable{V,M} <: AbstractVariable
         ::Type{V},
         ::Type{M},
     ) where {V<:AbstractVariableOrdering,M<:MP.AbstractMonomialOrdering}
-        return new{V,M}(
-            convert(String, name),
-            instantiate(V),
-        )
+        return new{V,M}(convert(String, name), instantiate(V))
     end
 end
 
@@ -185,7 +182,8 @@ function mergevars(varsvec::Vector{Vector{PV}}) where {PV<:Variable}
     return vars, maps
 end
 function mergevars_of(::Type{Variable{V,M}}, polys::AbstractVector) where {V,M}
-    varsvec = Vector{Variable{V,M}}[variables(p) for p in polys if p isa PolyType]
+    varsvec =
+        Vector{Variable{V,M}}[variables(p) for p in polys if p isa PolyType]
     # TODO avoid computing `maps`
     return mergevars(varsvec)
 end

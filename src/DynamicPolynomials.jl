@@ -22,7 +22,8 @@ include("monomial_vector.jl")
 include("poly.jl")
 MA.mutability(::Type{<:Polynomial}) = MA.IsMutable()
 const TermPoly{V,M,T} = Union{_Term{V,M,T},Polynomial{V,M,T}}
-const PolyType{V,M} = Union{Polynomial{V,M},_Term{V,M},Monomial{V,M},Variable{V,M}}
+const PolyType{V,M} =
+    Union{Polynomial{V,M},_Term{V,M},Monomial{V,M},Variable{V,M}}
 function MP.variable_union_type(
     ::Union{PolyType{V,M},Type{<:PolyType{V,M}}},
 ) where {V,M}
@@ -37,7 +38,9 @@ MP.monomial_type(::PolyType{V,M}) where {V,M} = Monomial{V,M}
 #function MP.constant_monomial(::Type{Monomial{V,M}}, vars=Variable{V,M}[]) where {V,M}
 #    return Monomial{V,M}(vars, zeros(Int, length(vars)))
 #end
-function MP.term_type(::Union{TermPoly{V,M,T},Type{<:TermPoly{V,M,T}}}) where {V,M,T}
+function MP.term_type(
+    ::Union{TermPoly{V,M,T},Type{<:TermPoly{V,M,T}}},
+) where {V,M,T}
     return _Term{V,M,T}
 end
 function MP.term_type(

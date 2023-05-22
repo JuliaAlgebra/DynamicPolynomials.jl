@@ -7,14 +7,22 @@ function Base.setindex!(sv::SafeValues, v, i::Int)
     return sv.values[i] = v
 end
 
-function fillmap!(vals, vars::Vector{<:Variable{<:NonCommutative}}, s::MP.Substitution)
+function fillmap!(
+    vals,
+    vars::Vector{<:Variable{<:NonCommutative}},
+    s::MP.Substitution,
+)
     for j in eachindex(vars)
         if vars[j] == s.first
             vals[j] = s.second
         end
     end
 end
-function fillmap!(vals, vars::Vector{<:Variable{<:Commutative}}, s::MP.Substitution)
+function fillmap!(
+    vals,
+    vars::Vector{<:Variable{<:Commutative}},
+    s::MP.Substitution,
+)
     j = findfirst(isequal(s.first), vars)
     if j !== nothing
         vals[j] = s.second
@@ -68,7 +76,8 @@ function _subsmap(
     s::MP.Substitutions,
 ) where {V,M}
     # Some variable may not be replaced
-    vals = Vector{promote_type(_substype(s), Variable{V,M})}(undef, length(vars))
+    vals =
+        Vector{promote_type(_substype(s), Variable{V,M})}(undef, length(vars))
     Future.copy!(vals, vars)
     fillmap!(vals, vars, s...)
     return vals
@@ -101,7 +110,9 @@ end
 
 _subs(st, ::Variable, vals) = monoeval([1], vals::AbstractVector)
 _subs(st, m::Monomial, vals) = monoeval(m.z, vals::AbstractVector)
-_subs(st, t::_Term, vals) = MP.coefficient(t) * monoeval(MP.monomial(t).z, vals::AbstractVector)
+function _subs(st, t::_Term, vals)
+    return MP.coefficient(t) * monoeval(MP.monomial(t).z, vals::AbstractVector)
+end
 function _subs(
     ::MP.Eval,
     p::Polynomial{V,M,T},

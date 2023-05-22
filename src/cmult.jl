@@ -6,7 +6,11 @@ function Base.:(*)(x::Variable{V,M}, y::Variable{V,M}) where {V<:Commutative,M}
         Monomial(x > y ? [x, y] : [y, x], [1, 1])
     end
 end
-function multiplyvar(v::Vector{Variable{V,M}}, x::Variable{V,M}, z) where {V<:Commutative,M}
+function multiplyvar(
+    v::Vector{Variable{V,M}},
+    x::Variable{V,M},
+    z,
+) where {V<:Commutative,M}
     i = findfirst(Base.Fix2(<=, x), v)
     if (i !== nothing && i > 0) && v[i] == x
         copy(v), multiplyexistingvar(i, z)
@@ -19,10 +23,16 @@ function Base.:(*)(x::Variable{V,M}, y::Monomial{V,M}) where {V<:Commutative,M}
     w, z = multiplyvar(y.vars, x, y.z)
     return Monomial(w, z)
 end
-function Base.:(*)(y::MonomialVector{V,M}, x::Variable{V,M}) where {V<:Commutative,M}
+function Base.:(*)(
+    y::MonomialVector{V,M},
+    x::Variable{V,M},
+) where {V<:Commutative,M}
     return x * y
 end
-function Base.:(*)(x::Variable{V,M}, y::MonomialVector{V,M}) where {V<:Commutative,M}
+function Base.:(*)(
+    x::Variable{V,M},
+    y::MonomialVector{V,M},
+) where {V<:Commutative,M}
     w, Z = multiplyvar(y.vars, x, y.Z)
     return MonomialVector(w, Z)
 end

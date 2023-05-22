@@ -110,7 +110,9 @@ function MP.empty_monomial_vector(
 ) where {V,M}
     return MonomialVector{V,M}(vars, Vector{Int}[])
 end
-MP.empty_monomial_vector(t::DMonoVecElemNonConstant) = empty_monomial_vector(MP.variables(t))
+function MP.empty_monomial_vector(t::DMonoVecElemNonConstant)
+    return empty_monomial_vector(MP.variables(t))
+end
 function MP.empty_monomial_vector(
     ::Type{<:DMonoVecElemNonConstant{V,M}},
 ) where {V,M}
@@ -243,7 +245,8 @@ end
 
 function buildZvarsvec(::Type{PV}, X::DMonoVec) where {PV<:Variable}
     varsvec = Vector{PV}[
-        (isa(x, DMonoVecElemNonConstant) ? MP.variables(x) : Variable[]) for x in X
+        (isa(x, DMonoVecElemNonConstant) ? MP.variables(x) : Variable[]) for
+        x in X
     ]
     allvars, maps = mergevars(varsvec)
     nvars = length(allvars)

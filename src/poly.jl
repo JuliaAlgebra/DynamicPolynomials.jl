@@ -8,7 +8,10 @@ struct Polynomial{V,M,T} <: AbstractPolynomial{T}
     a::Vector{T}
     x::MonomialVector{V,M}
 
-    function Polynomial{V,M,T}(a::Vector{T}, x::MonomialVector{V,M}) where {V,M,T}
+    function Polynomial{V,M,T}(
+        a::Vector{T},
+        x::MonomialVector{V,M},
+    ) where {V,M,T}
         length(a) == length(x) || throw(
             ArgumentError("There should be as many coefficient than monomials"),
         )
@@ -25,7 +28,7 @@ function Polynomial{V,M,T}(terms::AbstractVector{<:_Term{V,M}}) where {V,M,T}
     return Polynomial{V,M,T}(a, x)
 end
 
-iscomm(::Type{Polynomial{V,M,T}}) where {V,M,T} = V,M
+iscomm(::Type{Polynomial{V,M,T}}) where {V,M,T} = V, M
 
 function _zero_with_variables(
     ::Type{Polynomial{V,M,T}},
@@ -70,7 +73,10 @@ end
 Polynomial{V,M,T}(p::Polynomial{V,M,T}) where {V,M,T} = p
 
 Base.convert(::Type{Polynomial{V,M,T}}, p::Polynomial{V,M,T}) where {V,M,T} = p
-function Base.convert(::Type{Polynomial{V,M,T}}, t::AbstractTermLike) where {V,M,T}
+function Base.convert(
+    ::Type{Polynomial{V,M,T}},
+    t::AbstractTermLike,
+) where {V,M,T}
     if iszero(t)
         _zero_with_variables(Polynomial{V,M,T}, variables(t))
     else
