@@ -12,35 +12,70 @@ const MA = MutableArithmetics
 using DataStructures
 
 include("var.jl")
+#const CommutativeVariable{O,M} = Variable{Commutative{O},M}
+#const NonCommutativeVariable{O,M} = Variable{NonCommutative{O},M}
 include("mono.jl")
-const DMonomialLike{C} = Union{Monomial{C}, PolyVar{C}}
+const DMonomialLike{V,M} = Union{Monomial{V,M},Variable{V,M}}
 MA.mutability(::Type{<:Monomial}) = MA.IsMutable()
-include("term.jl")
-MA.mutability(::Type{Term{C, T}}) where {C, T} = MA.mutability(T)
+const _Term{V,M,T} = MP.Term{T,Monomial{V,M}}
 include("monomial_vector.jl")
 include("poly.jl")
 MA.mutability(::Type{<:Polynomial}) = MA.IsMutable()
-const TermPoly{C, T} = Union{Term{C, T}, Polynomial{C, T}}
-const PolyType{C} = Union{Polynomial{C}, Term{C}, Monomial{C}, PolyVar{C}}
-MP.variable_union_type(::Union{PolyType{C}, Type{<:PolyType{C}}}) where {C} = PolyVar{C}
-MP.constant_monomial(::Type{<:PolyType{C}}) where {C} = Monomial{C}()
-MP.constant_monomial(p::PolyType) = Monomial(_vars(p), zeros(Int, nvariables(p)))
-MP.monomial_type(::Type{<:PolyType{C}}) where C = Monomial{C}
-MP.monomial_type(::PolyType{C}) where C = Monomial{C}
-#function MP.constant_monomial(::Type{Monomial{C}}, vars=PolyVar{C}[]) where {C}
-#    return Monomial{C}(vars, zeros(Int, length(vars)))
+const TermPoly{V,M,T} = Union{_Term{V,M,T},Polynomial{V,M,T}}
+const PolyType{V,M} =
+    Union{Polynomial{V,M},_Term{V,M},Monomial{V,M},Variable{V,M}}
+function MP.variable_union_type(
+    ::Union{PolyType{V,M},Type{<:PolyType{V,M}}},
+) where {V,M}
+    return Variable{V,M}
+end
+MP.constant_monomial(::Type{<:PolyType{V,M}}) where {V,M} = Monomial{V,M}()
+function MP.constant_monomial(p::PolyType)
+    return Monomial(MP.variables(p), zeros(Int, nvariables(p)))
+end
+MP.monomial_type(::Type{<:PolyType{V,M}}) where {V,M} = Monomial{V,M}
+MP.monomial_type(::PolyType{V,M}) where {V,M} = Monomial{V,M}
+#function MP.constant_monomial(::Type{Monomial{V,M}}, vars=Variable{V,M}[]) where {V,M}
+#    return Monomial{V,M}(vars, zeros(Int, length(vars)))
 #end
-MP.term_type(::Union{TermPoly{C, T}, Type{<:TermPoly{C, T}}}) where {C, T} = Term{C, T}
-MP.term_type(::Union{PolyType{C}, Type{<:PolyType{C}}}, ::Type{T}) where {C, T} = Term{C, T}
-MP.term_type(::Type{Polynomial{C}}) where {C} = Term{C}
-MP.polynomial_type(::Type{Term{C}}) where {C} = Polynomial{C}
-MP.polynomial_type(::Type{Term{C, T}}) where {T, C} = Polynomial{C, T}
-MP.polynomial_type(::Union{PolyType{C}, Type{<:PolyType{C}}}, ::Type{T}) where {C, T} = Polynomial{C, T}
-_vars(p::AbstractArray{<:PolyType}) = mergevars(_vars.(p))[1]
-MP.variables(p::Union{PolyType, MonomialVector, AbstractArray{<:PolyType}}) = _vars(p) # tuple(_vars(p))
-MP.nvariables(p::Union{PolyType, MonomialVector, AbstractArray{<:PolyType}}) = length(_vars(p))
-MP.similar_variable(p::Union{PolyType{C}, Type{<:PolyType{C}}}, ::Type{Val{V}}) where {C, V} = PolyVar{C}(string(V))
-MP.similar_variable(p::Union{PolyType{C}, Type{<:PolyType{C}}}, V::Symbol) where {C} = PolyVar{C}(string(V))
+function MP.term_type(
+    ::Union{TermPoly{V,M,T},Type{<:TermPoly{V,M,T}}},
+) where {V,M,T}
+    return _Term{V,M,T}
+end
+function MP.term_type(
+    ::Union{PolyType{V,M},Type{<:PolyType{V,M}}},
+    ::Type{T},
+) where {V,M,T}
+    return _Term{V,M,T}
+end
+MP.term_type(::Type{Polynomial{V,M}}) where {V,M} = _Term{V,M}
+MP.polynomial_type(::Type{_Term{V,M}}) where {V,M} = Polynomial{V,M}
+MP.polynomial_type(::Type{_Term{V,M,T}}) where {T,V,M} = Polynomial{V,M,T}
+function MP.polynomial_type(
+    ::Union{PolyType{V,M},Type{<:PolyType{V,M}}},
+    ::Type{T},
+) where {V,M,T}
+    return Polynomial{V,M,T}
+end
+MP.variables(p::AbstractArray{<:PolyType}) = mergevars(MP.variables.(p))[1]
+function MP.nvariables(
+    p::Union{PolyType,MonomialVector,AbstractArray{<:PolyType}},
+)
+    return length(MP.variables(p))
+end
+function MP.similar_variable(
+    P::Union{PolyType{V,M},Type{<:PolyType{V,M}}},
+    ::Type{Val{S}},
+) where {V,M,S}
+    return MP.similar_variable(P, S)
+end
+function MP.similar_variable(
+    ::Union{PolyType{V,M},Type{<:PolyType{V,M}}},
+    s::Symbol,
+) where {V,M}
+    return Variable(string(s), V, M)
+end
 
 include("promote.jl")
 
