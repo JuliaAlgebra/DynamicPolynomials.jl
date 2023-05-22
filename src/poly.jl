@@ -223,7 +223,7 @@ function removedups_to!(
     ::Type{M},
 ) where {T,M}
     _isless = let M = M
-        (a, b) -> _exponents_isless(a, b, M)
+        (a, b) -> MP.compare(a, b, M) < 0
     end
     σ = sortperm(Zdup, lt = _isless)
     i = 0

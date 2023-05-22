@@ -39,58 +39,59 @@ end
 
 # Comparison of Monomial
 
-# graded lex ordering
-function _exponents_compare(x::Vector{Int}, y::Vector{Int}, ::Type{MP.Graded{MP.LexOrder}})
-    @assert length(x) == length(y)
-    degx = sum(x)
-    degy = sum(y)
-    if degx != degy
-        degx - degy
-    else
-        @inbounds for i in eachindex(x)
-            if x[i] != y[i]
-                return x[i] - y[i]
-            end
-        end
-        return 0
-    end
-end
-
 function MP.compare(x::Monomial{V,M}, y::Monomial{V,M}) where {V,M}
     return MP.compare(x, y, M)
 end
 
-function MP.compare(x::Monomial{V}, y::Monomial{V}, ::Type{MP.Graded{MP.LexOrder}}) where {V}
-    degx = degree(x)
-    degy = degree(y)
-    if degx != degy
-        return degx - degy
-    else
-        i = j = 1
-        # since they have the same degree,
-        # if we get j > nvariables(y), the rest in x.z should be zeros
-        @inbounds while i <= nvariables(x) && j <= nvariables(y)
-            if x.vars[i] > y.vars[j]
-                if x.z[i] == 0
-                    i += 1
-                else
-                    return 1
-                end
-            elseif x.vars[i] < y.vars[j]
-                if y.z[j] == 0
-                    j += 1
-                else
-                    return -1
-                end
-            elseif x.z[i] != y.z[j]
-                return x.z[i] - y.z[j]
+function MP.compare(x::Monomial{V}, y::Monomial{V}, ::Type{MP.InverseLexOrder}) where {V}
+    i = MP.nvariables(x)
+    j = MP.nvariables(y)
+    @inbounds while i >= 1 && j >= 1
+        if x.vars[i] < y.vars[j]
+            if x.z[i] == 0
+                i -= 1
             else
-                i += 1
-                j += 1
+                return 1
             end
+        elseif x.vars[i] > y.vars[j]
+            if y.z[j] == 0
+                j -= 1
+            else
+                return -1
+            end
+        elseif x.z[i] != y.z[j]
+            return x.z[i] - y.z[j]
+        else
+            i -= 1
+            j -= 1
         end
-        return 0
     end
+    return 0
+end
+
+function MP.compare(x::Monomial{V}, y::Monomial{V}, ::Type{MP.LexOrder}) where {V}
+    i = j = 1
+    @inbounds while i <= nvariables(x) && j <= nvariables(y)
+        if x.vars[i] > y.vars[j]
+            if x.z[i] == 0
+                i += 1
+            else
+                return 1
+            end
+        elseif x.vars[i] < y.vars[j]
+            if y.z[j] == 0
+                j += 1
+            else
+                return -1
+            end
+        elseif x.z[i] != y.z[j]
+            return x.z[i] - y.z[j]
+        else
+            i += 1
+            j += 1
+        end
+    end
+    return 0
 end
 
 function (==)(x::Monomial{V,M}, y::Monomial{V,M}) where {V,M}
@@ -149,24 +150,6 @@ function (==)(p::Polynomial{V,M}, q::Polynomial{V,M}) where {V,M}
         end
     end
     return true
-end
-
-function _exponents_isless(x::Vector{Int}, y::Vector{Int}, ::Type{MP.Graded{MP.LexOrder}})
-    @assert length(x) == length(y)
-    degx = sum(x)
-    degy = sum(y)
-    if degx != degy
-        degx < degy
-    else
-        for (a, b) in zip(x, y)
-            if a < b
-                return true
-            elseif a > b
-                return false
-            end
-        end
-        false
-    end
 end
 
 function Base.isapprox(

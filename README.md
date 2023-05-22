@@ -66,6 +66,35 @@ julia> A = reshape(1:9, 3, 3);
 julia> p(x => A * vec(x))  # corresponds to dot(A*x, A*x), need vec to convert the tuple to a vector
 194x₃² + 244x₂x₃ + 77x₂² + 100x₁x₃ + 64x₁x₂ + 14x₁²
 ```
+
+The terms of a polynomial are ordered in increasing monomial order. The default
+ordering is the graded lex order but it can be modified using the
+`monomial_order` keyword argument of the `@polyvar` macro.
+We illustrate this below by borrowing the example p. 59 of "Ideals, Varieties and Algorithms"
+of Cox, Little and O'Shea:
+```julia
+julia> p(x, y, z) = 4x*y^2*z + 4z^2 - 5x^3 + 7x^2*z^2
+p (generic function with 1 method)
+
+julia> @polyvar x y z monomial_order = LexOrder
+(x, y, z)
+
+julia> p(x, y, z) 
+4z² + 4xy²z + 7x²z² - 5x³
+
+julia> @polyvar x y z
+(x, y, z)
+
+julia> p(x, y, z)
+4z² - 5x³ + 4xy²z + 7x²z²
+
+julia> @polyvar x y z monomial_order = Graded{Reverse{InverseLexOrder}}
+(x, y, z)
+
+julia> p(x, y, z)
+4z² - 5x³ + 7x²z² + 4xy²z
+```
+
 Note that, when doing substitution, it is required to give the `Variable` ordering that is meant.
 Indeed, the ordering between the `Variable` is not alphabetical but rather by order of creation
 which can be undeterministic with parallel computing.
