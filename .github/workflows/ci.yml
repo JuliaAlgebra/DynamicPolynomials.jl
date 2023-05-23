@@ -46,7 +46,7 @@ jobs:
         shell: julia --project=@. {0}
         run: |
           using Pkg
-          Pkg.add(PackageSpec(name="MultivariatePolynomials", rev="bl/order"))
+          Pkg.add(PackageSpec(name="MultivariatePolynomials", rev="master"))
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
         with:
