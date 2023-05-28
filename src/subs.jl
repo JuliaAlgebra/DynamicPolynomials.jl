@@ -16,7 +16,15 @@ function fillmap!(
     # We may also assign a complex value to its conjugate, or just the real or imaginary parts
     # Any combination of z, conj(z), real(z), imag(z), imag(conj(z)) can occur in either the polynomial or the substitution,
     # and we must handle all of them correctly.
-    if !iscomplex(s.first)
+    # Note: This may or may not work... Issues can arise if the substitutions contain the real and imaginary (or only one of
+    # those) of a variable separately whenever vals is not of the correct type:
+    # - Unless subs() originally had a polynomial-valued rhs, vals will be scalars, monomials, or terms. So when we try to
+    #   assign a polynomial to its value (which is necessary, as the one-step substitution of only the real or only the
+    #   imaginary part is incomplete), this is an impossible conversion.
+    # - The coefficients in vals might not be complex-valued; but to assign only a part of the variable, we necessarily need to
+    #   introduce an explicit imaginary coefficient to the value.
+    # Currently, we don't do anything to catch these errors.
+    if s.first.kind == cpNone
         for j in eachindex(vars)
             if vars[j] == s.first
                 vals[j] = s.second
@@ -25,7 +33,8 @@ function fillmap!(
         end
     else
         for j in eachindex(vars)
-            if vars[j].id == s.first.id
+            if vars[j].variable_order.order.id ==
+               s.first.variable_order.order.id
                 if s.first.kind == cpFull || s.first.kind == cpConj
                     value = s.first.kind == cpConj ? conj(s.second) : s.second
                     if vars[j].kind == cpFull
@@ -37,12 +46,34 @@ function fillmap!(
                     else
                         vals[j] = imag(value)
                     end
-                elseif s.first.kind == vars[j].kind
-                    vals[j] = real(s.second) # just to make sure the type is correct
+                elseif s.first.kind == cpReal
+                    isreal(s.second) || error(
+                        "Cannot assign a complex value to the real part of an expression",
+                    )
+                    value = real(s.second) # just to make sure the type is correct
+                    if vars[j].kind == cpFull
+                        vals[j] = value + im * imag(vals[j])
+                    elseif vars[j].kind == cpConj
+                        vals[j] = value - im * imag(vals[j])
+                    elseif vars[j].kind == cpReal
+                        vals[j] = value
+                    end
+                    # else we know the real part but use the imaginary part; do nothing
+                else
+                    @assert(s.first.kind == cpImag)
+                    isreal(s.second) || error(
+                        "Cannot assign a complex value to the imaginary part of an expression",
+                    )
+                    value = real(s.second) # just to make sure the type is correct
+                    if vars[j].kind == cpFull
+                        vals[j] = real(vals[j]) + im * value
+                    elseif vars[j].kind == cpConj
+                        vals[j] = real(vals[j]) - im * value
+                    elseif vars[j].kind == cpImag
+                        vals[j] = value
+                    end
+                    # else we know the imaginary part but use the real part; do nothing
                 end
-                # else: # assignment to parts of a complex variable, but the full appears in the polynomial
-                # We don't support this for the moment (would require more complex logic, since two substitutions may give the
-                # full value, or one part is left over - but can vals hold such a leftover?).
             end
         end
     end
