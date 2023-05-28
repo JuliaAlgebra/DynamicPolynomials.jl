@@ -1,41 +1,53 @@
 # In Base/intfuncs.jl, x^p returns zero(x) when p == 0
-# Since one(PolyVar) and one(Monomial) do not return
-# a PolyVar and a Monomial, this results in type instability
+# Since one(Variable) and one(Monomial) do not return
+# a Variable and a Monomial, this results in type instability
 # Defining the specific methods solve this problem and also make
 # them a lot faster
-Base.:(^)(x::PolyVar{C}, i::Int) where {C} = Monomial{C}([x], [i])
-Base.:(^)(x::Monomial{true}, i::Int) = Monomial{true}(x.vars, i*x.z)
+Base.:(^)(x::Variable{V,M}, i::Int) where {V,M} = Monomial{V,M}([x], [i])
+Base.:(^)(x::Monomial{<:Commutative}, i::Int) = Monomial(x.vars, i * x.z)
 
 myminivect(x::T, y::T) where {T} = [x, y]
 function myminivect(x::S, y::T) where {S,T}
     U = promote_type(S, T)
-    [U(x), U(y)]
+    return [U(x), U(y)]
 end
 
-Base.:(+)(x::DMonomialLike, y::DMonomialLike) = Term(x) + Term(y)
-Base.:(-)(x::DMonomialLike, y::DMonomialLike) = Term(x) - Term(y)
+Base.:(+)(x::DMonomialLike, y::DMonomialLike) = MP.term(x) + MP.term(y)
+Base.:(-)(x::DMonomialLike, y::DMonomialLike) = MP.term(x) - MP.term(y)
 
-_getindex(p::Polynomial, i) = p[i]
-_getindex(t::Term, i) = t
-function _plusorminus_to!(a::Vector{U}, Z::Vector{Vector{Int}}, op::Function, p::TermPoly{C}, q::TermPoly{C}, maps, nvars) where {C, U}
+_getindex(p::Polynomial, i::Int) = p[i]
+_getindex(t::_Term, ::Int) = t
+function _plusorminus_to!(
+    a::Vector{U},
+    Z::Vector{Vector{Int}},
+    op::Function,
+    p::TermPoly{V,M},
+    q::TermPoly{V,M},
+    maps,
+    nvars,
+) where {V,M,U}
     i = j = 1
     while i <= nterms(p) || j <= nterms(q)
         z = zeros(Int, nvars)
-        if j > nterms(q) || (i <= nterms(p) && _getindex(p, i).x < _getindex(q, j).x)
+        if j > nterms(q) || (
+            i <= nterms(p) &&
+            MP.monomial(_getindex(p, i)) < MP.monomial(_getindex(q, j))
+        )
             t = _getindex(p, i)
-            z[maps[1]] = t.x.z
-            α = MA.scaling_convert(U, MA.copy_if_mutable(t.α))
+            z[maps[1]] = MP.monomial(t).z
+            α = MA.scaling_convert(U, MA.copy_if_mutable(MP.coefficient(t)))
             i += 1
-        elseif i > nterms(p) || _getindex(q, j).x < _getindex(p, i).x
+        elseif i > nterms(p) ||
+               MP.monomial(_getindex(q, j)) < MP.monomial(_getindex(p, i))
             t = _getindex(q, j)
-            z[maps[2]] = t.x.z
-            α = MA.scaling_convert(U, MA.operate(op, t.α))
+            z[maps[2]] = MP.monomial(t).z
+            α = MA.scaling_convert(U, MA.operate(op, MP.coefficient(t)))
             j += 1
         else
             t = _getindex(p, i)
-            z[maps[1]] = t.x.z
+            z[maps[1]] = MP.monomial(t).z
             s = _getindex(q, j)
-            α = op(t.α, s.α)
+            α = op(MP.coefficient(t), MP.coefficient(s))
             i += 1
             j += 1
         end
@@ -43,17 +55,21 @@ function _plusorminus_to!(a::Vector{U}, Z::Vector{Vector{Int}}, op::Function, p:
         push!(Z, z)
     end
 end
-function plusorminus(p::TermPoly{C, S}, q::TermPoly{C, T}, op::Function) where {C, S, T}
-    varsvec = [_vars(p), _vars(q)]
+function plusorminus(
+    p::TermPoly{V,M,S},
+    q::TermPoly{V,M,T},
+    op::Function,
+) where {V,M,S,T}
+    varsvec = [MP.variables(p), MP.variables(q)]
     allvars, maps = mergevars(varsvec)
     U = MA.promote_operation(op, S, T)
     a = U[]
     Z = Vector{Int}[]
     _plusorminus_to!(a, Z, op, p, q, maps, length(allvars))
-    Polynomial(a, MonomialVector{C}(allvars, Z))
+    return Polynomial(a, MonomialVector{V,M}(allvars, Z))
 end
 
-function MA.operate!(::typeof(*), p::Polynomial, t::Term)
+function MA.operate!(::typeof(*), p::Polynomial, t::_Term)
     # In case `coefficient(t)` is a polynomial (e.g. in `gcd` algorithm)
     # We cannot do `MA.operate!(*, ...)`, we need `MP.right_constant_mult`
     MA.operate!(MP.right_constant_mult, p, coefficient(t))
@@ -61,13 +77,19 @@ function MA.operate!(::typeof(*), p::Polynomial, t::Term)
     return p
 end
 
-function MA.operate_to!(output::Polynomial{C}, op::Union{typeof(+), typeof(-)},
-                                p::TermPoly{C}, q::TermPoly{C}) where C
+function MA.operate_to!(
+    output::Polynomial{V,M},
+    op::Union{typeof(+),typeof(-)},
+    p::TermPoly{V,M},
+    q::TermPoly{V,M},
+) where {V,M}
     if output === p || output === q
         # Otherwise, `_plusorminus_to!` never finishes
-        error("Cannot call `operate_to!(output, $op, p, q)` with `output` equal to `p` or `q`, call `operate!` instead.")
+        error(
+            "Cannot call `operate_to!(output, $op, p, q)` with `output` equal to `p` or `q`, call `operate!` instead.",
+        )
     end
-    varsvec = [_vars(p), _vars(q)]
+    varsvec = [MP.variables(p), MP.variables(q)]
     allvars, maps = mergevars(varsvec)
     Future.copy!(output.x.vars, allvars)
     empty!(output.a)
@@ -76,25 +98,39 @@ function MA.operate_to!(output::Polynomial{C}, op::Union{typeof(+), typeof(-)},
     return output
 end
 
-function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial,
-                             q::Union{PolyVar, Monomial, Term})
+function MA.operate!(
+    op::Union{typeof(+),typeof(-)},
+    p::Polynomial,
+    q::Union{Variable,Monomial,_Term},
+)
     return MA.operate!(op, p, polynomial(q))
 end
-const _NoVarTerm{T} = Tuple{T, Vector{Int}}
-function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{false},
-                             q::Polynomial{false})
+const _NoVarTerm{T} = Tuple{T,Vector{Int}}
+function MA.operate!(
+    op::Union{typeof(+),typeof(-)},
+    p::Polynomial{<:NonCommutative},
+    q::Polynomial{<:NonCommutative},
+)
     return MA.operate_to!(p, op, MA.copy(p), q)
 end
+
+function _exponents_compare(q::Polynomial{V,M}, j, e) where {V,M}
+    return MP.compare(q.x.Z[j], e, M)
+end
+
 # TODO need to check that this also works for non-commutative
-function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{true},
-                             q::Polynomial{true})
-    if _vars(p) != _vars(q)
-        varsvec = [_vars(p), _vars(q)]
+function MA.operate!(
+    op::Union{typeof(+),typeof(-)},
+    p::Polynomial{V},
+    q::Polynomial{V},
+) where {V<:Commutative}
+    if MP.variables(p) != MP.variables(q)
+        varsvec = [MP.variables(p), MP.variables(q)]
         allvars, maps = mergevars(varsvec)
-        if length(allvars) != length(_vars(p))
+        if length(allvars) != length(MP.variables(p))
             _add_variables!(p.x, allvars, maps[1])
         end
-        if length(allvars) == length(_vars(q))
+        if length(allvars) == length(MP.variables(q))
             rhs = q
         else
             # We could avoid promoting `q` to the same variables
@@ -108,40 +144,61 @@ function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{true},
         return MA.operate!(op, p, rhs)
     end
     get1(i) = (p.a[i], p.x.Z[i])
-    get2(i) = (MA.scaling_convert(eltype(p.a), MA.operate(op, q.a[i])), copy(q.x.Z[i]))
+    function get2(i)
+        return (
+            MA.scaling_convert(eltype(p.a), MA.operate(op, q.a[i])),
+            copy(q.x.Z[i]),
+        )
+    end
     function set(i, t::_NoVarTerm)
         p.a[i] = t[1]
-        p.x.Z[i] = t[2]
+        return p.x.Z[i] = t[2]
     end
     function push(t::_NoVarTerm)
         push!(p.a, t[1])
-        push!(p.x.Z, t[2])
+        return push!(p.x.Z, t[2])
     end
-    compare_monomials(t::_NoVarTerm, j::Int) = samevars_grlex(q.x.Z[j], t[2])
+    compare_monomials(t::_NoVarTerm, j::Int) = _exponents_compare(q, j, t[2])
     compare_monomials(i::Int, j::Int) = compare_monomials(get1(i), j)
     combine(i::Int, j::Int) = p.a[i] = MA.operate!!(op, p.a[i], q.a[j])
     combine(t::_NoVarTerm, j::Int) = (MA.operate!!(op, t[1], q.a[j]), t[2])
     function resize(n)
         resize!(p.a, n)
-        resize!(p.x.Z, n)
+        return resize!(p.x.Z, n)
     end
     # We can modify the coefficient since it's the result of `combine`.
     keep(t::_NoVarTerm) = !MA.iszero!!(t[1])
     keep(i::Int) = !MA.iszero!!(p.a[i])
     MP.polynomial_merge!(
-        nterms(p), nterms(q), get1, get2, set, push,
-        compare_monomials, combine, keep, resize
+        nterms(p),
+        nterms(q),
+        get1,
+        get2,
+        set,
+        push,
+        compare_monomials,
+        combine,
+        keep,
+        resize,
     )
     return p
 end
 
-Base.:(+)(x::TermPoly{C}, y::TermPoly{C}) where C = plusorminus(x, y, +)
-Base.:(-)(x::TermPoly{C}, y::TermPoly{C}) where C = plusorminus(x, y, -)
-Base.:(+)(x::TermPoly{C}, y::Union{Monomial,PolyVar}) where C = x + Term{C}(y)
-Base.:(+)(x::Union{Monomial,PolyVar}, y::TermPoly{C}) where C = Term{C}(x) + y
+Base.:(+)(x::TermPoly{V,M}, y::TermPoly{V,M}) where {V,M} = plusorminus(x, y, +)
+Base.:(-)(x::TermPoly{V,M}, y::TermPoly{V,M}) where {V,M} = plusorminus(x, y, -)
+function Base.:(+)(x::TermPoly{V,M}, y::Union{Monomial,Variable}) where {V,M}
+    return x + MP.term(y)
+end
+function Base.:(+)(x::Union{Monomial,Variable}, y::TermPoly{V,M}) where {V,M}
+    return MP.term(x) + y
+end
 
-Base.:(-)(x::TermPoly{T}, y::DMonomialLike) where T = x - Term{T}(y)
-Base.:(-)(x::DMonomialLike, y::TermPoly{T}) where T = Term{T}(x) - y
+function Base.:(-)(x::TermPoly{V,M,T}, y::DMonomialLike{V,M}) where {V,M,T}
+    return x - convert(MP.term_type(y, T), y)
+end
+function Base.:(-)(x::DMonomialLike{V,M}, y::TermPoly{V,M,T}) where {V,M,T}
+    return convert(MP.term_type(x, T), x) - y
+end
 
 # `MA.operate(-, p)` redirects to `-p` as it assumes that `-p` can be modified
 # through the MA API without modifying `p`. We should either copy `p.x` here

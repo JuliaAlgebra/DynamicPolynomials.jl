@@ -4,10 +4,14 @@ struct SafeValues{T}
 end
 function Base.setindex!(sv::SafeValues, v, i::Int)
     delete!(sv.undefined, i)
-    sv.values[i] = v
+    return sv.values[i] = v
 end
 
-function fillmap!(vals, vars::Vector{PolyVar{C}}, s::MP.Substitution) where {C}
+function fillmap!(
+    vals,
+    vars::Vector{<:Variable{C}},
+    s::MP.Substitution,
+) where {C}
     # We may assign a complex or real variable to its value (ordinary substitution).
     # We may also assign a complex value to its conjugate, or just the real or imaginary parts
     # Any combination of z, conj(z), real(z), imag(z), imag(conj(z)) can occur in either the polynomial or the substitution,
@@ -16,6 +20,7 @@ function fillmap!(vals, vars::Vector{PolyVar{C}}, s::MP.Substitution) where {C}
         for j in eachindex(vars)
             if vars[j] == s.first
                 vals[j] = s.second
+                C == Commutative && break
             end
         end
     else
@@ -48,9 +53,14 @@ function fillmap!(vals, vars, s::MP.AbstractMultiSubstitution)
     end
 end
 
-function fillmap!(vals, vars, s1::MP.AbstractSubstitution, s2::MP.AbstractSubstitution...)
+function fillmap!(
+    vals,
+    vars,
+    s1::MP.AbstractSubstitution,
+    s2::MP.AbstractSubstitution...,
+)
     fillmap!(vals, vars, s1)
-    fillmap!(vals, vars, s2...)
+    return fillmap!(vals, vars, s2...)
 end
 
 _eltype(::T) where {T} = T
@@ -58,21 +68,35 @@ _eltype(t::Tuple) = Base.promote_typeof(t...)
 _eltype(::Tuple{Vararg{T}}) where {T} = T
 _eltype(::AbstractVector{T}) where {T} = T
 _substype(s::MP.AbstractSubstitution) = _eltype(s.second)
-_substype(s1::MP.AbstractSubstitution, s2::MP.AbstractSubstitution...) = promote_type(_substype(s1), _substype(s2...))
+function _substype(s1::MP.AbstractSubstitution, s2::MP.AbstractSubstitution...)
+    return promote_type(_substype(s1), _substype(s2...))
+end
 _substype(s::MP.Substitutions) = _substype(s...)
 
 function _subsmap(::MP.Eval, vars, s::MP.Substitutions)
     # Every variable should be replaced by some value of type T
-    vals = SafeValues(BitSet(1:length(vars)), Vector{_substype(s)}(undef, length(vars)))
+    vals = SafeValues(
+        BitSet(1:length(vars)),
+        Vector{_substype(s)}(undef, length(vars)),
+    )
     fillmap!(vals, vars, s...)
     if !isempty(vals.undefined)
-        throw(ArgumentError("Variable `$(vars[first(vals.undefined)])` was not assigned a value. Use `subs` to substitute only a subset of the variables."))
+        throw(
+            ArgumentError(
+                "Variable `$(vars[first(vals.undefined)])` was not assigned a value. Use `subs` to substitute only a subset of the variables.",
+            ),
+        )
     end
     return vals.values
 end
-function _subsmap(::MP.Subs, vars::Vector{PolyVar{C}}, s::MP.Substitutions) where {C}
+function _subsmap(
+    ::MP.Subs,
+    vars::Vector{Variable{V,M}},
+    s::MP.Substitutions,
+) where {V,M}
     # Some variable may not be replaced
-    vals = Vector{promote_type(_substype(s), PolyVar{C})}(undef, length(vars))
+    vals =
+        Vector{promote_type(_substype(s), Variable{V,M})}(undef, length(vars))
     Future.copy!(vals, vars)
     fillmap!(vals, vars, s...)
     return vals
@@ -100,13 +124,19 @@ function monoeval(z::Vector{Int}, vals::AbstractVector)
             val *= vals[i]^z[i]
         end
     end
-    val
+    return val
 end
 
-_subs(st, ::PolyVar, vals) = monoeval([1], vals::AbstractVector)
+_subs(st, ::Variable, vals) = monoeval([1], vals::AbstractVector)
 _subs(st, m::Monomial, vals) = monoeval(m.z, vals::AbstractVector)
-_subs(st, t::Term, vals) = t.α * monoeval(t.x.z, vals::AbstractVector)
-function _subs(::MP.Eval, p::Polynomial{C, T}, vals::AbstractVector{S}) where {C, T, S}
+function _subs(st, t::_Term, vals)
+    return MP.coefficient(t) * monoeval(MP.monomial(t).z, vals::AbstractVector)
+end
+function _subs(
+    ::MP.Eval,
+    p::Polynomial{V,M,T},
+    vals::AbstractVector{S},
+) where {V,M,T,S}
     # I need to check for iszero otherwise I get : ArgumentError: reducing over an empty collection is not allowed
     if iszero(p)
         zero(Base.promote_op(*, S, T))
@@ -114,36 +144,64 @@ function _subs(::MP.Eval, p::Polynomial{C, T}, vals::AbstractVector{S}) where {C
         sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), 1:length(p))
     end
 end
-function _subs(::MP.Subs, p::Polynomial{C, T}, vals::AbstractVector{S}) where {C, T, S}
+function _subs(
+    ::MP.Subs,
+    p::Polynomial{V,M,T},
+    vals::AbstractVector{S},
+) where {V,M,T,S}
     Tout = MA.promote_operation(*, T, MP.coefficient_type(S))
-    q = zero_with_variables(Polynomial{C, Tout}, mergevars_of(PolyVar{C}, vals)[1])
+    q = zero_with_variables(
+        Polynomial{V,M,Tout},
+        mergevars_of(Variable{V,M}, vals)[1],
+    )
     for i in 1:length(p.a)
         MA.operate!(+, q, p.a[i] * monoeval(p.x.Z[i], vals))
     end
     return q
 end
 
-function MA.promote_operation(::typeof(MP.substitute), ::Type{MP.Subs}, ::Type{Monomial{C}}, ::Type{Pair{PolyVar{C},T}}) where {C,T}
+function MA.promote_operation(
+    ::typeof(MP.substitute),
+    ::Type{MP.Subs},
+    ::Type{Monomial{V,M}},
+    ::Type{Pair{Variable{V,M},T}},
+) where {V,M,T}
     U = MA.promote_operation(^, T, Int)
-    return Term{C,U}
+    return _Term{V,M,U}
 end
 
-function MP.substitute(st::MP.AbstractSubstitutionType, p::PolyType, s::MP.Substitutions)
-    _subs(st, p, subsmap(st, _vars(p), s))
+function MP.substitute(
+    st::MP.AbstractSubstitutionType,
+    p::PolyType,
+    s::MP.Substitutions,
+)
+    return _subs(st, p, subsmap(st, MP.variables(p), s))
 end
 
-(v::PolyVar)(s::MP.AbstractSubstitution...)    = MP.substitute(MP.Eval(), v, s)
-(m::Monomial)(s::MP.AbstractSubstitution...)   = MP.substitute(MP.Eval(), m, s)
-(t::Term)(s::MP.AbstractSubstitution...)       = MP.substitute(MP.Eval(), t, s)
+(v::Variable)(s::MP.AbstractSubstitution...) = MP.substitute(MP.Eval(), v, s)
+(m::Monomial)(s::MP.AbstractSubstitution...) = MP.substitute(MP.Eval(), m, s)
+(t::_Term)(s::MP.AbstractSubstitution...) = MP.substitute(MP.Eval(), t, s)
 (p::Polynomial)(s::MP.AbstractSubstitution...) = MP.substitute(MP.Eval(), p, s)
 
-(p::PolyVar)(x::Number) = x
-(p::Monomial)(x::NTuple{N, <:Number}) where N = MP.substitute(MP.Eval(), p, variables(p)=>x)
-(p::Monomial)(x::AbstractVector{<:Number}) = MP.substitute(MP.Eval(), p, variables(p)=>x)
-(p::Monomial)(x::Number...) = MP.substitute(MP.Eval(), p, variables(p)=>x)
-(p::Term)(x::NTuple{N, <:Number}) where N = MP.substitute(MP.Eval(), p, variables(p)=>x)
-(p::Term)(x::AbstractVector{<:Number}) = MP.substitute(MP.Eval(), p, variables(p)=>x)
-(p::Term)(x::Number...) = MP.substitute(MP.Eval(), p, variables(p)=>x)
-(p::Polynomial)(x::NTuple{N, <:Number}) where N = MP.substitute(MP.Eval(), p, variables(p)=>x)
-(p::Polynomial)(x::AbstractVector{<:Number}) = MP.substitute(MP.Eval(), p, variables(p)=>x)
-(p::Polynomial)(x::Number...) = MP.substitute(MP.Eval(), p, variables(p)=>x)
+(p::Variable)(x::Number) = x
+function (p::Monomial)(x::NTuple{N,<:Number}) where {N}
+    return MP.substitute(MP.Eval(), p, variables(p) => x)
+end
+function (p::Monomial)(x::AbstractVector{<:Number})
+    return MP.substitute(MP.Eval(), p, variables(p) => x)
+end
+(p::Monomial)(x::Number...) = MP.substitute(MP.Eval(), p, variables(p) => x)
+function (p::_Term)(x::NTuple{N,<:Number}) where {N}
+    return MP.substitute(MP.Eval(), p, variables(p) => x)
+end
+function (p::_Term)(x::AbstractVector{<:Number})
+    return MP.substitute(MP.Eval(), p, variables(p) => x)
+end
+(p::_Term)(x::Number...) = MP.substitute(MP.Eval(), p, variables(p) => x)
+function (p::Polynomial)(x::NTuple{N,<:Number}) where {N}
+    return MP.substitute(MP.Eval(), p, variables(p) => x)
+end
+function (p::Polynomial)(x::AbstractVector{<:Number})
+    return MP.substitute(MP.Eval(), p, variables(p) => x)
+end
+(p::Polynomial)(x::Number...) = MP.substitute(MP.Eval(), p, variables(p) => x)

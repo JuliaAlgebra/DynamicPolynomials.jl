@@ -1,13 +1,15 @@
 using Test
+import MultivariatePolynomials as MP
 
-@testset "PolyVar and Monomial tests" begin
-    @testset "PolyVar macro index set" begin
+@testset "Variable and Monomial tests" begin
+    @testset "Variable macro index set" begin
         n = 3
-        @polyvar x[1:n] y z[1:n-1] u[1:n,1:n-1]
-        @test x isa Vector{PolyVar{true}}
-        @test y isa PolyVar{true}
-        @test z isa Vector{PolyVar{true}}
-        @test u isa Matrix{PolyVar{true}}
+        @polyvar x[1:n] y z[1:n-1] u[1:n, 1:n-1]
+        VT = typeof(y)
+        @test x isa Vector{VT}
+        @test y isa VT
+        @test z isa Vector{VT}
+        @test u isa Matrix{VT}
         @test length(x) == 3
         @test length(z) == 2
         @test size(u) == (3, 2)
@@ -17,7 +19,7 @@ using Test
         @polyvar a[1:5, 1:3, 1:2]
         @test size(a) == (5, 3, 2)
     end
-    @testset "PolyVar macro tuple return" begin
+    @testset "Variable macro tuple return" begin
         vars = @polyvar x y z
         @test vars isa Tuple
         @test vars == (x, y, z)
@@ -29,45 +31,53 @@ using Test
 
     @testset "variable_union_type" begin
         @polyvar x
-        @test DynamicPolynomials.MP.variable_union_type(x) == PolyVar{true}
-        @test DynamicPolynomials.MP.variable_union_type(x^2) == PolyVar{true}
-        @test DynamicPolynomials.MP.variable_union_type(2x) == PolyVar{true}
-        @test DynamicPolynomials.MP.variable_union_type(x + 1) == PolyVar{true}
+        XT = typeof(x)
+        @test DynamicPolynomials.MP.variable_union_type(x) == XT
+        @test DynamicPolynomials.MP.variable_union_type(x^2) == XT
+        @test DynamicPolynomials.MP.variable_union_type(2x) == XT
+        @test DynamicPolynomials.MP.variable_union_type(x + 1) == XT
         @ncpolyvar y
-        @test DynamicPolynomials.MP.variable_union_type(y) == PolyVar{false}
-        @test DynamicPolynomials.MP.variable_union_type(y^2) == PolyVar{false}
-        @test DynamicPolynomials.MP.variable_union_type(2y) == PolyVar{false}
-        @test DynamicPolynomials.MP.variable_union_type(y + 1) == PolyVar{false}
+        YT = typeof(y)
+        @test DynamicPolynomials.MP.variable_union_type(y) == YT
+        @test DynamicPolynomials.MP.variable_union_type(y^2) == YT
+        @test DynamicPolynomials.MP.variable_union_type(2y) == YT
+        @test DynamicPolynomials.MP.variable_union_type(y + 1) == YT
     end
-    @testset "PolyVar" begin
-        @test zero_term(PolyVar{true}) == 0
-        @test zero(PolyVar{true}) == 0
-        @test one(PolyVar{false}) == 1
+    @testset "Variable" begin
         @polyvar x
-        @test zero_term(x) isa Term{true, Int}
-        @test zero(x) isa Polynomial{true, Int}
-        @test one(x) isa Monomial{true}
+        XT = typeof(x)
+        @test zero_term(XT) == 0
+        @test zero(XT) == 0
+        @ncpolyvar y
+        YT = typeof(y)
+        @test one(YT) == 1
+        @polyvar x
+        @test zero_term(x) isa MP.Term{Int,monomial_type(XT)}
+        @test zero(x) isa polynomial_type(XT)
+        @test one(x) isa monomial_type(XT)
     end
     @testset "Monomial" begin
-        @test zero_term(Monomial{false}) == 0
-        @test zero(Monomial{false}) == 0
-        @test one(Monomial{true}) == 1
-        if VERSION ≥ v"0.7-"
-            @test_throws ErrorException Monomial(2)
-            @test (@inferred Monomial(1)) isa Monomial{true}
-            @test Monomial(1) == 1
-            @test_throws ErrorException convert(Monomial{true}, 2)
-            @test (@inferred convert(Monomial{true}, 1)) isa Monomial{true}
-            @test convert(Monomial{true}, 1) == 1
-            @test_throws ErrorException convert(Monomial{false}, 2)
-            @test (@inferred convert(Monomial{false}, 1)) isa Monomial{false}
-            @test convert(Monomial{false}, 1) == 1
-        end
+        @ncpolyvar ncp
+        YT = typeof(ncp)
+        @test zero_term(YT) == 0
+        @test zero(YT) == 0
+        @polyvar cp
+        XT = typeof(cp)
+        @test one(XT) == 1
+        @test_throws ErrorException Monomial(2)
+        @test (@inferred Monomial(1)) isa monomial_type(XT)
+        @test Monomial(1) == 1
+        @test_throws ErrorException convert(monomial_type(XT), 2)
+        @test (@inferred convert(monomial_type(XT), 1)) isa monomial_type(XT)
+        @test convert(monomial_type(XT), 1) == 1
+        @test_throws ErrorException convert(monomial_type(YT), 2)
+        @test (@inferred convert(monomial_type(YT), 1)) isa monomial_type(YT)
+        @test convert(monomial_type(YT), 1) == 1
         @polyvar x
-        @test_throws ArgumentError Monomial{true}([x], [1,0])
-        @test zero_term(x^2) isa Term{true, Int}
-        @test zero(x^2) isa Polynomial{true, Int}
-        @test one(x^2) isa Monomial{true}
+        @test_throws ArgumentError monomial_type(XT)([x], [1, 0])
+        @test zero_term(x^2) isa MP.Term{Int,monomial_type(x)}
+        @test zero(x^2) isa polynomial_type(XT)
+        @test one(x^2) isa monomial_type(XT)
 
         @polyvar y
         @test Monomial([x, y], [1, 0]) == x
@@ -75,12 +85,13 @@ using Test
     end
     @testset "MonomialVector" begin
         @polyvar x y
-        @test_throws AssertionError MonomialVector{true}([x], [[1], [1,0]])
-        X = MonomialVector([x, 1, x*y])
+        @test_throws AssertionError monomial_vector_type(x)([x], [[1], [1, 0]])
+        X = MonomialVector([x, 1, x * y])
         @test variables(X) == [x, y]
         @test X.Z == [[0, 0], [1, 0], [1, 1]]
-        @test MonomialVector{true}([1]) isa MonomialVector{true}
-        @test MonomialVector{false}([1]) isa MonomialVector{false}
+        @test monomial_vector_type(x)([1]) isa monomial_vector_type(x)
+        @ncpolyvar nc
+        @test monomial_vector_type(nc)([1]) isa monomial_vector_type(nc)
         a = [1, 5, 3]
         b, Y = monomial_vector(a, X)
         @test b === a
@@ -89,19 +100,20 @@ using Test
         @test σ == 1:length(X)
         @test Y === X
         XX = @inferred merge_monomial_vectors([X, X])
-        @test XX isa MonomialVector{true}
+        @test XX isa monomial_vector_type(x)
         @test X == XX
 
         @test 2 != MonomialVector([x, y], 1)
         @test x != MonomialVector([x, y], 1)
-        @test MonomialVector([x, y], [[0, 0], [1, 0]]) == MonomialVector([x], [[0], [1]])
+        @test MonomialVector([x, y], [[0, 0], [1, 0]]) ==
+              MonomialVector([x], [[0], [1]])
     end
     @testset "Non-commutative" begin
         @ncpolyvar x
-        @test_throws ArgumentError Monomial{false}([x], [1,0])
-        @test_throws AssertionError MonomialVector{false}([x], [[1], [1,0]])
+        @test_throws ArgumentError monomial_type(x)([x], [1, 0])
+        @test_throws AssertionError monomial_vector_type(x)([x], [[1], [1, 0]])
     end
-    @testset "NC PolyVar * Monomial" begin
+    @testset "NC Variable * Monomial" begin
         @ncpolyvar x y z
         m = y * Monomial([y, z, x, z], [0, 0, 2, 1])
         @test variables(m) == [y, z, x, z]
@@ -113,7 +125,7 @@ using Test
         @test variables(m) == [y, z, x, y, z]
         @test m.z == [0, 0, 1, 2, 1]
     end
-    @testset "NC Monomial * PolyVar" begin
+    @testset "NC Monomial * Variable" begin
         @ncpolyvar x y z
         m = Monomial([x, z, x, y], [2, 1, 0, 0]) * y
         @test variables(m) == [x, z, x, y]
@@ -128,9 +140,9 @@ using Test
 
     @testset "Evaluation" begin
         @polyvar x y
-        @test (x^2*y)(3,2) == 18
-        @test (x^2*y)((3,2)) == 18
-        @test (x^2*y)([3,2]) == 18
+        @test (x^2 * y)(3, 2) == 18
+        @test (x^2 * y)((3, 2)) == 18
+        @test (x^2 * y)([3, 2]) == 18
         @test (x^2)(3) == 9
         @test (x)(3) == 3
     end
@@ -138,7 +150,8 @@ using Test
         @polyvar x y
         @test x == DynamicPolynomials.MP.map_exponents!(div, x^1, x * y^2)
         for z in [x * y, x^2, y^2]
-            @test y == DynamicPolynomials.MP.map_exponents_to!(z, -, x * y^2, x * y)
+            @test y ==
+                  DynamicPolynomials.MP.map_exponents_to!(z, -, x * y^2, x * y)
         end
     end
     # TODO add to MP
