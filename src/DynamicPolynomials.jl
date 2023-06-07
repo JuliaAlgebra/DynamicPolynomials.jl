@@ -4,12 +4,9 @@ import Future # For `copy!`
 
 using Reexport
 @reexport using MultivariatePolynomials
-const MP = MultivariatePolynomials
+import MultivariatePolynomials as MP
 
-import MutableArithmetics
-const MA = MutableArithmetics
-
-using DataStructures
+import MutableArithmetics as MA
 
 include("var.jl")
 #const CommutativeVariable{O,M} = Variable{Commutative{O},M}
