@@ -147,8 +147,8 @@ function MA.promote_operation(
     ::Type{Monomial{V,M}},
     ::Type{Pair{Variable{V,M},T}},
 ) where {V,M,T}
-    U = MA.promote_operation(^, T, Int)
-    return _Term{V,M,U}
+    U = MA.promote_operation(*, T, T)
+    return MA.promote_operation(*, U, Monomial{V,M})
 end
 
 function MP.substitute(

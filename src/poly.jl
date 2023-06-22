@@ -1,5 +1,3 @@
-export Polynomial
-
 # Invariant:
 # a and x might be empty: meaning it is the zero polynomial
 # a does not contain any zeros

@@ -28,14 +28,14 @@
     end
 
     @testset "Polynomial" begin
-        #@test eltype(Polynomial{true, Int}) == Int
+        #@test eltype(polynomial{true, Int}) == Int
         @polyvar x
         TT = term_type(x)
         PT = polynomial_type(x)
         @test_throws ArgumentError PT([1, 2], [x])
         @test_throws ArgumentError PT([1, 2], MonomialVector([x]))
         @test_throws InexactError PT([1.5], [x])
-        @test Polynomial(1 + x) == 1 + x
+        @test polynomial(1 + x) == 1 + x
         @test typeof(one(1 + x)) == PT
         @test typeof(zero_term(1 + x)) == TT
         @test typeof(zero(1 + x)) == PT
@@ -45,20 +45,20 @@
         @test typeof(zero_term(1.0 + x)) == TTF
         @test typeof(zero(1.0 + x)) == PTF
 
-        pf = Polynomial(i -> 1.0, [x * x, x, x * x])
+        pf = DynamicPolynomials.Polynomial(i -> 1.0, [x * x, x, x * x])
         @test coefficients(pf) == [1.0, 2.0]
         @test monomials(pf) == monomial_vector([x^2, x])
 
-        p = Polynomial([4, 9], [x, x * x])
+        p = polynomial([4, 9], [x, x * x])
         p.a == [9, 4]
         p.x[1] == x^2
         p.x[2] == x
 
-        @inferred Polynomial(i -> float(i), [x, x * x])
-        @inferred Polynomial(i -> float(i), MonomialVector([x * x, x]))
+        @inferred DynamicPolynomials.Polynomial(i -> float(i), [x, x * x])
+        @inferred DynamicPolynomials.Polynomial(i -> float(i), MonomialVector([x * x, x]))
         for p in (
-            Polynomial(i -> float(i), [x, x * x]),
-            Polynomial(i -> float(i), MonomialVector([x * x, x])),
+            DynamicPolynomials.Polynomial(i -> float(i), [x, x * x]),
+            DynamicPolynomials.Polynomial(i -> float(i), MonomialVector([x * x, x])),
         )
             @test typeof(p) == PTF
             @test p.a == [1.0, 2.0]
@@ -67,8 +67,8 @@
 
         @ncpolyvar ncpolyvar u v
         NCPT = polynomial_type(u)
-        @inferred Polynomial(i -> i, [u, u * u, 1])
-        p = Polynomial(i -> i, [u, u * u, 1])
+        @inferred DynamicPolynomials.Polynomial(i -> i, [u, u * u, 1])
+        p = DynamicPolynomials.Polynomial(i -> i, [u, u * u, 1])
         @test typeof(p) == NCPT
         @test p.a == [3, 1, 2]
         @test p.x == MonomialVector([u^2, u, 1])
