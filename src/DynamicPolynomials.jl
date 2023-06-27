@@ -32,7 +32,7 @@ function MP.variable_union_type(
 end
 MP.constant_monomial(::Type{<:PolyType{V,M}}) where {V,M} = Monomial{V,M}()
 function MP.constant_monomial(p::PolyType)
-    return Monomial(MP.variables(p), zeros(Int, nvariables(p)))
+    return Monomial(copy(MP.variables(p)), zeros(Int, nvariables(p)))
 end
 MP.monomial_type(::Type{<:PolyType{V,M}}) where {V,M} = Monomial{V,M}
 MP.monomial_type(::PolyType{V,M}) where {V,M} = Monomial{V,M}

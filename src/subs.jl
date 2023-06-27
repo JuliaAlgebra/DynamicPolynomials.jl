@@ -96,9 +96,9 @@ end
 
 _add_variables!(α, β) = α
 _add_variables!(p::PolyType, α) = p
-_add_variables!(α, p::PolyType) = α * one(p)
+_add_variables!(α, p::PolyType) = MP.operate!!(*, α, one(p))
 function _add_variables!(x::Variable, p::PolyType)
-    return x * one(p)
+    return MP.operate!!(*, x, one(p))
 end
 function ___add_variables!(p, q)
     varsvec = [MP.variables(p), MP.variables(q)]
@@ -158,7 +158,7 @@ function _subs(
         Polynomial{V,M,Tout},
         mergevars_of(Variable{V,M}, vals)[1],
     )
-    for i in 1:length(p.a)
+    for i in eachindex(p.a)
         MA.operate!(+, q, p.a[i] * monoeval(p.x.Z[i], vals))
     end
     return q
