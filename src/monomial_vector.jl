@@ -355,7 +355,7 @@ function MP.merge_monomial_vectors(ms::Vector{MonomialVector{V,M}}) where {V,M}
     return MonomialVector{V,M}(buildZvarsvec(Variable{V,M}, X)...)
 end
 
-function _add_variables!(
+function __add_variables!(
     monos::MonomialVector{V,M},
     allvars::Vector{Variable{V,M}},
     map,
