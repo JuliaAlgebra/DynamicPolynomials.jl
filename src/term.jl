@@ -75,3 +75,7 @@ function MA.operate!(::typeof(one), t::Term)
     MA.operate!(zero, t.x.z)
     return t
 end
+
+function __add_variables!(t::_Term, allvars, map)
+    return __add_variables!(MP.monomial(t), allvars, map)
+end

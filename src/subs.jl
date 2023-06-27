@@ -94,15 +94,38 @@ function subsmap(st, vars, s::Tuple{MP.VectorMultiSubstitution})
     end
 end
 
+_add_variables!(α, β) = α
+_add_variables!(p::PolyType, α) = p
+_add_variables!(α, p::PolyType) = α * one(p)
+function _add_variables!(x::Variable, p::PolyType)
+    return x * one(p)
+end
+function ___add_variables!(p, q)
+    varsvec = [MP.variables(p), MP.variables(q)]
+    allvars, maps = mergevars(varsvec)
+    if length(allvars) != length(MP.variables(p))
+        __add_variables!(p, allvars, maps[1])
+    end
+    return allvars, maps
+end
+function _add_variables!(p::PolyType, q::PolyType)
+    ___add_variables!(p, q)
+    return p
+end
+
 function monoeval(z::Vector{Int}, vals::AbstractVector)
     @assert length(z) == length(vals)
     if isempty(z)
         return one(eltype(vals))^1
     end
+    # `Base.power_by_squaring` does a `copy` if `z[1]` is `1`
+    # which is redirected to `MA.mutable_copy`
     val = vals[1]^z[1]
     for i in 2:length(vals)
-        if z[i] > 0
-            val *= vals[i]^z[i]
+        if iszero(z[i])
+            val = _add_variables!(val, vals[i])
+        else
+            val = MA.operate!!(*, val, vals[i]^z[i])
         end
     end
     return val
@@ -122,7 +145,7 @@ function _subs(
     if iszero(p)
         zero(Base.promote_op(*, S, T))
     else
-        sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), 1:length(p))
+        sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), eachindex(p.a))
     end
 end
 function _subs(

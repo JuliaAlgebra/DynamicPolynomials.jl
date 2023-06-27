@@ -125,11 +125,7 @@ function MA.operate!(
     q::Polynomial{V},
 ) where {V<:Commutative}
     if MP.variables(p) != MP.variables(q)
-        varsvec = [MP.variables(p), MP.variables(q)]
-        allvars, maps = mergevars(varsvec)
-        if length(allvars) != length(MP.variables(p))
-            _add_variables!(p.x, allvars, maps[1])
-        end
+        allvars, maps = ___add_variables!(p, q)
         if length(allvars) == length(MP.variables(q))
             rhs = q
         else
@@ -139,7 +135,7 @@ function MA.operate!(
             # should be better of `q` has less terms and then the same term is compared
             # many times.
             rhs = Polynomial(q.a, copy(q.x))
-            _add_variables!(rhs.x, allvars, maps[2])
+            __add_variables!(rhs, allvars, maps[2])
         end
         return MA.operate!(op, p, rhs)
     end
