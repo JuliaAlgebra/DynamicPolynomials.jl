@@ -13,8 +13,12 @@ include("var.jl")
 #const NonCommutativeVariable{O,M} = Variable{NonCommutative{O},M}
 include("mono.jl")
 const DMonomialLike{V,M} = Union{Monomial{V,M},Variable{V,M}}
-MA.mutability(::Type{<:Monomial}) = MA.IsMutable()
+MA.mutability(::Type{<:Monomial{<:Commutative}}) = MA.IsMutable()
+MA.mutability(::Type{<:Monomial{<:NonCommutative}}) = MA.IsNotMutable()
 const _Term{V,M,T} = MP.Term{T,Monomial{V,M}}
+function __add_variables!(t::_Term, allvars, map)
+    return __add_variables!(MP.monomial(t), allvars, map)
+end
 include("monomial_vector.jl")
 include("poly.jl")
 MA.mutability(::Type{<:Polynomial}) = MA.IsMutable()
