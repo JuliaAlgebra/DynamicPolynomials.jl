@@ -4,20 +4,21 @@ import Future # For `copy!`
 
 using Reexport
 @reexport using MultivariatePolynomials
-const MP = MultivariatePolynomials
+import MultivariatePolynomials as MP
 
-import MutableArithmetics
-const MA = MutableArithmetics
-
-using DataStructures
+import MutableArithmetics as MA
 
 include("var.jl")
 #const CommutativeVariable{O,M} = Variable{Commutative{O},M}
 #const NonCommutativeVariable{O,M} = Variable{NonCommutative{O},M}
 include("mono.jl")
 const DMonomialLike{V,M} = Union{Monomial{V,M},Variable{V,M}}
-MA.mutability(::Type{<:Monomial}) = MA.IsMutable()
+MA.mutability(::Type{<:Monomial{<:Commutative}}) = MA.IsMutable()
+MA.mutability(::Type{<:Monomial{<:NonCommutative}}) = MA.IsNotMutable()
 const _Term{V,M,T} = MP.Term{T,Monomial{V,M}}
+function __add_variables!(t::_Term, allvars, map)
+    return __add_variables!(MP.monomial(t), allvars, map)
+end
 include("monomial_vector.jl")
 include("poly.jl")
 MA.mutability(::Type{<:Polynomial}) = MA.IsMutable()
@@ -31,7 +32,7 @@ function MP.variable_union_type(
 end
 MP.constant_monomial(::Type{<:PolyType{V,M}}) where {V,M} = Monomial{V,M}()
 function MP.constant_monomial(p::PolyType)
-    return Monomial(MP.variables(p), zeros(Int, nvariables(p)))
+    return Monomial(copy(MP.variables(p)), zeros(Int, nvariables(p)))
 end
 MP.monomial_type(::Type{<:PolyType{V,M}}) where {V,M} = Monomial{V,M}
 MP.monomial_type(::PolyType{V,M}) where {V,M} = Monomial{V,M}

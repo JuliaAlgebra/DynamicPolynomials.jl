@@ -101,6 +101,19 @@ MP.monomial(m::Monomial) = m
 #    i > length(m1.z)
 #end
 
+function __add_variables!(
+    mono::Monomial{V,M},
+    allvars::Vector{Variable{V,M}},
+    map,
+) where {V,M}
+    Future.copy!(mono.vars, allvars)
+    tmp = copy(mono.z)
+    resize!(mono.z, length(allvars))
+    fill!(mono.z, 0)
+    mono.z[map] = tmp
+    return
+end
+
 # for efficiency reasons
 function Base.conj(x::Monomial{V,M}) where {V<:Commutative,M}
     cv = conj.(x.vars)

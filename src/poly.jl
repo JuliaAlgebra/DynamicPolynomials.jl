@@ -1,5 +1,3 @@
-export Polynomial
-
 # Invariant:
 # a and x might be empty: meaning it is the zero polynomial
 # a does not contain any zeros
@@ -403,4 +401,8 @@ end
 function MP.map_exponents!(f::Function, p::Polynomial, m::DMonomialLike)
     MP.map_exponents!(f, p.x, m)
     return p
+end
+
+function __add_variables!(p::Polynomial, allvars, map)
+    return __add_variables!(p.x, allvars, map)
 end
