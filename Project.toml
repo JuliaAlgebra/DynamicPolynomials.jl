@@ -1,7 +1,7 @@
 name = "DynamicPolynomials"
 uuid = "7c1d4256-1411-5781-91ec-d7bc3513ac07"
 repo = "https://github.com/JuliaAlgebra/DynamicPolynomials.jl.git"
-version = "0.5.1"
+version = "0.5.2"
 
 [deps]
 Future = "9fa8497b-333b-5362-9e8d-4d0656e87820"
