@@ -15,6 +15,9 @@ import MultivariatePolynomials as MP
         @test size(u) == (3, 2)
         @test x[1] > x[2] > x[3] > y > z[1] > z[2]
         @test u[1, 1] > u[2, 1] > u[2, 2]
+        dummy = VT("dummy")
+        @test dummy isa VT
+        @test name(dummy) == "dummy"
 
         @polyvar a[1:5, 1:3, 1:2]
         @test size(a) == (5, 3, 2)
