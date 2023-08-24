@@ -141,7 +141,15 @@ function MP.empty_monomial_vector(
     return MonomialVector{V,M}()
 end
 
+# TODO replace by MP function
+function _error_for_negative_degree(deg)
+    if deg < 0
+        throw(ArgumentError("The degree should be a nonnegative number but the provided degree `$deg` is negative."))
+    end
+end
+
 function fillZfordeg!(Z, n, deg, ::Type{Commutative}, filter::Function, ::Int)
+    _error_for_negative_degree(deg)
     z = zeros(Int, n)
     z[end] = deg
     while true
@@ -181,6 +189,8 @@ function fillZfordeg!(
     filter::Function,
     maxdeg::Int,
 )
+    _error_for_negative_degree(deg)
+    _error_for_negative_degree(maxdeg)
     z = zeros(Int, maxdeg * n - maxdeg + 1)
     start = length(Z) + 1
     fillZrec!(Z, z, 1, n, deg, filter)

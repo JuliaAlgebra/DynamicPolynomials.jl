@@ -150,6 +150,9 @@ struct Variable{V,M} <: AbstractVariable
     kind::ComplexKind
     variable_order::V
 
+    function Variable{V,M}(name::AbstractString) where {V<:AbstractVariableOrdering,M<:MP.AbstractMonomialOrdering}
+        return new{V,M}(convert(String, name), instantiate(V))
+    end
     function Variable(
         name::AbstractString,
         ::Type{V},
