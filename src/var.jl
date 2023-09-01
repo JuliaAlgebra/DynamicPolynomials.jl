@@ -195,7 +195,7 @@ MP.variables(v::Variable) = [v]
 
 iscomm(::Type{Variable{C}}) where {C} = C
 
-MP.iscomplex(x::Variable{C}) where {C} = x.kind == cpFull || x.kind == cpConj
+Base.isreal(x::Variable{C}) where {C} = x.kind != cpFull && x.kind != cpConj
 MP.isrealpart(x::Variable{C}) where {C} = x.kind == cpReal
 MP.isimagpart(x::Variable{C}) where {C} = x.kind == cpImag
 MP.isconj(x::Variable{C}) where {C} = x.kind == cpConj

@@ -112,7 +112,7 @@ for (fun, call, def, ret) in [
     end)
 end
 # faster complex-related functions
-MultivariatePolynomials.iscomplex(x::MonomialVector) = any(iscomplex, x.vars)
+Base.isreal(x::MonomialVector) = all(isreal, x.vars)
 Base.conj(x::MonomialVector) = MonomialVector(conj.(x.vars), x.Z)
 
 MP.variables(m::Union{Monomial,MonomialVector}) = m.vars
@@ -144,7 +144,11 @@ end
 # TODO replace by MP function
 function _error_for_negative_degree(deg)
     if deg < 0
-        throw(ArgumentError("The degree should be a nonnegative number but the provided degree `$deg` is negative."))
+        throw(
+            ArgumentError(
+                "The degree should be a nonnegative number but the provided degree `$deg` is negative.",
+            ),
+        )
     end
 end
 
