@@ -12,6 +12,14 @@ using LinearAlgebra
     @test p(x0 => y0, x1 => y1) == y1 * y0 * y1
 end
 
+# https://github.com/JuliaAlgebra/DynamicPolynomials.jl/issues/141
+@testset "Issue #141" begin
+    @polyvar x
+    m = x^2
+    q = m^2
+    @test variables(q) !== variables(m)
+end
+
 @testset "Issue #79, Issue #80 and Issue #92" begin
     @polyvar x[1:2]
     p1 = x[1] * 0.0 + x[2] * 0
