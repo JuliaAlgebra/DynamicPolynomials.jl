@@ -36,6 +36,7 @@ function MP.constant_monomial(p::PolyType)
 end
 MP.monomial_type(::Type{<:PolyType{V,M}}) where {V,M} = Monomial{V,M}
 MP.monomial_type(::PolyType{V,M}) where {V,M} = Monomial{V,M}
+MP.ordering(p::PolyType) = MP.ordering(MP.variable_union_type(p))
 #function MP.constant_monomial(::Type{Monomial{V,M}}, vars=Variable{V,M}[]) where {V,M}
 #    return Monomial{V,M}(vars, zeros(Int, length(vars)))
 #end
