@@ -16,7 +16,7 @@ The following types are defined:
 
 All common algebraic operations between those types are designed to be as efficient as possible without doing any assumption on `T`.
 Typically, one imagine `T` to be a subtype of `Number` but it can be anything.
-This is useful for example in the package [PolyJuMP](https://github.com/JuliaOpt/PolyJuMP.jl) where `T` is often an affine expression of [JuMP](https://github.com/JuliaOpt/JuMP.jl) decision variables.
+This is useful for example in the package [PolyJuMP](https://github.com/jump-dev/PolyJuMP.jl) where `T` is often an affine expression of [JuMP](https://github.com/jump-dev/JuMP.jl) decision variables.
 The commutativity of `T` with `*` is not assumed, even if it is the coefficient of a monomial of commutative variables.
 However, commutativity of `T` and of the variables `+` is always assumed.
 This allows to keep the terms sorted (Graded Lexicographic order is used) in polynomial and measure which enables more efficient operations.
