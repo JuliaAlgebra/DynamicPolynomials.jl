@@ -10,6 +10,17 @@ import DynamicPolynomials: Commutative, CreationOrder # to test hygiene
     @polyvar x variable_order = order
     @test z != x
 end
+function _less(a, b)
+    @test a < b
+    @test b > a
+    @test compare(monomial(a), b) < 0
+    @test compare(b, monomial(a)) > 0
+end
+@testset "Issue 152" begin
+    @polyvar x y monomial_order=LexOrder
+    _less(x, x * y)
+    _less(x * y^2, x^2)
+end
 @testset "README example" begin
     function p(x, y, z)
         return sprint(
