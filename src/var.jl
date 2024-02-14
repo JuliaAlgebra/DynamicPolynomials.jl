@@ -145,7 +145,8 @@ end
 
 MP.monomial(v::Variable) = Monomial(v)
 MP.variables(v::Variable) = [v]
-MP.ordering(::Variable{V,M}) where {V,M} = M
+MP.ordering(v::Variable) = MP.ordering(typeof(v))
+MP.ordering(::Type{Variable{V,M}}) where {V,M} = M
 
 iscomm(::Type{Variable{C}}) where {C} = C
 
