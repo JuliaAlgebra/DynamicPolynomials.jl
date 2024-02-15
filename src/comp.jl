@@ -99,6 +99,18 @@ function MP.compare(
             j += 1
         end
     end
+    @inbounds while i <= nvariables(x)
+        if x.z[i] > 0
+            return 1
+        end
+	i += 1
+    end
+    @inbounds while j <= nvariables(y)
+        if y.z[j] > 0
+            return -1
+        end
+	j += 1
+    end
     return 0
 end
 
