@@ -166,4 +166,9 @@ import MultivariatePolynomials as MP
         @test filter(mono -> degree(mono) == 1, X) == monomial_vector([x, y])
         @test filter(mono -> degree(mono) == 0, X) == monomial_vector([x^0])
     end
+    @testset "Noncommutative div" begin
+        @ncpolyvar x y
+	err = ErrorException("Not implemented yet")
+	@test_throws err div(x, x * y)
+    end
 end
