@@ -40,9 +40,9 @@ function buildpolyvar(var, variable_order, monomial_order, complex_kind)
         varname,
         :(
             $(esc(varname)) = polyarrayvar(
-                $variable_order,
-                $monomial_order,
-                $complex_kind,
+                $(variable_order),
+                $(monomial_order),
+                $(complex_kind),
                 $prefix,
                 $(esc.(var.args[2:end])...),
             )
@@ -69,9 +69,9 @@ function _extract_kw_args(args, variable_order, complex_kind)
     for arg in args
         if Base.Meta.isexpr(arg, :(=))
             if arg.args[1] == :variable_order
-                variable_order = arg.args[2]
+                variable_order = esc(arg.args[2])
             elseif arg.args[1] == :monomial_order
-                monomial_order = arg.args[2]
+                monomial_order = esc(arg.args[2])
             elseif arg.args[1] == :complex
                 complex_kind = arg.args[2] == :true ? cpFull : cpNone
             else
@@ -192,6 +192,8 @@ end
 
 MP.monomial(v::Variable) = Monomial(v)
 MP.variables(v::Variable) = [v]
+MP.ordering(v::Variable) = MP.ordering(typeof(v))
+MP.ordering(::Type{Variable{V,M}}) where {V,M} = M
 
 iscomm(::Type{Variable{C}}) where {C} = C
 

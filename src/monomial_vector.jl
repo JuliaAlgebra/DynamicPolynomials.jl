@@ -15,7 +15,6 @@ struct MonomialVector{V,M} <: AbstractVector{Monomial{V,M}}
         _isless = let M = M
             (a, b) -> MP.compare(a, b, M) < 0
         end
-        @assert issorted(Z, lt = _isless)
         return new{V,M}(vars, Z)
     end
 end

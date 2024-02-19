@@ -1,4 +1,7 @@
-function MP.divides(m1::Monomial, m2::Monomial)
+function MP.divides(m1::Monomial{<:NonCommutative}, m2::Monomial{<:NonCommutative})
+    error("Not implemented yet")
+end
+function MP.divides(m1::Monomial{<:Commutative}, m2::Monomial{<:Commutative})
     e1 = exponents(m1)
     v1 = variables(m1)
     e2 = exponents(m2)
