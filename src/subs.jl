@@ -24,7 +24,7 @@ function fillmap!(
     # - The coefficients in vals might not be complex-valued; but to assign only a part of the variable, we necessarily need to
     #   introduce an explicit imaginary coefficient to the value.
     # Currently, we don't do anything to catch these errors.
-    if s.first.kind == cpNone
+    if s.first.kind == REAL
         for j in eachindex(vars)
             if vars[j] == s.first
                 vals[j] = s.second
@@ -35,41 +35,41 @@ function fillmap!(
         for j in eachindex(vars)
             if vars[j].variable_order.order.id ==
                s.first.variable_order.order.id
-                if s.first.kind == cpFull || s.first.kind == cpConj
-                    value = s.first.kind == cpConj ? conj(s.second) : s.second
-                    if vars[j].kind == cpFull
+                if s.first.kind == COMPLEX || s.first.kind == CONJ
+                    value = s.first.kind == CONJ ? conj(s.second) : s.second
+                    if vars[j].kind == COMPLEX
                         vals[j] = value
-                    elseif vars[j].kind == cpConj
+                    elseif vars[j].kind == CONJ
                         vals[j] = conj(value)
-                    elseif vars[j].kind == cpReal
+                    elseif vars[j].kind == REAL_PART
                         vals[j] = real(value)
                     else
                         vals[j] = imag(value)
                     end
-                elseif s.first.kind == cpReal
+                elseif s.first.kind == REAL_PART
                     isreal(s.second) || error(
                         "Cannot assign a complex value to the real part of an expression",
                     )
                     value = real(s.second) # just to make sure the type is correct
-                    if vars[j].kind == cpFull
+                    if vars[j].kind == COMPLEX
                         vals[j] = value + im * imag(vals[j])
-                    elseif vars[j].kind == cpConj
+                    elseif vars[j].kind == CONJ
                         vals[j] = value - im * imag(vals[j])
-                    elseif vars[j].kind == cpReal
+                    elseif vars[j].kind == REAL_PART
                         vals[j] = value
                     end
                     # else we know the real part but use the imaginary part; do nothing
                 else
-                    @assert(s.first.kind == cpImag)
+                    @assert(s.first.kind == IMAG_PART)
                     isreal(s.second) || error(
                         "Cannot assign a complex value to the imaginary part of an expression",
                     )
                     value = real(s.second) # just to make sure the type is correct
-                    if vars[j].kind == cpFull
+                    if vars[j].kind == COMPLEX
                         vals[j] = real(vals[j]) + im * value
-                    elseif vars[j].kind == cpConj
+                    elseif vars[j].kind == CONJ
                         vals[j] = real(vals[j]) - im * value
-                    elseif vars[j].kind == cpImag
+                    elseif vars[j].kind == IMAG_PART
                         vals[j] = value
                     end
                     # else we know the imaginary part but use the real part; do nothing

@@ -73,7 +73,7 @@ function _extract_kw_args(args, variable_order, complex_kind)
             elseif arg.args[1] == :monomial_order
                 monomial_order = esc(arg.args[2])
             elseif arg.args[1] == :complex
-                complex_kind = arg.args[2] == :true ? cpFull : cpNone
+                complex_kind = arg.args[2] == :true ? COMPLEX : REAL
             else
                 error("Unrecognized keyword argument `$(arg.args[1])`")
             end
@@ -87,7 +87,7 @@ end
 # Variable vector x returned garanteed to be sorted so that if p is built with x then vars(p) == x
 macro polyvar(args...)
     pos_args, variable_order, monomial_order, complex_kind =
-        _extract_kw_args(args, :($(Commutative{CreationOrder})), cpNone)
+        _extract_kw_args(args, :($(Commutative{CreationOrder})), REAL)
     vars, exprs =
         buildpolyvars(pos_args, variable_order, monomial_order, complex_kind)
     return :($(foldl((x, y) -> :($x; $y), exprs, init = :()));
@@ -96,7 +96,7 @@ end
 
 macro ncpolyvar(args...)
     pos_args, variable_order, monomial_order, complex_kind =
-        _extract_kw_args(args, :($(NonCommutative{CreationOrder})), cpNone)
+        _extract_kw_args(args, :($(NonCommutative{CreationOrder})), REAL)
     vars, exprs =
         buildpolyvars(pos_args, variable_order, monomial_order, complex_kind)
     return :($(foldl((x, y) -> :($x; $y), exprs, init = :()));
@@ -105,7 +105,7 @@ end
 
 macro polycvar(args...)
     pos_args, variable_order, monomial_order, complex_kind =
-        _extract_kw_args(args, :($(Commutative{CreationOrder})), cpFull)
+        _extract_kw_args(args, :($(Commutative{CreationOrder})), COMPLEX)
     vars, exprs =
         buildpolyvars(pos_args, variable_order, monomial_order, complex_kind)
     return :($(foldl((x, y) -> :($x; $y), exprs, init = :()));
@@ -147,20 +147,20 @@ end
     ComplexKind
 
 The type used to identify whether a variable is complex-valued. It has the following instances:
-- `cpNone`: the variable is real-valued, [`conj`](@ref) and [`real`](@ref) are identities, [`imag`](@ref) is zero.
-- `cpFull`: the variable is a declared complex-valued variable with distinct conjugate, real, and imaginary part.
+- `REAL`: the variable is real-valued, [`conj`](@ref) and [`real`](@ref) are identities, [`imag`](@ref) is zero.
+- `COMPLEX`: the variable is a declared complex-valued variable with distinct conjugate, real, and imaginary part.
   [`ordinary_variable`](@ref) is an identity.
-- `cpConj`: the variable is the conjugate of a declared complex-valued variable. [`ordinary_variable`](@ref) is equal to
+- `CONJ`: the variable is the conjugate of a declared complex-valued variable. [`ordinary_variable`](@ref) is equal to
   [`conj`](@ref). It will print with an over-bar.
-- `cpReal`: the variable is the real part of a complex-valued variable. It is real-valued itself: [`conj`](@ref) and
+- `REAL_PART`: the variable is the real part of a complex-valued variable. It is real-valued itself: [`conj`](@ref) and
   [`real`](@ref) are identities, [`imag`](@ref) is zero. [`ordinary_variable`](@ref) will give back the original complex-valued
   _declared_ variable from which the real part was extracted. It will print with an `ᵣ` subscript.
-- `cpImag`: the variable is the imaginary part of a declared complex-valued variable (or the negative imaginary part of the
+- `IMAG_PART`: the variable is the imaginary part of a declared complex-valued variable (or the negative imaginary part of the
   conjugate of a declared complex-valued variable). It is real-valued itself: [`conj`](@ref) and [`real`](@ref) are identities,
   [`imag`](@ref) is zero. [`ordinary_variable`](@ref) will give back the original complex-valued _declared_ variable from which
   the imaginary part was extracted. It will print with an `ᵢ` subscript.
 """
-@enum ComplexKind cpNone cpFull cpConj cpReal cpImag
+@enum ComplexKind REAL COMPLEX CONJ REAL_PART IMAG_PART
 
 struct Variable{V,M} <: AbstractVariable
     name::String
@@ -169,7 +169,7 @@ struct Variable{V,M} <: AbstractVariable
 
     function Variable{V,M}(
         name::AbstractString,
-        kind::ComplexKind = cpNone,
+        kind::ComplexKind = REAL,
     ) where {V<:AbstractVariableOrdering,M<:MP.AbstractMonomialOrdering}
         return new{V,M}(convert(String, name), kind, instantiate(V))
     end
@@ -178,7 +178,7 @@ struct Variable{V,M} <: AbstractVariable
         name::AbstractString,
         ::Type{V},
         ::Type{M},
-        kind::ComplexKind = cpNone,
+        kind::ComplexKind = REAL,
     ) where {V<:AbstractVariableOrdering,M<:MP.AbstractMonomialOrdering}
         return new{V,M}(convert(String, name), kind, instantiate(V))
     end
@@ -187,8 +187,8 @@ struct Variable{V,M} <: AbstractVariable
         from::Variable{V,M},
         kind::ComplexKind,
     ) where {V<:AbstractVariableOrdering,M<:MP.AbstractMonomialOrdering}
-        (from.kind == cpNone && kind == cpNone) ||
-            (from.kind != cpNone && kind != cpNone) ||
+        (from.kind == REAL && kind == REAL) ||
+            (from.kind != REAL && kind != REAL) ||
             error("Cannot change the complex type of an existing variable")
         return new{V,M}(from.name, kind, from.variable_order)
     end
@@ -214,36 +214,36 @@ MP.ordering(::Type{Variable{V,M}}) where {V,M} = M
 
 iscomm(::Type{Variable{C}}) where {C} = C
 
-Base.isreal(x::Variable{C}) where {C} = x.kind != cpFull && x.kind != cpConj
-MP.isrealpart(x::Variable{C}) where {C} = x.kind == cpReal
-MP.isimagpart(x::Variable{C}) where {C} = x.kind == cpImag
-MP.isconj(x::Variable{C}) where {C} = x.kind == cpConj
+Base.isreal(x::Variable{C}) where {C} = x.kind != COMPLEX && x.kind != CONJ
+MP.isrealpart(x::Variable{C}) where {C} = x.kind == REAL_PART
+MP.isimagpart(x::Variable{C}) where {C} = x.kind == IMAG_PART
+MP.isconj(x::Variable{C}) where {C} = x.kind == CONJ
 function MP.ordinary_variable(x::Variable)
-    return x.kind == cpNone || x.kind == cpFull ? x : Variable(x, cpFull)
+    return x.kind == REAL || x.kind == COMPLEX ? x : Variable(x, COMPLEX)
 end
 
 function Base.conj(x::Variable)
-    if x.kind == cpFull
-        return Variable(x, cpConj)
-    elseif x.kind == cpConj
-        return Variable(x, cpFull)
+    if x.kind == COMPLEX
+        return Variable(x, CONJ)
+    elseif x.kind == CONJ
+        return Variable(x, COMPLEX)
     else
         return x
     end
 end
 
 function Base.real(x::Variable)
-    if x.kind == cpFull || x.kind == cpConj
-        return Variable(x, cpReal)
+    if x.kind == COMPLEX || x.kind == CONJ
+        return Variable(x, REAL_PART)
     else
         return x
     end
 end
 function Base.imag(x::Variable{V,M}) where {V,M}
-    if x.kind == cpFull
-        return Variable(x, cpImag)
-    elseif x.kind == cpConj
-        return _Term{V,M,Int}(-1, Monomial(Variable(x, cpImag)))
+    if x.kind == COMPLEX
+        return Variable(x, IMAG_PART)
+    elseif x.kind == CONJ
+        return _Term{V,M,Int}(-1, Monomial(Variable(x, IMAG_PART)))
     else
         return MA.Zero()
     end

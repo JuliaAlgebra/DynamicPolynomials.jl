@@ -73,10 +73,10 @@ function MP.similar_variable(
     return MP.similar_variable(P, S)
 end
 function MP.similar_variable(p::PolyType{V,M}, s::Symbol) where {V,M}
-    return Variable(string(s), V, M, isreal(p) ? cpNone : cpFull)
+    return Variable(string(s), V, M, isreal(p) ? REAL : COMPLEX)
 end
 function MP.similar_variable(::Type{<:PolyType{V,M}}, s::Symbol) where {V,M}
-    return Variable(string(s), V, M, cpNone) # we cannot infer this from the type,
+    return Variable(string(s), V, M, REAL) # we cannot infer this from the type,
 end
 
 include("promote.jl")
