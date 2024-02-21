@@ -55,10 +55,16 @@
         p.x[2] == x
 
         @inferred DynamicPolynomials.Polynomial(i -> float(i), [x, x * x])
-        @inferred DynamicPolynomials.Polynomial(i -> float(i), MonomialVector([x * x, x]))
+        @inferred DynamicPolynomials.Polynomial(
+            i -> float(i),
+            MonomialVector([x * x, x]),
+        )
         for p in (
             DynamicPolynomials.Polynomial(i -> float(i), [x, x * x]),
-            DynamicPolynomials.Polynomial(i -> float(i), MonomialVector([x * x, x])),
+            DynamicPolynomials.Polynomial(
+                i -> float(i),
+                MonomialVector([x * x, x]),
+            ),
         )
             @test typeof(p) == PTF
             @test p.a == [1.0, 2.0]

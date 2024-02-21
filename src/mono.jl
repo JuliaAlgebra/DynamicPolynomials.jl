@@ -113,3 +113,10 @@ function __add_variables!(
     mono.z[map] = tmp
     return
 end
+
+# for efficiency reasons
+function Base.conj(x::Monomial{V,M}) where {V<:Commutative,M}
+    cv = conj.(x.vars)
+    perm = sortperm(cv, rev = true)
+    return Monomial{V,M}(cv[perm], x.z[perm])
+end

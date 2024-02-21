@@ -9,23 +9,73 @@ end
 
 function fillmap!(
     vals,
-    vars::Vector{<:Variable{<:NonCommutative}},
+    vars::Vector{<:Variable{C}},
     s::MP.Substitution,
-)
-    for j in eachindex(vars)
-        if vars[j] == s.first
-            vals[j] = s.second
+) where {C}
+    # We may assign a complex or real variable to its value (ordinary substitution).
+    # We may also assign a complex value to its conjugate, or just the real or imaginary parts
+    # Any combination of z, conj(z), real(z), imag(z), imag(conj(z)) can occur in either the polynomial or the substitution,
+    # and we must handle all of them correctly.
+    # Note: This may or may not work... Issues can arise if the substitutions contain the real and imaginary (or only one of
+    # those) of a variable separately whenever vals is not of the correct type:
+    # - Unless subs() originally had a polynomial-valued rhs, vals will be scalars, monomials, or terms. So when we try to
+    #   assign a polynomial to its value (which is necessary, as the one-step substitution of only the real or only the
+    #   imaginary part is incomplete), this is an impossible conversion.
+    # - The coefficients in vals might not be complex-valued; but to assign only a part of the variable, we necessarily need to
+    #   introduce an explicit imaginary coefficient to the value.
+    # Currently, we don't do anything to catch these errors.
+    if s.first.kind == REAL
+        for j in eachindex(vars)
+            if vars[j] == s.first
+                vals[j] = s.second
+                C == Commutative && break
+            end
         end
-    end
-end
-function fillmap!(
-    vals,
-    vars::Vector{<:Variable{<:Commutative}},
-    s::MP.Substitution,
-)
-    j = findfirst(isequal(s.first), vars)
-    if j !== nothing
-        vals[j] = s.second
+    else
+        for j in eachindex(vars)
+            if vars[j].variable_order.order.id ==
+               s.first.variable_order.order.id
+                if s.first.kind == COMPLEX || s.first.kind == CONJ
+                    value = s.first.kind == CONJ ? conj(s.second) : s.second
+                    if vars[j].kind == COMPLEX
+                        vals[j] = value
+                    elseif vars[j].kind == CONJ
+                        vals[j] = conj(value)
+                    elseif vars[j].kind == REAL_PART
+                        vals[j] = real(value)
+                    else
+                        vals[j] = imag(value)
+                    end
+                elseif s.first.kind == REAL_PART
+                    isreal(s.second) || error(
+                        "Cannot assign a complex value to the real part of an expression",
+                    )
+                    value = real(s.second) # just to make sure the type is correct
+                    if vars[j].kind == COMPLEX
+                        vals[j] = value + im * imag(vals[j])
+                    elseif vars[j].kind == CONJ
+                        vals[j] = value - im * imag(vals[j])
+                    elseif vars[j].kind == REAL_PART
+                        vals[j] = value
+                    end
+                    # else we know the real part but use the imaginary part; do nothing
+                else
+                    @assert(s.first.kind == IMAG_PART)
+                    isreal(s.second) || error(
+                        "Cannot assign a complex value to the imaginary part of an expression",
+                    )
+                    value = real(s.second) # just to make sure the type is correct
+                    if vars[j].kind == COMPLEX
+                        vals[j] = real(vals[j]) + im * value
+                    elseif vars[j].kind == CONJ
+                        vals[j] = real(vals[j]) - im * value
+                    elseif vars[j].kind == IMAG_PART
+                        vals[j] = value
+                    end
+                    # else we know the imaginary part but use the real part; do nothing
+                end
+            end
+        end
     end
 end
 function fillmap!(vals, vars, s::MP.AbstractMultiSubstitution)
