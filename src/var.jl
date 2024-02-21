@@ -143,6 +143,23 @@ function instantiate(::Type{NonCommutative{O}}) where {O}
     return NonCommutative(instantiate(O))
 end
 
+"""
+    ComplexKind
+
+The type used to identify whether a variable is complex-valued. It has the following instances:
+- `cpNone`: the variable is real-valued, [`conj`](@ref) and [`real`](@ref) are identities, [`imag`](@ref) is zero.
+- `cpFull`: the variable is a declared complex-valued variable with distinct conjugate, real, and imaginary part.
+  [`ordinary_variable`](@ref) is an identity.
+- `cpConj`: the variable is the conjugate of a declared complex-valued variable. [`ordinary_variable`](@ref) is equal to
+  [`conj`](@ref). It will print with an over-bar.
+- `cpReal`: the variable is the real part of a complex-valued variable. It is real-valued itself: [`conj`](@ref) and
+  [`real`](@ref) are identities, [`imag`](@ref) is zero. [`ordinary_variable`](@ref) will give back the original complex-valued
+  _declared_ variable from which the real part was extracted. It will print with an `ᵣ` subscript.
+- `cpImag`: the variable is the imaginary part of a declared complex-valued variable (or the negative imaginary part of the
+  conjugate of a declared complex-valued variable). It is real-valued itself: [`conj`](@ref) and [`real`](@ref) are identities,
+  [`imag`](@ref) is zero. [`ordinary_variable`](@ref) will give back the original complex-valued _declared_ variable from which
+  the imaginary part was extracted. It will print with an `ᵢ` subscript.
+"""
 @enum ComplexKind cpNone cpFull cpConj cpReal cpImag
 
 struct Variable{V,M} <: AbstractVariable
