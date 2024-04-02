@@ -81,6 +81,22 @@
         @inferred polynomial(2.0u, Int)
     end
 
+    @testset "Antiderivative" begin
+        @polyvar x y
+
+        p = (x^2 + 4*y^3)
+        pi = DynamicPolynomials.antidifferentiate(p, y)
+        @test pi == (x^2*y + y^4)
+
+        p = 2*y
+        pi = DynamicPolynomials.antidifferentiate(p, y)
+        @test pi == y^2
+
+        p = x^2
+        pi = DynamicPolynomials.antidifferentiate(p, y)
+        @test pi == x^2*y
+    end
+
     @testset "Evaluation" begin
         @polyvar x y
         @test (x^2 + y^3)(2, 3) == 31
