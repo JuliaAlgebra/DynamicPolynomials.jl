@@ -2,7 +2,7 @@ function _div_by_power(x::T, y::Int) where {T}
     x / y
 end
 
-function _div_by_power(x::T, y::Int)::Rational{T} where {T<:Int}
+function _div_by_power(x::T, y::Int)::Rational{T} where {T<:Integer}
     x // y
 end
 
