@@ -84,17 +84,33 @@
     @testset "Antiderivative" begin
         @polyvar x y
 
-        p = (x^2 + 4*y^3)
-        pi = DynamicPolynomials.antidifferentiate(p, y)
-        @test pi == (x^2*y + y^4)
+        p = (x^2 + 4 * y^3)
+        (_, _, T) = typeof(p).parameters
+        @test T == Int
 
-        p = 2*y
+        pi = DynamicPolynomials.antidifferentiate(p, y)
+        @test pi == (x^2 * y + y^4)
+
+        pi = DynamicPolynomials.antidifferentiate(p, x)
+        (_, _, T) = typeof(pi).parameters
+        @test T == Rational{Int}
+
+        p = (1.0 * x^2 + 2.0 * y^2)
+        (_, _, T) = typeof(p).parameters
+        @test T == Float64
+
+        pi = DynamicPolynomials.antidifferentiate(p, x)
+        (_, _, T) = typeof(pi).parameters
+        @test T == Float64
+
+        p = 2 * y
         pi = DynamicPolynomials.antidifferentiate(p, y)
         @test pi == y^2
 
         p = x^2
         pi = DynamicPolynomials.antidifferentiate(p, y)
-        @test pi == x^2*y
+        @test pi == x^2 * y
+
     end
 
     @testset "Evaluation" begin
