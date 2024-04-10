@@ -148,13 +148,19 @@ import MultivariatePolynomials as MP
         mi = DynamicPolynomials.MP.antidifferentiate(m, y)
         @test mi == x * y
 
+        # Antidifferentiation is product => Integral coefficients
+        @test MP.coefficient_type(mi) == Int
+
+        # General antidifferentiation => Rational coefficients
         m = x^3
         mi = DynamicPolynomials.MP.antidifferentiate(m, x)
         @test mi == (x^4 / 4)
+        @test MP.coefficient_type(mi) == Rational{Int}
 
         m = Monomial([x, y, z], [1, 2, 3])
         mi = DynamicPolynomials.MP.antidifferentiate(m, z)
         @test mi == (x*y^2*z^4) / 4
+        @test MP.coefficient_type(mi) == Rational{Int}
     end
 
     @testset "Evaluation" begin

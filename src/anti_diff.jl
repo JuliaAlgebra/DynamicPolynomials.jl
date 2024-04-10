@@ -13,7 +13,7 @@ function MP.antidifferentiate(m::Monomial{V,M}, x::Variable{V,M}) where {V,M}
         Monomial(MP.variables(m), z) * x
     else
         z[i] += 1
-        Monomial(MP.variables(m), z) / (m.z[i] + 1)
+        (1 // (m.z[i] + 1)) * Monomial(MP.variables(m), z)
     end
 end
 
