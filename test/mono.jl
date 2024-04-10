@@ -144,8 +144,6 @@ import MultivariatePolynomials as MP
     @testset "Antidifferentiation" begin
 	      @ncpolyvar x y z
 
-        @info typeof(x)
-
         m = x
         mi = DynamicPolynomials.MP.antidifferentiate(m, y)
         @test mi == x * y
