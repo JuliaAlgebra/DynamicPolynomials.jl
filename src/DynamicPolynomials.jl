@@ -84,6 +84,7 @@ include("promote.jl")
 include("operators.jl")
 include("comp.jl")
 
+include("anti_diff.jl")
 include("diff.jl")
 include("subs.jl")
 

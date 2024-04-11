@@ -141,6 +141,28 @@ import MultivariatePolynomials as MP
         @test m.z == [2, 1, 1, 0, 0]
     end
 
+    @testset "Antidifferentiation" begin
+	      @ncpolyvar x y z
+
+        m = x
+        mi = DynamicPolynomials.MP.antidifferentiate(m, y)
+        @test mi == x * y
+
+        # Antidifferentiation is product => Integral coefficients
+        @test MP.coefficient_type(mi) == Int
+
+        # General antidifferentiation => Rational coefficients
+        m = x^3
+        mi = DynamicPolynomials.MP.antidifferentiate(m, x)
+        @test mi == (x^4 / 4)
+        @test MP.coefficient_type(mi) == Rational{Int}
+
+        m = Monomial([x, y, z], [1, 2, 3])
+        mi = DynamicPolynomials.MP.antidifferentiate(m, z)
+        @test mi == (x*y^2*z^4) / 4
+        @test MP.coefficient_type(mi) == Rational{Int}
+    end
+
     @testset "Evaluation" begin
         @polyvar x y
         @test (x^2 * y)(3, 2) == 18
