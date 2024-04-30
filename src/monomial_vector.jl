@@ -125,7 +125,31 @@ function _error_for_negative_degree(deg)
     end
 end
 
-function fillZfordeg!(Z, n, deg, ::Type{Commutative}, filter::Function, ::Int)
+function _fill_exponents!(Z, n, degs, ::Type{Commutative}, ::Type{MP.LexOrder}, filter::Function)
+    _error_for_negative_degree.(degs)
+    maxdeg = maximum(degs, init = 0)
+    z = zeros(Int, n)
+    while true
+        deg = sum(z)
+        if deg in degs && filter(z)
+            push!(Z, z)
+            z = copy(z)
+        end
+        if deg == maxdeg
+            i = findfirst(i -> !iszero(z[i]), n:-1:2)
+            if isnothing(i)
+                break
+            end
+            j = (n:-1:2)[i]
+            z[j] = 0
+            z[j-1] += 1
+        else
+            z[end] += 1
+        end
+    end
+end
+
+function _fill_exponents!(Z, n, deg, ::Type{Commutative}, ::Type{MP.LexOrder}, filter::Function, ::Int)
     _error_for_negative_degree(deg)
     z = zeros(Int, n)
     z[end] = deg
@@ -134,10 +158,10 @@ function fillZfordeg!(Z, n, deg, ::Type{Commutative}, filter::Function, ::Int)
             push!(Z, z)
             z = copy(z)
         end
-        if z[1] == deg
+        i = findfirst(i -> !iszero(z[i]), n:-1:2)
+        if isnothing(i)
             break
         end
-        i = findfirst(i -> !iszero(z[i]), n:-1:2)
         j = (n:-1:2)[i]
         p = z[j]
         z[j] = 0
@@ -145,7 +169,7 @@ function fillZfordeg!(Z, n, deg, ::Type{Commutative}, filter::Function, ::Int)
         z[j-1] += 1
     end
 end
-function fillZrec!(Z, z, i, n, deg, filter::Function)
+function _fill_noncomm_exponents_rec!(Z, z, i, n, deg, ::Type{MP.LexOrder}, filter::Function)
     if deg == 0
         if filter(z)
             push!(Z, copy(z))
@@ -153,28 +177,29 @@ function fillZrec!(Z, z, i, n, deg, filter::Function)
     else
         for i in i:i+n-1
             z[i] += 1
-            fillZrec!(Z, z, i, n, deg - 1, filter)
+            fillZrec!(Z, z, i, n, deg - 1, LexOrder, filter)
             z[i] -= 1
         end
     end
 end
-function fillZfordeg!(
+function _fill_exponents!(
     Z,
     n,
     deg,
     ::Type{NonCommutative},
+    ::Type{M},
     filter::Function,
     maxdeg::Int,
-)
+) where {M}
     _error_for_negative_degree(deg)
     _error_for_negative_degree(maxdeg)
     z = zeros(Int, maxdeg * n - maxdeg + 1)
     start = length(Z) + 1
-    fillZrec!(Z, z, 1, n, deg, filter)
+    fillZrec!(Z, z, 1, n, deg, M, filter)
     return reverse!(view(Z, start:length(Z)))
 end
 # List exponents in decreasing Graded Lexicographic Order
-function getZfordegs(
+function _all_exponents(
     n,
     degs::AbstractVector{Int},
     ::Type{V},
@@ -182,10 +207,25 @@ function getZfordegs(
     filter::Function,
 ) where {V,M}
     Z = Vector{Vector{Int}}()
+    _fill_exponents!(Z, n, degs, V, M, filter)
+    _isless = let M = M
+        (a, b) -> MP.compare(a, b, M) < 0
+    end
+    @assert issorted(Z, lt = _isless)
+    return Z
+end
+function _all_exponents(
+    n,
+    degs::AbstractVector{Int},
+    ::Type{V},
+    ::Type{MP.Graded{M}},
+    filter::Function,
+) where {V,M}
+    Z = Vector{Vector{Int}}()
     # For non-commutative, lower degree need to create a vector of exponent as large as for the highest degree
-    maxdeg = isempty(degs) ? 0 : maximum(degs)
+    maxdeg = maximum(degs, init = 0)
     for deg in sort(degs)
-        fillZfordeg!(Z, n, deg, V, filter, maxdeg)
+        _fill_exponents!(Z, n, deg, V, M, filter, maxdeg)
     end
     _isless = let M = M
         (a, b) -> MP.compare(a, b, M) < 0
@@ -202,7 +242,7 @@ function MonomialVector(
     vars = unique!(sort(vars, rev = true))
     return MonomialVector(
         vars,
-        getZfordegs(
+        _all_exponents(
             length(vars),
             degs,
             Commutative,
@@ -222,7 +262,7 @@ function MonomialVector(
     filter::Function = x -> true,
 ) where {M}
     vars = unique!(sort(vars, rev = true))
-    Z = getZfordegs(
+    Z = _all_exponents(
         length(vars),
         degs,
         NonCommutative,
@@ -248,11 +288,11 @@ function MP.monomials(vars::Tuple{Vararg{Variable}}, args...)
 end
 
 #function MP.monomials(vars::TupOrVec{Variable{true}}, degs::AbstractVector{Int}, filter::Function = x->true)
-#    Z = getZfordegs(length(vars), degs, true, z -> filter(Monomial(vars, z)))
+#    Z = _all_exponents(length(vars), degs, true, z -> filter(Monomial(vars, z)))
 #    [Monomial{true}(vars, z) for z in Z]
 #end
 #function MP.monomials(vars::TupOrVec{<:Variable{<:NonCommutative}}, degs::AbstractVector{Int}, filter::Function = x->true)
-#    Z = getZfordegs(length(vars), degs, false, z -> filter(Monomial(vars, z)))
+#    Z = _all_exponents(length(vars), degs, false, z -> filter(Monomial(vars, z)))
 #    v = isempty(Z) ? vars : getvarsforlength(vars, length(first(Z)))
 #    [Monomial(v, z) for z in Z]
 #end

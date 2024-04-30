@@ -44,3 +44,19 @@ end
     @test ordering(x[1]) == order
     @test issorted(monomials(x[1], 0:2))
 end
+
+function _test_less(a, b)
+    @test a < b
+    @test b > a
+end
+
+@testset "LexOrder" begin
+    @polyvar x y monomial_order = LexOrder
+    _test_less(y, y^2)
+    _test_less(x^0, y)
+    _test_less(y^2, x)
+    _test_less(x * y^2, x^2)
+    @test monomials([x, y], 3) == [y^3, y^2 * x, y * x^2, x^3]
+    @test monomials([x, y], 1:2) == [y, y^2, x, x * y, x^2]
+    @test monomials([x, y], [0, 1, 3]) == [1, y, y^3, x, y^2 * x, y * x^2, x^3]
+end
