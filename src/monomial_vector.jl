@@ -186,7 +186,7 @@ function _fill_noncomm_exponents_rec!(Z, z, i, n, deg, ::Type{MP.LexOrder}, filt
     else
         for i in i:i+n-1
             z[i] += 1
-            fillZrec!(Z, z, i, n, deg - 1, LexOrder, filter)
+            _fill_noncomm_exponents_rec!(Z, z, i, n, deg - 1, LexOrder, filter)
             z[i] -= 1
         end
     end
@@ -205,7 +205,7 @@ function _fill_exponents!(
     _error_for_negative_degree(maxdeg)
     z = zeros(Int, maxdeg * n - maxdeg + 1)
     start = length(Z) + 1
-    fillZrec!(Z, z, 1, n, deg, M, filter)
+    _fill_noncomm_exponents_rec!(Z, z, 1, n, deg, M, filter)
     return reverse!(view(Z, start:length(Z)))
 end
 
