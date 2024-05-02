@@ -205,7 +205,7 @@ function _fill_exponents!(
     _error_for_negative_degree(maxdeg)
     z = zeros(Int, maxdeg * n - maxdeg + 1)
     start = length(Z) + 1
-    _fill_noncomm_exponents_rec!(Z, z, 1, n, deg, M, filter)
+    _fill_noncomm_exponents_rec!(Z, z, 1, n, deg, MP.LexOrder, filter)
     return reverse!(view(Z, start:length(Z)))
 end
 
