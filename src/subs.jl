@@ -13,17 +13,15 @@ function fillmap!(
     s::MP.Substitution,
 ) where {C}
     # We may assign a complex or real variable to its value (ordinary substitution).
-    # We may also assign a complex value to its conjugate, or just the real or imaginary parts
-    # Any combination of z, conj(z), real(z), imag(z), imag(conj(z)) can occur in either the polynomial or the substitution,
-    # and we must handle all of them correctly.
-    # Note: This may or may not work... Issues can arise if the substitutions contain the real and imaginary (or only one of
-    # those) of a variable separately whenever vals is not of the correct type:
-    # - Unless subs() originally had a polynomial-valued rhs, vals will be scalars, monomials, or terms. So when we try to
-    #   assign a polynomial to its value (which is necessary, as the one-step substitution of only the real or only the
-    #   imaginary part is incomplete), this is an impossible conversion.
-    # - The coefficients in vals might not be complex-valued; but to assign only a part of the variable, we necessarily need to
-    #   introduce an explicit imaginary coefficient to the value.
-    # Currently, we don't do anything to catch these errors.
+    # We follow the following rules:
+    # - If a single substitution rule determines the value of a real variable, just substitute it.
+    # - If a single substitution rule determines the value of a complex variable or its conjugate, substitute the appropriate
+    #   value whereever something related to this variable is found (i.e., the complex variable, the conjugate variable, or
+    #   its real or imaginary part)
+    # - If a single substitution rule determines the value of the real or imaginary part of a complex variable alone, then only
+    #   replace the real or imaginary parts if they occur explicitly. Don't do a partial substitution, i.e., `z` with the rule
+    #   `zᵣ => 1` is left alone and not changed into `1 + im*zᵢ`. Even if both the real and imaginary parts are substituted as
+    #   two individual rules (which we don't know of in this method), `z` will not be replaced.
     if s.first.kind == REAL
         for j in eachindex(vars)
             if vars[j] == s.first
@@ -51,28 +49,20 @@ function fillmap!(
                         "Cannot assign a complex value to the real part of an expression",
                     )
                     value = real(s.second) # just to make sure the type is correct
-                    if vars[j].kind == COMPLEX
-                        vals[j] = value + im * imag(vals[j])
-                    elseif vars[j].kind == CONJ
-                        vals[j] = value - im * imag(vals[j])
-                    elseif vars[j].kind == REAL_PART
+                    if vars[j].kind == REAL_PART
                         vals[j] = value
                     end
-                    # else we know the real part but use the imaginary part; do nothing
+                    # don't do a partial substitution
                 else
                     @assert(s.first.kind == IMAG_PART)
                     isreal(s.second) || error(
                         "Cannot assign a complex value to the imaginary part of an expression",
                     )
                     value = real(s.second) # just to make sure the type is correct
-                    if vars[j].kind == COMPLEX
-                        vals[j] = real(vals[j]) + im * value
-                    elseif vars[j].kind == CONJ
-                        vals[j] = real(vals[j]) - im * value
-                    elseif vars[j].kind == IMAG_PART
+                    if vars[j].kind == IMAG_PART
                         vals[j] = value
                     end
-                    # else we know the imaginary part but use the real part; do nothing
+                    # don't do a partial substitution
                 end
             end
         end
