@@ -1,4 +1,4 @@
-export Variable, @polyvar, @ncpolyvar, @polycvar
+export Variable, @polyvar, @ncpolyvar, @complex_polyvar
 
 function polyarrayvar(
     variable_order,
@@ -103,7 +103,7 @@ macro ncpolyvar(args...)
     $(Expr(:tuple, esc.(vars)...)))
 end
 
-macro polycvar(args...)
+macro complex_polyvar(args...)
     pos_args, variable_order, monomial_order, complex_kind =
         _extract_kw_args(args, :($(Commutative{CreationOrder})), COMPLEX)
     vars, exprs =
