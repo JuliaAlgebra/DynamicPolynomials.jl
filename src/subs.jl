@@ -51,8 +51,9 @@ function fillmap!(
                     value = real(s.second) # just to make sure the type is correct
                     if vars[j].kind == REAL_PART
                         vals[j] = value
+                    elseif vars[j].kind != IMAG_PART
+                        error("Found complex variable with substitution of real part - not implemented")
                     end
-                    # don't do a partial substitution
                 else
                     @assert(s.first.kind == IMAG_PART)
                     isreal(s.second) || error(
@@ -61,8 +62,9 @@ function fillmap!(
                     value = real(s.second) # just to make sure the type is correct
                     if vars[j].kind == IMAG_PART
                         vals[j] = value
+                    elseif vars[j].kind != REAL_PART
+                        error("Found complex variable with substitution of imaginary part - not implemented")
                     end
-                    # don't do a partial substitution
                 end
             end
         end
