@@ -52,7 +52,9 @@ function fillmap!(
                     if vars[j].kind == REAL_PART
                         vals[j] = value
                     elseif vars[j].kind != IMAG_PART
-                        error("Found complex variable with substitution of real part - not implemented")
+                        error(
+                            "Found complex variable with substitution of real part - not implemented",
+                        )
                     end
                 else
                     @assert(s.first.kind == IMAG_PART)
@@ -63,7 +65,9 @@ function fillmap!(
                     if vars[j].kind == IMAG_PART
                         vals[j] = value
                     elseif vars[j].kind != REAL_PART
-                        error("Found complex variable with substitution of imaginary part - not implemented")
+                        error(
+                            "Found complex variable with substitution of imaginary part - not implemented",
+                        )
                     end
                 end
             end
