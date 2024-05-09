@@ -112,22 +112,12 @@
         @complex_polyvar z
         pc = z^3 + 2real(z) - 7imag(z^4)
         @test pc(z => 2 + 3im) == 798 + 9im
-        @test pc(conj(z) => 2 - 3im) == 798 + 9im
-        @test real(pc)(z => 2 + 3im) == 798
         err = ArgumentError(
-            "Variable `zᵢ` was not assigned a value. Use `subs` to substitute only a subset of the variables.",
+            "Substitution with complex variables requires the ordinary_variable in the substitution specification"
         )
-        @test_throws err real(pc)(real(z) => 2)
-        @test subs(real(pc), real(z) => 2) ==
-              12 - 224imag(z) - 6imag(z)^2 + 56imag(z)^3
-        @test real(pc)([real(z), imag(z)] => [2, 3]) == 798
-        err = ErrorException(
-            "Found complex variable with substitution of real part - not implemented",
-        )
-        @test_throws err subs(pc, real(z) => 2)
-        err = ErrorException(
-            "Found complex variable with substitution of imaginary part - not implemented",
-        )
-        @test_throws err subs(pc, imag(z) => 3)
+        @test_throws err pc(conj(z) => 2 - 3im)
+        @test_throws err pc(real(z) => 2)
+        @test_throws err pc(imag(z) => 3)
+        @test real(pc)(z => 2 + 3im) == 798
     end
 end

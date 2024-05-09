@@ -30,45 +30,22 @@ function fillmap!(
             end
         end
     else
+        s.first.kind == COMPLEX || throw(
+            ArgumentError(
+                "Substitution with complex variables requires the ordinary_variable in the substitution specification",
+            ),
+        )
         for j in eachindex(vars)
             if vars[j].variable_order.order.id ==
                s.first.variable_order.order.id
-                if s.first.kind == COMPLEX || s.first.kind == CONJ
-                    value = s.first.kind == CONJ ? conj(s.second) : s.second
-                    if vars[j].kind == COMPLEX
-                        vals[j] = value
-                    elseif vars[j].kind == CONJ
-                        vals[j] = conj(value)
-                    elseif vars[j].kind == REAL_PART
-                        vals[j] = real(value)
-                    else
-                        vals[j] = imag(value)
-                    end
-                elseif s.first.kind == REAL_PART
-                    isreal(s.second) || error(
-                        "Cannot assign a complex value to the real part of an expression",
-                    )
-                    value = real(s.second) # just to make sure the type is correct
-                    if vars[j].kind == REAL_PART
-                        vals[j] = value
-                    elseif vars[j].kind != IMAG_PART
-                        error(
-                            "Found complex variable with substitution of real part - not implemented",
-                        )
-                    end
+                if vars[j].kind == COMPLEX
+                    vals[j] = s.second
+                elseif vars[j].kind == CONJ
+                    vals[j] = conj(s.second)
+                elseif vars[j].kind == REAL_PART
+                    vals[j] = real(s.second)
                 else
-                    @assert(s.first.kind == IMAG_PART)
-                    isreal(s.second) || error(
-                        "Cannot assign a complex value to the imaginary part of an expression",
-                    )
-                    value = real(s.second) # just to make sure the type is correct
-                    if vars[j].kind == IMAG_PART
-                        vals[j] = value
-                    elseif vars[j].kind != REAL_PART
-                        error(
-                            "Found complex variable with substitution of imaginary part - not implemented",
-                        )
-                    end
+                    vals[j] = imag(s.second)
                 end
             end
         end
