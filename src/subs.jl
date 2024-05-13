@@ -9,23 +9,46 @@ end
 
 function fillmap!(
     vals,
-    vars::Vector{<:Variable{<:NonCommutative}},
+    vars::Vector{<:Variable{C}},
     s::MP.Substitution,
-)
-    for j in eachindex(vars)
-        if vars[j] == s.first
-            vals[j] = s.second
+) where {C}
+    # We may assign a complex or real variable to its value (ordinary substitution).
+    # We follow the following rules:
+    # - If a single substitution rule determines the value of a real variable, just substitute it.
+    # - If a single substitution rule determines the value of a complex variable or its conjugate, substitute the appropriate
+    #   value whereever something related to this variable is found (i.e., the complex variable, the conjugate variable, or
+    #   its real or imaginary part)
+    # - If a single substitution rule determines the value of the real or imaginary part of a complex variable alone, then only
+    #   replace the real or imaginary parts if they occur explicitly. Don't do a partial substitution, i.e., `z` with the rule
+    #   `zᵣ => 1` is left alone and not changed into `1 + im*zᵢ`. Even if both the real and imaginary parts are substituted as
+    #   two individual rules (which we don't know of in this method), `z` will not be replaced.
+    if s.first.kind == REAL
+        for j in eachindex(vars)
+            if vars[j] == s.first
+                vals[j] = s.second
+                C == Commutative && break
+            end
         end
-    end
-end
-function fillmap!(
-    vals,
-    vars::Vector{<:Variable{<:Commutative}},
-    s::MP.Substitution,
-)
-    j = findfirst(isequal(s.first), vars)
-    if j !== nothing
-        vals[j] = s.second
+    else
+        s.first.kind == COMPLEX || throw(
+            ArgumentError(
+                "Substitution with complex variables requires the ordinary_variable in the substitution specification",
+            ),
+        )
+        for j in eachindex(vars)
+            if vars[j].variable_order.order.id ==
+               s.first.variable_order.order.id
+                if vars[j].kind == COMPLEX
+                    vals[j] = s.second
+                elseif vars[j].kind == CONJ
+                    vals[j] = conj(s.second)
+                elseif vars[j].kind == REAL_PART
+                    vals[j] = real(s.second)
+                else
+                    vals[j] = imag(s.second)
+                end
+            end
+        end
     end
 end
 function fillmap!(vals, vars, s::MP.AbstractMultiSubstitution)

@@ -88,6 +88,28 @@ end
 function MultivariatePolynomials.maxdegree(x::MonomialVector)
     return isempty(x) ? 0 : maximum(sum.(x.Z))
 end
+# Complex-valued degrees for monomial vectors
+for (fun, call, def, ret) in [
+    (:extdegree_complex, :extrema, (0, 0), :((min(v1, v2), max(v1, v2)))),
+    (:mindegree_complex, :minimum, 0, :(min(v1, v2))),
+    (:maxdegree_complex, :maximum, 0, :(max(v1, v2))),
+]
+    eval(quote
+        function MultivariatePolynomials.$fun(x::MonomialVector)
+            isempty(x) && return $def
+            vars = variables(x)
+            @assert(!any(isrealpart, vars) && !any(isimagpart, vars))
+            grouping = isconj.(vars)
+            v1 = $call(sum(z[grouping]) for z in x.Z)
+            grouping = map(!, grouping)
+            v2 = $call(sum(z[grouping]) for z in x.Z)
+            return $ret
+        end
+    end)
+end
+# faster complex-related functions
+Base.isreal(x::MonomialVector) = all(isreal, x.vars)
+Base.conj(x::MonomialVector) = MonomialVector(conj.(x.vars), x.Z)
 
 MP.variables(m::Union{Monomial,MonomialVector}) = m.vars
 
@@ -118,7 +140,11 @@ end
 # TODO replace by MP function
 function _error_for_negative_degree(deg)
     if deg < 0
-        throw(ArgumentError("The degree should be a nonnegative number but the provided degree `$deg` is negative."))
+        throw(
+            ArgumentError(
+                "The degree should be a nonnegative number but the provided degree `$deg` is negative.",
+            ),
+        )
     end
 end
 

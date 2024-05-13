@@ -55,10 +55,16 @@
         p.x[2] == x
 
         @inferred DynamicPolynomials.Polynomial(i -> float(i), [x, x * x])
-        @inferred DynamicPolynomials.Polynomial(i -> float(i), MonomialVector([x * x, x]))
+        @inferred DynamicPolynomials.Polynomial(
+            i -> float(i),
+            MonomialVector([x * x, x]),
+        )
         for p in (
             DynamicPolynomials.Polynomial(i -> float(i), [x, x * x]),
-            DynamicPolynomials.Polynomial(i -> float(i), MonomialVector([x * x, x])),
+            DynamicPolynomials.Polynomial(
+                i -> float(i),
+                MonomialVector([x * x, x]),
+            ),
         )
             @test typeof(p) == PTF
             @test p.a == [1.0, 2.0]
@@ -130,5 +136,16 @@
         )
         @test_throws err t(y => 1)
         @test_throws err p(y => 1)
+
+        @complex_polyvar z
+        pc = z^3 + 2real(z) - 7imag(z^4)
+        @test pc(z => 2 + 3im) == 798 + 9im
+        err = ArgumentError(
+            "Substitution with complex variables requires the ordinary_variable in the substitution specification"
+        )
+        @test_throws err pc(conj(z) => 2 - 3im)
+        @test_throws err pc(real(z) => 2)
+        @test_throws err pc(imag(z) => 3)
+        @test real(pc)(z => 2 + 3im) == 798
     end
 end

@@ -27,14 +27,19 @@ function (==)(
     x::Variable{<:AnyCommutative{CreationOrder}},
     y::Variable{<:AnyCommutative{CreationOrder}},
 )
-    return x.variable_order.order.id == y.variable_order.order.id
+    return x.variable_order.order.id == y.variable_order.order.id &&
+           x.kind == y.kind
 end
 
 function Base.isless(
     x::Variable{<:AnyCommutative{CreationOrder}},
     y::Variable{<:AnyCommutative{CreationOrder}},
 )
-    return isless(y.variable_order.order.id, x.variable_order.order.id)
+    if x.variable_order.order.id == y.variable_order.order.id
+        return isless(y.kind, x.kind)
+    else
+        return isless(y.variable_order.order.id, x.variable_order.order.id)
+    end
 end
 
 # Comparison of Monomial
