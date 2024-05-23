@@ -1,4 +1,5 @@
-export Monomial
+# We don't export `Monomial` to avoid a clash with `MultivariateBases.Monomial`
+# export Monomial
 
 const TupOrVec{T} = Union{AbstractVector{T},Tuple{Vararg{T}}}
 
