@@ -67,9 +67,9 @@ import MultivariatePolynomials as MP
         @polyvar cp
         XT = typeof(cp)
         @test one(XT) == 1
-        @test_throws ErrorException Monomial(2)
-        @test (@inferred Monomial(1)) isa monomial_type(XT)
-        @test Monomial(1) == 1
+        @test_throws ErrorException DynamicPolynomials.Monomial(2)
+        @test (@inferred DynamicPolynomials.Monomial(1)) isa monomial_type(XT)
+        @test DynamicPolynomials.Monomial(1) == 1
         @test_throws ErrorException convert(monomial_type(XT), 2)
         @test (@inferred convert(monomial_type(XT), 1)) isa monomial_type(XT)
         @test convert(monomial_type(XT), 1) == 1
@@ -83,8 +83,8 @@ import MultivariatePolynomials as MP
         @test one(x^2) isa monomial_type(XT)
 
         @polyvar y
-        @test Monomial([x, y], [1, 0]) == x
-        @test x != Monomial([x, y], [0, 1])
+        @test DynamicPolynomials.Monomial([x, y], [1, 0]) == x
+        @test x != DynamicPolynomials.Monomial([x, y], [0, 1])
     end
     @testset "MonomialVector" begin
         @polyvar x y
@@ -118,25 +118,25 @@ import MultivariatePolynomials as MP
     end
     @testset "NC Variable * Monomial" begin
         @ncpolyvar x y z
-        m = y * Monomial([y, z, x, z], [0, 0, 2, 1])
+        m = y * DynamicPolynomials.Monomial([y, z, x, z], [0, 0, 2, 1])
         @test variables(m) == [y, z, x, z]
         @test m.z == [1, 0, 2, 1]
-        m = x * Monomial([z, y, y, z], [0, 0, 2, 1])
+        m = x * DynamicPolynomials.Monomial([z, y, y, z], [0, 0, 2, 1])
         @test variables(m) == [z, x, y, y, z]
         @test m.z == [0, 1, 0, 2, 1]
-        m = x * Monomial([y, z, y, z], [0, 0, 2, 1])
+        m = x * DynamicPolynomials.Monomial([y, z, y, z], [0, 0, 2, 1])
         @test variables(m) == [y, z, x, y, z]
         @test m.z == [0, 0, 1, 2, 1]
     end
     @testset "NC Monomial * Variable" begin
         @ncpolyvar x y z
-        m = Monomial([x, z, x, y], [2, 1, 0, 0]) * y
+        m = DynamicPolynomials.Monomial([x, z, x, y], [2, 1, 0, 0]) * y
         @test variables(m) == [x, z, x, y]
         @test m.z == [2, 1, 0, 1]
-        m = Monomial([x, y, y, x], [2, 1, 0, 0]) * z
+        m = DynamicPolynomials.Monomial([x, y, y, x], [2, 1, 0, 0]) * z
         @test variables(m) == [x, y, y, z, x]
         @test m.z == [2, 1, 0, 1, 0]
-        m = Monomial([x, y, x, y], [2, 1, 0, 0]) * z
+        m = DynamicPolynomials.Monomial([x, y, x, y], [2, 1, 0, 0]) * z
         @test variables(m) == [x, y, z, x, y]
         @test m.z == [2, 1, 1, 0, 0]
     end
@@ -157,7 +157,7 @@ import MultivariatePolynomials as MP
         @test mi == (x^4 / 4)
         @test MP.coefficient_type(mi) == Rational{Int}
 
-        m = Monomial([x, y, z], [1, 2, 3])
+        m = DynamicPolynomials.Monomial([x, y, z], [1, 2, 3])
         mi = DynamicPolynomials.MP.antidifferentiate(m, z)
         @test mi == (x*y^2*z^4) / 4
         @test MP.coefficient_type(mi) == Rational{Int}
