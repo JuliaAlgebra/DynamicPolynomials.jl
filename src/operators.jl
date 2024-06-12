@@ -15,7 +15,7 @@ end
 Base.:(+)(x::DMonomialLike, y::DMonomialLike) = MP.term(x) + MP.term(y)
 Base.:(-)(x::DMonomialLike, y::DMonomialLike) = MP.term(x) - MP.term(y)
 
-_getindex(p::Polynomial, i::Int) = p[i]
+_getindex(p::Polynomial, i::Int) = MP.terms(p)[i]
 _getindex(t::_Term, ::Int) = t
 function _plusorminus_to!(
     a::Vector{U},
