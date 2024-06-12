@@ -184,7 +184,7 @@ function MP.remove_monomials(p::Polynomial, x::MonomialVector)
     # use the fact that monomials are sorted to do this O(n) instead of O(n^2)
     j = 1
     I = Int[]
-    for (i, t) in enumerate(p)
+    for (i, t) in enumerate(MP.terms(p))
         while j <= length(x) && x[j] < MP.monomial(t)
             j += 1
         end
