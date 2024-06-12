@@ -1,8 +1,5 @@
 import Base.==
 
-#Base.iszero(t::Term) = iszero(MP.coefficient(t))
-Base.iszero(p::Polynomial) = isempty(p)
-
 # TODO This should be in Base with T instead of Variable{V,M}.
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/3
 function (==)(x::Vector{Variable{V,M}}, y::Vector{Variable{V,M}}) where {V,M}
