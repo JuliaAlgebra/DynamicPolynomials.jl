@@ -1,8 +1,5 @@
 import Base.==
 
-#Base.iszero(t::Term) = iszero(MP.coefficient(t))
-Base.iszero(p::Polynomial) = isempty(p)
-
 # TODO This should be in Base with T instead of Variable{V,M}.
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/3
 function (==)(x::Vector{Variable{V,M}}, y::Vector{Variable{V,M}}) where {V,M}
@@ -162,10 +159,10 @@ end
 # Comparison of Term
 function (==)(p::Polynomial{V,M}, q::Polynomial{V,M}) where {V,M}
     # terms should be sorted and without zeros
-    if length(p) != length(q)
+    if MP.nterms(p) != MP.nterms(q)
         return false
     end
-    for i in 1:length(p)
+    for i in eachindex(p.a)
         if p.x[i] != q.x[i]
             # There should not be zero terms
             @assert p.a[i] != 0

@@ -137,14 +137,6 @@ end
 #Base.convert(::Type{term_type{V,M}}, p::TermContainer{V,M}) where {V,M} = p
 #Base.convert(::Type{term_type{V,M,T}}, p::TermContainer{V,M,T}) where {V,M,T} = p
 
-Base.length(p::Polynomial) = length(p.a)
-Base.isempty(p::Polynomial) = isempty(p.a)
-Base.iterate(p::Polynomial) = isempty(p) ? nothing : (p[1], 1)
-function Base.iterate(p::Polynomial, state::Int)
-    return state < length(p) ? (p[state+1], state + 1) : nothing
-end
-#eltype(::Type{Polynomial{V,M,T}}) where {V,M,T} = T
-Base.getindex(p::Polynomial, I::Int) = MP.term(p.a[I[1]], p.x[I[1]])
 
 #Base.transpose(p::Polynomial) = Polynomial(map(transpose, p.a), p.x) # FIXME invalid age range update
 
@@ -192,7 +184,7 @@ function MP.remove_monomials(p::Polynomial, x::MonomialVector)
     # use the fact that monomials are sorted to do this O(n) instead of O(n^2)
     j = 1
     I = Int[]
-    for (i, t) in enumerate(p)
+    for (i, t) in enumerate(MP.terms(p))
         while j <= length(x) && x[j] < MP.monomial(t)
             j += 1
         end

@@ -101,12 +101,12 @@ function _mul(
     else
         allvars, maps = mergevars([MP.variables(p), MP.variables(q)])
     end
-    N = length(p) * length(q)
+    N = MP.nterms(p) * MP.nterms(q)
     Z = Vector{Vector{Int}}(undef, N)
     a = Vector{T}(undef, N)
     i = 0
-    for u in p
-        for v in q
+    for u in MP.terms(p)
+        for v in MP.terms(q)
             if samevars
                 z = MP.monomial(u).z + MP.monomial(v).z
             else
