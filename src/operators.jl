@@ -6,12 +6,6 @@
 Base.:(^)(x::Variable{V,M}, i::Int) where {V,M} = Monomial{V,M}([x], [i])
 Base.:(^)(x::Monomial{<:Commutative}, i::Int) = Monomial(copy(x.vars), i * x.z)
 
-myminivect(x::T, y::T) where {T} = [x, y]
-function myminivect(x::S, y::T) where {S,T}
-    U = promote_type(S, T)
-    return [U(x), U(y)]
-end
-
 Base.:(+)(x::DMonomialLike, y::DMonomialLike) = MP.term(x) + MP.term(y)
 Base.:(-)(x::DMonomialLike, y::DMonomialLike) = MP.term(x) - MP.term(y)
 
