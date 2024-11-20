@@ -138,7 +138,7 @@ end
 
 function _mono_eval(z::Vector{Int}, vals::AbstractVector)
     if length(z) != length(vals)
-        error("")
+        error("Cannot evaluate a polynomial of `$(length(z))` variables with only `$(length(vals))` values.")
     end
     if isempty(z)
         return one(eltype(vals))^1

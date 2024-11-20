@@ -18,6 +18,8 @@ end
     alloc_test_lt(() -> p(x => v), 300)
     alloc_test_lt(() -> substitute(Eval(), p, v), 0)
     alloc_test_lt(() -> p(v), 0)
+    err = ErrorException("Cannot evaluate a polynomial of `3` variables with only `2` values.")
+    @test_throws err p([1, 2])
 end
 
 @testset "Issue #70" begin
