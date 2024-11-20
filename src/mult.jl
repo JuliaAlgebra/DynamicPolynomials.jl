@@ -39,7 +39,9 @@ end
 include("cmult.jl")
 include("ncmult.jl")
 
-MP.left_constant_mult(α, x::Monomial) = MP.term(α, MA.mutable_copy(x))
+function MP.left_constant_mult(α, x::Monomial)
+    MP.term(α, x) # MA.mutable_copy(x))
+end
 
 function zero_with_variables(
     ::Type{Polynomial{V,M,T}},
