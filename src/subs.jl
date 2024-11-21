@@ -207,6 +207,16 @@ function MP.substitute(
     return MP.substitute(st, p, subsmap(st, MP.variables(p), s))
 end
 
+# TODO resolve ambiguity. Can remove after:
+# https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/pull/305
+function MP.substitute(
+    st::MP.AbstractSubstitutionType,
+    p::PolyType,
+    s::MP.AbstractMultiSubstitution,
+)
+    return MP.substitute(st, p, subsmap(st, MP.variables(p), (s,)))
+end
+
 function MP.substitute(
     st::MP.AbstractSubstitutionType,
     p::PolyType,
