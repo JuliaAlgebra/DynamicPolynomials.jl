@@ -136,7 +136,7 @@ function _add_variables!(p::PolyType, q::PolyType)
     return p
 end
 
-function _mono_eval(z::Vector{Int}, vals::AbstractVector)
+function _mono_eval(z::Union{Vector{Int},Tuple}, vals::AbstractVector)
     if length(z) != length(vals)
         error("Cannot evaluate a polynomial of `$(length(z))` variables with only `$(length(vals))` values.")
     end
