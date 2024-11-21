@@ -136,8 +136,10 @@ function _add_variables!(p::PolyType, q::PolyType)
     return p
 end
 
-function monoeval(z::Vector{Int}, vals::AbstractVector)
-    @assert length(z) == length(vals)
+function _mono_eval(z::Union{Vector{Int},Tuple}, vals::AbstractVector)
+    if length(z) != length(vals)
+        error("Cannot evaluate a polynomial of `$(length(z))` variables with only `$(length(vals))` values.")
+    end
     if isempty(z)
         return one(eltype(vals))^1
     end
@@ -154,24 +156,24 @@ function monoeval(z::Vector{Int}, vals::AbstractVector)
     return val
 end
 
-_subs(st, ::Variable, vals) = monoeval([1], vals::AbstractVector)
-_subs(st, m::Monomial, vals) = monoeval(m.z, vals::AbstractVector)
-function _subs(st, t::_Term, vals)
-    return MP.coefficient(t) * monoeval(MP.monomial(t).z, vals::AbstractVector)
+MP.substitute(::MP.AbstractSubstitutionType, ::Variable, vals::AbstractVector) = _mono_eval((1,), vals)
+MP.substitute(::MP.AbstractSubstitutionType, m::Monomial, vals::AbstractVector) = _mono_eval(m.z, vals)
+function MP.substitute(st::MP.AbstractSubstitutionType, t::_Term, vals::AbstractVector)
+    return MP.coefficient(t) * MP.substitute(st, MP.monomial(t), vals)
 end
-function _subs(
+function MP.substitute(
     ::MP.Eval,
     p::Polynomial{V,M,T},
     vals::AbstractVector{S},
 ) where {V,M,T,S}
     # I need to check for iszero otherwise I get : ArgumentError: reducing over an empty collection is not allowed
     if iszero(p)
-        zero(Base.promote_op(*, S, T))
+        zero(MA.promote_operation(*, S, T))
     else
-        sum(i -> p.a[i] * monoeval(p.x.Z[i], vals), eachindex(p.a))
+        sum(i -> p.a[i] * _mono_eval(p.x.Z[i], vals), eachindex(p.a))
     end
 end
-function _subs(
+function MP.substitute(
     ::MP.Subs,
     p::Polynomial{V,M,T},
     vals::AbstractVector{S},
@@ -182,7 +184,7 @@ function _subs(
         mergevars_of(Variable{V,M}, vals)[1],
     )
     for i in eachindex(p.a)
-        MA.operate!(+, q, p.a[i] * monoeval(p.x.Z[i], vals))
+        MA.operate!(+, q, p.a[i] * _mono_eval(p.x.Z[i], vals))
     end
     return q
 end
@@ -200,9 +202,27 @@ end
 function MP.substitute(
     st::MP.AbstractSubstitutionType,
     p::PolyType,
+    s::MP.AbstractSubstitution...,
+)
+    return MP.substitute(st, p, subsmap(st, MP.variables(p), s))
+end
+
+# TODO resolve ambiguity. Can remove after:
+# https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/pull/305
+function MP.substitute(
+    st::MP.AbstractSubstitutionType,
+    p::PolyType,
+    s::MP.AbstractMultiSubstitution,
+)
+    return MP.substitute(st, p, subsmap(st, MP.variables(p), (s,)))
+end
+
+function MP.substitute(
+    st::MP.AbstractSubstitutionType,
+    p::PolyType,
     s::MP.Substitutions,
 )
-    return _subs(st, p, subsmap(st, MP.variables(p), s))
+    return MP.substitute(st, p, subsmap(st, MP.variables(p), s))
 end
 
 (v::Variable)(s::MP.AbstractSubstitution...) = MP.substitute(MP.Eval(), v, s)
@@ -215,20 +235,20 @@ function (p::Monomial)(x::NTuple{N,<:Number}) where {N}
     return MP.substitute(MP.Eval(), p, variables(p) => x)
 end
 function (p::Monomial)(x::AbstractVector{<:Number})
-    return MP.substitute(MP.Eval(), p, variables(p) => x)
+    return MP.substitute(MP.Eval(), p, x)
 end
 (p::Monomial)(x::Number...) = MP.substitute(MP.Eval(), p, variables(p) => x)
 function (p::_Term)(x::NTuple{N,<:Number}) where {N}
     return MP.substitute(MP.Eval(), p, variables(p) => x)
 end
 function (p::_Term)(x::AbstractVector{<:Number})
-    return MP.substitute(MP.Eval(), p, variables(p) => x)
+    return MP.substitute(MP.Eval(), p, x)
 end
 (p::_Term)(x::Number...) = MP.substitute(MP.Eval(), p, variables(p) => x)
 function (p::Polynomial)(x::NTuple{N,<:Number}) where {N}
     return MP.substitute(MP.Eval(), p, variables(p) => x)
 end
 function (p::Polynomial)(x::AbstractVector{<:Number})
-    return MP.substitute(MP.Eval(), p, variables(p) => x)
+    return MP.substitute(MP.Eval(), p, x)
 end
 (p::Polynomial)(x::Number...) = MP.substitute(MP.Eval(), p, variables(p) => x)

@@ -3,7 +3,25 @@ using MultivariatePolynomials
 using Test
 using LinearAlgebra
 
+function alloc_test_lt(f, n)
+    f() # compile
+    @test n >= @allocated f()
+end
+
 # TODO move to MP
+@testset "See https://github.com/jump-dev/SumOfSquares.jl/issues/388" begin
+    @polyvar x[1:3]
+    p = sum(x)
+    v = map(_ -> 1, x)
+    # I get 208 but let's give some margin
+    alloc_test_lt(() -> substitute(Eval(), p, x => v), 300)
+    alloc_test_lt(() -> p(x => v), 300)
+    alloc_test_lt(() -> substitute(Eval(), p, v), 0)
+    alloc_test_lt(() -> p(v), 0)
+    err = ErrorException("Cannot evaluate a polynomial of `3` variables with only `2` values.")
+    @test_throws err p([1, 2])
+end
+
 @testset "Issue #70" begin
     @ncpolyvar y0 y1 x0 x1
     p = x1 * x0 * x1
