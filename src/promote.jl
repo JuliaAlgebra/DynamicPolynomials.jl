@@ -1,4 +1,10 @@
 function MP.promote_rule_constant(
+    ::Type{Any},
+    ::Type{<:DMonomialLike{V,M}},
+) where {V,M}
+    return Any
+end
+function MP.promote_rule_constant(
     ::Type{T},
     ::Type{<:DMonomialLike{V,M}},
 ) where {V,M,T}

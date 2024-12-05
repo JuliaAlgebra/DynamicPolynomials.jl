@@ -82,4 +82,10 @@ import DynamicPolynomials
 end
 end
 
+@testset "Issue #166: promote_operation with Any" begin
+    DynamicPolynomials.@polyvar x
+    V = typeof(x)
+    @test promote_type(V, Any) == Any
+end
+
 include("mvp.jl")
