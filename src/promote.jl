@@ -5,6 +5,24 @@ function MP.promote_rule_constant(
     return Any
 end
 function MP.promote_rule_constant(
+    ::Type{Any},
+    ::Type{_Term{V,M,T}},
+) where {V,M,T}
+    return Any
+end
+function MP.promote_rule_constant(
+    ::Type{Any},
+    ::Type{_Term{V,M,T}},
+) where {V,M,T}
+    return Any
+end
+function MP.promote_rule_constant(
+    ::Type{Any},
+    ::Type{<:TermPoly{V,M,T}},
+) where {V,M,T}
+    return Any
+end
+function MP.promote_rule_constant(
     ::Type{T},
     ::Type{<:DMonomialLike{V,M}},
 ) where {V,M,T}
