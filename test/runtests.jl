@@ -86,6 +86,7 @@ end
     DynamicPolynomials.@polyvar x
     V = typeof(x)
     @test promote_type(V, Any) == Any
+    @test promote_type(typeof(x/2), Any) == Any
 end
 
 include("mvp.jl")
