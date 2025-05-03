@@ -1,5 +1,10 @@
 export MonomialVector
 
+struct AllMonomials{V,M} <: AbstractVector{Monomial{V,M}}
+    vars::Vector{Variable{V,M}}
+end
+Base.IteratorSize(::Type{<:AllMonomials}) = Base.IsInfinite()
+
 # Invariant: Always sorted and no zero vector
 struct MonomialVector{V,M} <: AbstractVector{Monomial{V,M}}
     vars::Vector{Variable{V,M}}
@@ -148,14 +153,14 @@ function _error_for_negative_degree(deg)
     end
 end
 
-const _Lex = Union{MP.LexOrder,MP.InverseLexOrder}
-
-_last_lex_index(n, ::Type{MP.LexOrder}) = n
-_prev_lex_index(i, ::Type{MP.LexOrder}) = i - 1
-_not_first_indices(n, ::Type{MP.LexOrder}) = n:-1:2
-_last_lex_index(_, ::Type{MP.InverseLexOrder}) = 1
-_prev_lex_index(i, ::Type{MP.InverseLexOrder}) = i + 1
-_not_first_indices(n, ::Type{MP.InverseLexOrder}) = 1:(n-1)
+    I = _not_first_indices(n, M)
+    if state == 0
+        return (zeros(Int, it.num_vars), 1)
+    end
+    z = zeros(Int, it.num_vars)
+    z[_last_lex_index(it.num_vars, M)] = state
+    return (z, state + 1)
+end
 
 function _fill_exponents!(Z, n, degs, ::Type{Commutative}, M::Type{<:_Lex}, filter::Function)
     _error_for_negative_degree.(degs)
@@ -266,7 +271,7 @@ function _all_exponents(
     ::Type{M},
     filter::Function,
 ) where {V,M}
-    Z = Vector{Vector{Int}}()
+    Z = Vector{Int}[]
     _fill_exponents!(Z, n, degs, V, M, filter)
     _isless = let M = M
         (a, b) -> MP.compare(a, b, M) < 0
@@ -390,7 +395,7 @@ end
 function MonomialVector{V,M}(X::DMonoVec{V,M}) where {V,M}
     allvars, Z = buildZvarsvec(Variable{V,M}, X)
     _isless = let M = M
-        (a, b) -> MP.compare(a, b, M) < 0
+        (a, b) -> cmp(M(), a, b) < 0
     end
     sort!(Z, lt = _isless)
     dups = findall(i -> Z[i] == Z[i-1], 2:length(Z))

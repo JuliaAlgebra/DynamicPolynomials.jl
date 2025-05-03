@@ -13,8 +13,8 @@ end
 function _less(a, b)
     @test a < b
     @test b > a
-    @test compare(monomial(a), b) < 0
-    @test compare(b, monomial(a)) > 0
+    @test cmp(monomial(a), b) < 0
+    @test cmp(b, monomial(a)) > 0
 end
 @testset "Issue 152" begin
     @polyvar x y monomial_order=LexOrder
