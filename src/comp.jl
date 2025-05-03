@@ -31,6 +31,10 @@ function Base.cmp(
     end
 end
 
+# TODO remove
+Base.:(==)(x::Variable, y::Variable) = iszero(cmp(x, y))
+Base.:(==)(x::Monomial, y::Monomial) = iszero(cmp(x, y))
+
 # Comparison of MonomialVector
 function (==)(x::MonomialVector{V,M}, y::MonomialVector{V,M}) where {V,M}
     if length(x.Z) != length(y.Z)

@@ -215,7 +215,7 @@ function MonomialVector(
     )) do z
         filter(Monomial(vars, z))
     end
-    return MonomialVector(v, Z)
+    return MonomialVector(vars, collect(Z))
 end
 
 function MonomialVector(
