@@ -2,7 +2,7 @@ import Base.==
 
 # TODO This should be in Base with T instead of Variable{V,M}.
 # See https://github.com/blegat/MultivariatePolynomials.jl/issues/3
-function (==)(x::Vector{Variable{V,M}}, y::Vector{Variable{V,M}}) where {V,M}
+function Base.:(==)(x::Vector{Variable{V,M}}, y::Vector{Variable{V,M}}) where {V,M}
     if length(x) != length(y)
         false
     else
@@ -20,118 +20,15 @@ end
 
 const AnyCommutative{O} = Union{Commutative{O},NonCommutative{O}}
 
-function (==)(
-    x::Variable{<:AnyCommutative{CreationOrder}},
-    y::Variable{<:AnyCommutative{CreationOrder}},
-)
-    return x.variable_order.order.id == y.variable_order.order.id &&
-           x.kind == y.kind
-end
-
-function Base.isless(
+function Base.cmp(
     x::Variable{<:AnyCommutative{CreationOrder}},
     y::Variable{<:AnyCommutative{CreationOrder}},
 )
     if x.variable_order.order.id == y.variable_order.order.id
-        return isless(y.kind, x.kind)
+        return cmp(y.kind, x.kind)
     else
-        return isless(y.variable_order.order.id, x.variable_order.order.id)
+        return cmp(y.variable_order.order.id, x.variable_order.order.id)
     end
-end
-
-# Comparison of Monomial
-
-function MP.compare(x::Monomial{V,M}, y::Monomial{V,M}) where {V,M}
-    return MP.compare(x, y, M)
-end
-
-function MP.compare(
-    x::Monomial{V},
-    y::Monomial{V},
-    ::Type{MP.InverseLexOrder},
-) where {V}
-    i = MP.nvariables(x)
-    j = MP.nvariables(y)
-    @inbounds while i >= 1 && j >= 1
-        if x.vars[i] < y.vars[j]
-            if x.z[i] == 0
-                i -= 1
-            else
-                return 1
-            end
-        elseif x.vars[i] > y.vars[j]
-            if y.z[j] == 0
-                j -= 1
-            else
-                return -1
-            end
-        elseif x.z[i] != y.z[j]
-            return x.z[i] - y.z[j]
-        else
-            i -= 1
-            j -= 1
-        end
-    end
-    return 0
-end
-
-function MP.compare(
-    x::Monomial{V},
-    y::Monomial{V},
-    ::Type{MP.LexOrder},
-) where {V}
-    i = j = 1
-    @inbounds while i <= nvariables(x) && j <= nvariables(y)
-        if x.vars[i] > y.vars[j]
-            if x.z[i] == 0
-                i += 1
-            else
-                return 1
-            end
-        elseif x.vars[i] < y.vars[j]
-            if y.z[j] == 0
-                j += 1
-            else
-                return -1
-            end
-        elseif x.z[i] != y.z[j]
-            return x.z[i] - y.z[j]
-        else
-            i += 1
-            j += 1
-        end
-    end
-    @inbounds while i <= nvariables(x)
-        if x.z[i] > 0
-            return 1
-        end
-	i += 1
-    end
-    @inbounds while j <= nvariables(y)
-        if y.z[j] > 0
-            return -1
-        end
-	j += 1
-    end
-    return 0
-end
-
-function (==)(x::Monomial{V,M}, y::Monomial{V,M}) where {V,M}
-    return MP.compare(x, y) == 0
-end
-function (==)(x::Variable{V,M}, y::Monomial{V,M}) where {V,M}
-    return convert(Monomial{V,M}, x) == y
-end
-
-# graded lex ordering
-function Base.isless(x::Monomial{V,M}, y::Monomial{V,M}) where {V,M}
-    return MP.compare(x, y) < 0
-end
-function Base.isless(x::Monomial{V,M}, y::Variable{V,M}) where {V,M}
-    return isless(x, convert(Monomial{V,M}, y))
-end
-function Base.isless(x::Variable{V,M}, y::Monomial{V,M}) where {V,M}
-    return isless(convert(Monomial{V,M}, x), y)
 end
 
 # Comparison of MonomialVector

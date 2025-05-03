@@ -153,15 +153,6 @@ function _error_for_negative_degree(deg)
     end
 end
 
-    I = _not_first_indices(n, M)
-    if state == 0
-        return (zeros(Int, it.num_vars), 1)
-    end
-    z = zeros(Int, it.num_vars)
-    z[_last_lex_index(it.num_vars, M)] = state
-    return (z, state + 1)
-end
-
 function _fill_exponents!(Z, n, degs, ::Type{Commutative}, M::Type{<:_Lex}, filter::Function)
     _error_for_negative_degree.(degs)
     maxdeg = maximum(degs, init = 0)
