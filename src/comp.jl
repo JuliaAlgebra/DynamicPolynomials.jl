@@ -40,8 +40,8 @@ function (==)(x::MonomialVector{V,M}, y::MonomialVector{V,M}) where {V,M}
     # Should be sorted in the same order since the non-common
     # polyvar should have exponent 0
     for (a, b) in zip(x.Z, y.Z)
-        A = zeros(length(allvars))
-        B = zeros(length(allvars))
+        A = zeros(Int, length(allvars))
+        B = zeros(Int, length(allvars))
         A[maps[1]] = a
         B[maps[2]] = b
         if A != B

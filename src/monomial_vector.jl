@@ -1,10 +1,5 @@
 export MonomialVector
 
-struct AllMonomials{V,M} <: AbstractVector{Monomial{V,M}}
-    vars::Vector{Variable{V,M}}
-end
-Base.IteratorSize(::Type{<:AllMonomials}) = Base.IsInfinite()
-
 # Invariant: Always sorted and no zero vector
 struct MonomialVector{V,M} <: AbstractVector{Monomial{V,M}}
     vars::Vector{Variable{V,M}}
@@ -152,6 +147,15 @@ function _error_for_negative_degree(deg)
         )
     end
 end
+
+const _Lex = Union{MP.LexOrder,MP.InverseLexOrder}
+
+_last_lex_index(n, ::Type{MP.LexOrder}) = n
+_prev_lex_index(i, ::Type{MP.LexOrder}) = i - 1
+_not_first_indices(n, ::Type{MP.LexOrder}) = n:-1:2
+_last_lex_index(_, ::Type{MP.InverseLexOrder}) = 1
+_prev_lex_index(i, ::Type{MP.InverseLexOrder}) = i + 1
+_not_first_indices(n, ::Type{MP.InverseLexOrder}) = 1:(n-1)
 
 function _fill_exponents!(Z, n, degs, ::Type{Commutative}, M::Type{<:_Lex}, filter::Function)
     _error_for_negative_degree.(degs)

@@ -291,3 +291,15 @@ function mergevars_of(::Type{Variable{V,M}}, polys::AbstractVector) where {V,M}
     # TODO avoid computing `maps`
     return mergevars(varsvec)
 end
+
+function MP.promote_variables(m1::Monomial, m2::Monomial)
+    if MP.variables(m1) == MP.variables(m2)
+        return m1, m2
+    end
+    allvars, maps = mergevars([MP.variables(m1), MP.variables(m2)])
+    z1 = zeros(Int, length(allvars))
+    z1[maps[1]] = m1.z
+    z2 = zeros(Int, length(allvars))
+    z2[maps[2]] = m2.z
+    return Monomial(allvars, z1), Monomial(allvars, z2)
+end
