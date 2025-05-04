@@ -179,6 +179,22 @@ function _fill_exponents!(
     return reverse!(view(Z, start:length(Z)))
 end
 
+function _fill_exponents!(
+    Z::Vector{Vector{Int}},
+    n,
+    degs::AbstractVector{Int},
+    ::Type{V},
+    ::Type{MP.Graded{M}},
+    filter::Function,
+) where {V,M}
+    # For non-commutative, lower degree need to create a vector of exponent as large as for the highest degree
+    maxdeg = maximum(degs, init = 0)
+    for deg in sort(degs)
+        _fill_exponents!(Z, n, deg, V, M, filter, maxdeg)
+    end
+    return
+end
+
 # List exponents in decreasing Graded Lexicographic Order
 function _all_exponents(
     n,
