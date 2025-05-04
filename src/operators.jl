@@ -109,7 +109,7 @@ function MA.operate!(
 end
 
 function _exponents_compare(q::Polynomial{V,M}, j, e) where {V,M}
-    return MP.compare(q.x.Z[j], e, M)
+    return cmp(M(), q.x.Z[j], e)
 end
 
 # TODO need to check that this also works for non-commutative

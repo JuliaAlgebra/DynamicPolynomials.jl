@@ -148,62 +148,6 @@ function _error_for_negative_degree(deg)
     end
 end
 
-const _Lex = Union{MP.LexOrder,MP.InverseLexOrder}
-
-_last_lex_index(n, ::Type{MP.LexOrder}) = n
-_prev_lex_index(i, ::Type{MP.LexOrder}) = i - 1
-_not_first_indices(n, ::Type{MP.LexOrder}) = n:-1:2
-_last_lex_index(_, ::Type{MP.InverseLexOrder}) = 1
-_prev_lex_index(i, ::Type{MP.InverseLexOrder}) = i + 1
-_not_first_indices(n, ::Type{MP.InverseLexOrder}) = 1:(n-1)
-
-function _fill_exponents!(Z, n, degs, ::Type{Commutative}, M::Type{<:_Lex}, filter::Function)
-    _error_for_negative_degree.(degs)
-    maxdeg = maximum(degs, init = 0)
-    I = _not_first_indices(n, M)
-    z = zeros(Int, n)
-    while true
-        deg = sum(z)
-        if deg in degs && filter(z)
-            push!(Z, z)
-            z = copy(z)
-        end
-        if deg == maxdeg
-            i = findfirst(i -> !iszero(z[i]), I)
-            if isnothing(i)
-                break
-            end
-            j = I[i]
-            z[j] = 0
-            z[_prev_lex_index(j, M)] += 1
-        else
-            z[_last_lex_index(n, M)] += 1
-        end
-    end
-end
-
-function _fill_exponents!(Z, n, deg, ::Type{Commutative}, M::Type{<:_Lex}, filter::Function, ::Int)
-    _error_for_negative_degree(deg)
-    I = _not_first_indices(n, M)
-    z = zeros(Int, n)
-    z[_last_lex_index(n, M)] = deg
-    while true
-        if filter(z)
-            push!(Z, z)
-            z = copy(z)
-        end
-        i = findfirst(i -> !iszero(z[i]), I)
-        if isnothing(i)
-            break
-        end
-        j = I[i]
-        p = z[j]
-        z[j] = 0
-        z[_last_lex_index(n, M)] = p - 1
-        z[_prev_lex_index(j, M)] += 1
-    end
-end
-
 function _fill_noncomm_exponents_rec!(Z, z, i, n, deg, ::Type{MP.LexOrder}, filter::Function)
     if deg == 0
         if filter(z)
@@ -235,13 +179,6 @@ function _fill_exponents!(
     return reverse!(view(Z, start:length(Z)))
 end
 
-function _fill_exponents!(Z, n, deg, ::Type{V}, ::Type{MP.Reverse{M}}, args...) where {V,M}
-    prev = lastindex(Z)
-    _fill_exponents!(Z, n, deg, V, M, args...)
-    reverse!(view(Z, (prev + 1):lastindex(Z)))
-    return
-end
-
 function _fill_exponents!(
     Z::Vector{Vector{Int}},
     n,
@@ -266,7 +203,7 @@ function _all_exponents(
     ::Type{M},
     filter::Function,
 ) where {V,M}
-    Z = Vector{Vector{Int}}()
+    Z = Vector{Int}[]
     _fill_exponents!(Z, n, degs, V, M, filter)
     _isless = let M = M
         (a, b) -> MP.compare(a, b, M) < 0
@@ -275,28 +212,11 @@ function _all_exponents(
     return Z
 end
 
-function MonomialVector(
-    vars::Vector{<:Variable{<:Commutative,M}},
-    degs::AbstractVector{Int},
-    filter::Function = x -> true,
-) where {M}
-    vars = unique!(sort(vars, rev = true))
-    return MonomialVector(
-        vars,
-        _all_exponents(
-            length(vars),
-            degs,
-            Commutative,
-            M,
-            z -> filter(Monomial(vars, z)),
-        ),
-    )
-end
-
 function getvarsforlength(vars::Vector{<:Variable{<:NonCommutative}}, len::Int)
     n = length(vars)
     return map(i -> vars[((i-1)%n)+1], 1:len)
 end
+
 function MonomialVector(
     vars::Vector{<:Variable{<:NonCommutative,M}},
     degs::AbstractVector{Int},
@@ -313,6 +233,31 @@ function MonomialVector(
     v = isempty(Z) ? vars : getvarsforlength(vars, length(first(Z)))
     return MonomialVector(v, Z)
 end
+
+function MonomialVector(
+    vars::Vector{<:Variable{<:Commutative,M}},
+    degs::AbstractVector{Int},
+    filter::Function = x -> true,
+) where {M}
+    vars = unique!(sort(vars, rev = true))
+    if isempty(degs)
+        mindegree = 0
+        maxdegree = -1
+    else
+        mindegree = minimum(degs)
+        maxdegree = maximum(degs)
+    end
+    Z = Iterators.Filter(MP.ExponentsIterator{M}(
+        zeros(Int, length(vars));
+        mindegree,
+        maxdegree,
+    )) do z
+        mono = Monomial(vars, z)
+        MP.degree(mono) in degs && filter(mono)
+    end
+    return MonomialVector(vars, collect(Z))
+end
+
 function MonomialVector(
     vars::Vector{<:Variable},
     degs::Int,
@@ -324,6 +269,7 @@ end
 function MP.monomials(vars::AbstractVector{<:Variable}, args...)
     return MonomialVector(vars, args...)
 end
+
 function MP.monomials(vars::Tuple{Vararg{Variable}}, args...)
     return monomials([vars...], args...)
 end
@@ -390,7 +336,7 @@ end
 function MonomialVector{V,M}(X::DMonoVec{V,M}) where {V,M}
     allvars, Z = buildZvarsvec(Variable{V,M}, X)
     _isless = let M = M
-        (a, b) -> MP.compare(a, b, M) < 0
+        (a, b) -> cmp(M(), a, b) < 0
     end
     sort!(Z, lt = _isless)
     dups = findall(i -> Z[i] == Z[i-1], 2:length(Z))
