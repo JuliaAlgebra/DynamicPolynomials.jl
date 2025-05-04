@@ -213,7 +213,8 @@ function MonomialVector(
         mindegree = minimum(degs),
         maxdegree = maximum(degs),
     )) do z
-        filter(Monomial(vars, z))
+        mono = Monomial(vars, z)
+        MP.degree(mono) in degs && filter(mono)
     end
     return MonomialVector(vars, collect(Z))
 end
