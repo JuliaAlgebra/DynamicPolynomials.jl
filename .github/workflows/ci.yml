@@ -38,7 +38,7 @@ jobs:
         run: |
           using Pkg
           Pkg.add([
-              PackageSpec(name="MultivariatePolynomials", rev="bl/revo"),
+              PackageSpec(name="MultivariatePolynomials", rev="master"),
           ])
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
