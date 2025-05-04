@@ -180,6 +180,22 @@ function _fill_exponents!(
 end
 
 # List exponents in decreasing Graded Lexicographic Order
+function _all_exponents(
+    n,
+    degs::AbstractVector{Int},
+    ::Type{V},
+    ::Type{M},
+    filter::Function,
+) where {V,M}
+    Z = Vector{Int}[]
+    _fill_exponents!(Z, n, degs, V, M, filter)
+    _isless = let M = M
+        (a, b) -> MP.compare(a, b, M) < 0
+    end
+    @assert issorted(Z, lt = _isless)
+    return Z
+end
+
 function getvarsforlength(vars::Vector{<:Variable{<:NonCommutative}}, len::Int)
     n = length(vars)
     return map(i -> vars[((i-1)%n)+1], 1:len)
