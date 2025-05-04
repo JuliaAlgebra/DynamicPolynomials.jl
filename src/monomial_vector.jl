@@ -208,10 +208,17 @@ function MonomialVector(
     filter::Function = x -> true,
 ) where {M}
     vars = unique!(sort(vars, rev = true))
+    if isempty(degs)
+        mindegree = 0
+        maxdegree = -1
+    else
+        mindegree = minimum(degs)
+        maxdegree = maximum(degs)
+    end
     Z = Iterators.Filter(MP.ExponentsIterator{M}(
         zeros(Int, length(vars));
-        mindegree = minimum(degs),
-        maxdegree = maximum(degs),
+        mindegree,
+        maxdegree,
     )) do z
         mono = Monomial(vars, z)
         MP.degree(mono) in degs && filter(mono)
