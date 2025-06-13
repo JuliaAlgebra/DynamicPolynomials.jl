@@ -30,7 +30,7 @@ function Monomial{V,M}(
     return Monomial{V,M}([vars...], z)
 end
 
-function MP.monomial(vars::Vector{Variable{V,M}}, z::Vector{Int})
+function MP.monomial(vars::Vector{Variable{V,M}}, z::Vector{Int}) where {V,M}
     @assert issorted(vars, rev = true)
     return Monomial{V,M}(vars, z)
 end
