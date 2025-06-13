@@ -30,6 +30,11 @@ function Monomial{V,M}(
     return Monomial{V,M}([vars...], z)
 end
 
+function MP.monomial(vars::Vector{Variable{V,M}}, z::Vector{Int})
+    @assert issorted(vars, rev = true)
+    return Monomial{V,M}(vars, z)
+end
+
 iscomm(::Type{<:Monomial{V}}) where {V} = iscomm(V)
 Monomial{V,M}() where {V,M} = Monomial{V,M}(Variable{V,M}[], Int[])
 function Monomial(vars::TupOrVec{Variable{V,M}}, z::Vector{Int}) where {V,M}
@@ -79,7 +84,6 @@ MP.exponents(m::Monomial) = m.z
 # /!\ vars not copied, do not mess with vars
 MP.variables(m::Union{Monomial}) = m.vars
 
-MP.monomial(m::Monomial) = m
 # Does m1 divides m2 ?
 #function MP.divides(m1::Monomial, m2::Monomial)
 #    i = j = 1
