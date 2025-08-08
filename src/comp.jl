@@ -58,24 +58,27 @@ end
 (==)(x::MonomialVector, mv::AbstractVector) = x == monomial_vector(mv)
 
 # Comparison of Term
-function (==)(p::Polynomial{V,M}, q::Polynomial{V,M}) where {V,M}
+function _compare(p::Polynomial{V,M}, q::Polynomial{V,M}, comparator) where {V,M}
     # terms should be sorted and without zeros
     if MP.nterms(p) != MP.nterms(q)
         return false
     end
     for i in eachindex(p.a)
-        if p.x[i] != q.x[i]
+        if !comparator(p.x[i], q.x[i])
             # There should not be zero terms
             @assert p.a[i] != 0
             @assert q.a[i] != 0
             return false
         end
-        if p.a[i] != q.a[i]
+        if !comparator(p.a[i], q.a[i])
             return false
         end
     end
     return true
 end
+
+(==)(p::Polynomial{V, M}, q::Polynomial{V, M}) where {V, M} = _compare(p, q, (==))
+Base.isequal(p::Polynomial{V, M}, q::Polynomial{V, M}) where {V, M} = _compare(p, q, isequal)
 
 function Base.isapprox(
     p::Polynomial{V,M,S},
