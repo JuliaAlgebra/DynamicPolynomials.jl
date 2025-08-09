@@ -100,6 +100,14 @@ end
 
 @testset "Comparison with NaN" begin
     @polyvar p
-    @test (NaN + p) != (NaN + p)
-    @test isequal(NaN + p, NaN + p)
+    poly1 = NaN + p
+    poly2 = NaN + p
+    @test poly1 != poly2
+    @test (@allocated poly1 != poly2) == 0
+    @test poly1 != poly1
+    @test (@allocated poly1 != poly1) == 0
+    @test isequal(poly1, poly2)
+    @test (@allocated isequal(poly1, poly2)) == 0
+    @test isequal(poly1, poly1)
+    @test (@allocated isequal(poly1, poly1)) == 0
 end
