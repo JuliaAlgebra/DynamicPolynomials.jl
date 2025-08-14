@@ -97,3 +97,17 @@ end
     _test_monomials([x, y], 1:2, [y, x, y^2, x * y, x^2])
     _test_monomials([x, y], [0, 1, 3], [1, y, x, y^3, x*y^2, x^2*y, x^3])
 end
+
+@testset "Comparison with NaN" begin
+    @polyvar p
+    poly1 = NaN + p
+    poly2 = NaN + p
+    @test poly1 != poly2
+    @test (@allocated poly1 != poly2) == 0
+    @test poly1 != poly1
+    @test (@allocated poly1 != poly1) == 0
+    @test isequal(poly1, poly2)
+    @test (@allocated isequal(poly1, poly2)) == 0
+    @test isequal(poly1, poly1)
+    @test (@allocated isequal(poly1, poly1)) == 0
+end
