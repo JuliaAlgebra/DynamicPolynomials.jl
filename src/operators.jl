@@ -133,6 +133,33 @@ function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{V, M, T}, x:
     return p
 end
 
+function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{V, M, T}, x::Variable{V, M}) where {V, M, T}
+    vars = MP.variables(p)
+    idx = searchsortedfirst(vars, x; rev = true)
+    monos = MP.monomials(p)
+    if idx > length(vars) || !isequal(vars[idx], x)
+        for mono in monos
+            insert!(MP.exponents(mono), idx, 0)
+        end
+        insert!(vars, idx, x)
+    end
+    mono = Monomial{V, M}(vars, zeros(Int, length(vars)))
+    mono.z[idx] = 1
+    idx = searchsortedfirst(monos, mono)
+    coeffs = MP.coefficients(p)
+    N = MP.nterms(p)
+    if idx > N || !isequal(monos[idx], mono)
+        insert!(monos.Z, idx, MP.exponents(mono))
+        insert!(coeffs, idx, zero(T))
+    end
+    coeffs[idx] = op(coeffs[idx], one(T))
+    if iszero(coeffs[idx])
+        deleteat!(coeffs, idx)
+        deleteat!(monos, idx)
+    end
+    return p
+end
+
 function MA.operate!(
     op::Union{typeof(+),typeof(-)},
     p::Polynomial,

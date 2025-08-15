@@ -73,4 +73,30 @@ end
         # subsequent additions don't allocate
         @test (@allocated MA.operate!(-, poly2, 2)) == 0
     end
+
+    @testset "Polynomial + Variable" begin
+        poly = 2 * x^2 + 3 * x * y + z * y^2
+        poly2 = copy(poly)
+        result = poly + x
+        MA.operate!(+, poly, x)
+        @test isequal(poly, result)
+        # down from 18752 using the generic method
+        # 368 or 304 depending on ordering, more for different version
+        # pre is especially bad
+        @test (@allocated MA.operate!(+, poly2, x)) <= 400
+        # down from 1904 using the generic method
+        @test (@allocated MA.operate!(+, poly2, x)) <= 144
+
+        # also test `-`
+        poly = 2 * x^2 + 3 * x * y + z * y^2
+        poly2 = copy(poly)
+        result = poly - x
+        MA.operate!(-, poly, x)
+        @test isequal(poly, result)
+        # down from 18752 using the generic method
+        # 368 or 304 depending on ordering
+        @test (@allocated MA.operate!(-, poly2, x)) <= 400
+        # down from 1904 using the generic method
+        @test (@allocated MA.operate!(-, poly2, x)) <= 144
+    end
 end
