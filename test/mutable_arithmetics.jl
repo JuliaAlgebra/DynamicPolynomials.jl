@@ -35,3 +35,42 @@ using DynamicPolynomials
         @test q == x + y + 1
     end
 end
+
+@testset "Fast path cases: $ord" for ord in [
+        InverseLexOrder,
+        LexOrder,
+        Graded{InverseLexOrder},
+        Graded{LexOrder},
+        Reverse{InverseLexOrder},
+        Reverse{LexOrder},
+        Graded{Reverse{InverseLexOrder}},
+        Graded{Reverse{LexOrder}},
+        Reverse{Graded{InverseLexOrder}},
+        Reverse{Graded{LexOrder}},
+    ]
+    @polyvar x y z monomial_order=ord
+
+    # allocation tests vary between Julia versions, so they're upper bounds
+    @testset "Polynomial + constant" begin
+        poly = 2 * x^2 + 3 * x * y + z * y^2
+        poly2 = copy(poly)
+        result = poly + 2
+        MA.operate!(+, poly, 2)
+        @test isequal(poly, result)
+        # down from 576 using the generic method
+        @test (@allocated MA.operate!(+, poly2, 2)) <= 272
+        # subsequent additions don't allocate
+        @test (@allocated MA.operate!(+, poly2, 2)) == 0
+
+        # also test `-`
+        poly = 2 * x^2 + 3 * x * y + z * y^2
+        poly2 = copy(poly)
+        result = poly - 2
+        MA.operate!(-, poly, 2)
+        @test isequal(poly, result)
+        # down from 576 using the generic method
+        @test (@allocated MA.operate!(-, poly2, 2)) <= 272
+        # subsequent additions don't allocate
+        @test (@allocated MA.operate!(-, poly2, 2)) == 0
+    end
+end

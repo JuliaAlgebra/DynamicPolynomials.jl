@@ -92,6 +92,47 @@ function MA.operate_to!(
     return output
 end
 
+"""
+    _constant_term_idx(p::Polynomial)
+
+Return the index of the constant term in `p` according to its monomial ordering.
+"""
+_constant_term_idx(p::Polynomial{V, M, T}) where {V, M <: Reverse, T} = lastindex(p.x)
+_constant_term_idx(p::Polynomial) = firstindex(p.x)
+
+"""
+    _insert_constant_term!(p::Polynomial)
+
+Insert a constant (degree 0) term into polynomial `p` at the appropriate position for the
+monomial ordering of `p`. Does not check if a constant term already exists.
+"""
+function _insert_constant_term!(p::Polynomial{V, M, T}) where {V, M <: Reverse, T}
+    push!(MP.coefficients(p), zero(T))
+    push!(MP.monomials(p).Z, zeros(Int, length(MP.variables(p))))
+    return p
+end
+
+function _insert_constant_term!(p::Polynomial{V, M, T}) where {V, M, T}
+    insert!(MP.coefficients(p), 1, zero(T))
+    insert!(MP.monomials(p).Z, 1, zeros(Int, length(MP.variables(p))))
+    return p
+end
+
+function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{V, M, T}, x::T) where {V, M, T}
+    c_idx = _constant_term_idx(p)
+    if MP.nterms(p) == 0 || !MP.isconstant(MP.terms(p)[c_idx])
+        _insert_constant_term!(p)
+        c_idx = _constant_term_idx(p)
+    end
+    coeffs = MP.coefficients(p)
+    coeffs[c_idx] = op(coeffs[c_idx], x)
+    if iszero(coeffs[c_idx])
+        deleteat!(coeffs, c_idx)
+        deleteat!(MP.monomials(p), c_idx)
+    end
+    return p
+end
+
 function MA.operate!(
     op::Union{typeof(+),typeof(-)},
     p::Polynomial,
