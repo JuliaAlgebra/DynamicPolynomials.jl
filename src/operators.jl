@@ -104,7 +104,7 @@ _constant_term_idx(p::Polynomial) = firstindex(p.x)
     _insert_constant_term!(p::Polynomial)
 
 Insert a constant (degree 0) term into polynomial `p` at the appropriate position for the
-monomial ordering of `p`. Does not check if a constant term already exists.
+monomial ordering of `p`. Assume that a constant term does not already exists.
 """
 function _insert_constant_term!(p::Polynomial{V, M, T}) where {V, M <: Reverse, T}
     push!(MP.coefficients(p), zero(T))
