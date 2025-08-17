@@ -93,12 +93,12 @@ function MA.operate_to!(
 end
 
 """
-    _constant_term_idx(p::Polynomial)
+    _lowest_term_idx(p::Polynomial)
 
-Return the index of the constant term in `p` according to its monomial ordering.
+Return the index of the lowest term in `p` according to its monomial ordering.
 """
-_constant_term_idx(p::Polynomial{V, M, T}) where {V, M <: Reverse, T} = lastindex(p.x)
-_constant_term_idx(p::Polynomial) = firstindex(p.x)
+_lowest_term_idx(p::Polynomial{V, M, T}) where {V, M <: Reverse, T} = lastindex(p.x)
+_lowest_term_idx(p::Polynomial) = firstindex(p.x)
 
 """
     _insert_constant_term!(p::Polynomial)
@@ -119,10 +119,10 @@ function _insert_constant_term!(p::Polynomial{V, M, T}) where {V, M, T}
 end
 
 function MA.operate!(op::Union{typeof(+), typeof(-)}, p::Polynomial{V, M, T}, x::T) where {V, M, T}
-    c_idx = _constant_term_idx(p)
+    c_idx = _lowest_term_idx(p)
     if MP.nterms(p) == 0 || !MP.isconstant(MP.terms(p)[c_idx])
         _insert_constant_term!(p)
-        c_idx = _constant_term_idx(p)
+        c_idx = _lowest_term_idx(p)
     end
     coeffs = MP.coefficients(p)
     coeffs[c_idx] = op(coeffs[c_idx], x)
