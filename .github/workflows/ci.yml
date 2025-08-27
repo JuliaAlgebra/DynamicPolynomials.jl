@@ -23,7 +23,7 @@ jobs:
           - version: '1'
             os: ubuntu-latest
             arch: x86
-          - version: 'nightly'
+          - version: 'pre'
             os: ubuntu-latest
             arch: x64
     steps:
