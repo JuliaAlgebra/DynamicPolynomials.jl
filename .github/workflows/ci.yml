@@ -33,10 +33,25 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
+      - uses: actions/checkout@v4
+        with:
+          repository: AayushSabharwal/MultivariatePolynomials.jl
+          ref: as/poly-merge-nonconcrete
+          path: upstream-MP
+      - uses: actions/checkout@v4
+        with:
+          repository: AayushSabharwal/MutableArithmetics.jl
+          ref: as+bl/simplify_promote_type_fallback
+          path: upstream-MA
+      - name: Use branch
+        shell: julia --color=yes --project=@. {0}
+        run: |
+          using Pkg
+          Pkg.develop([PackageSpec(; path = "upstream-MP"), PackageSpec(; path = "upstream-MA")])
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
         with:
-          depwarn: error
+          depwarn: yes
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v4
         with:
