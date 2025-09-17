@@ -13,7 +13,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 MultivariatePolynomials = "0.5.9"
-MutableArithmetics = "1"
+MutableArithmetics = "1.6.5"
 Reexport = "1"
 julia = "1"
 
