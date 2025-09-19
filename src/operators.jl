@@ -183,9 +183,9 @@ end
 # TODO need to check that this also works for non-commutative
 function MA.operate!(
     op::Union{typeof(+),typeof(-)},
-    p::Polynomial{V},
-    q::Polynomial{V},
-) where {V<:Commutative}
+    p::Polynomial{V, M1, T1},
+    q::Polynomial{V, M2, T2},
+) where {V<:Commutative, M1, M2, T1, T2}
     if MP.variables(p) != MP.variables(q)
         allvars, maps = ___add_variables!(p, q)
         if length(allvars) == length(MP.variables(q))
@@ -239,6 +239,7 @@ function MA.operate!(
         combine,
         keep,
         resize,
+        Tuple{MA.promote_operation(op, T1, T2), Vector{Int}},
     )
     return p
 end
