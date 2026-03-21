@@ -31,7 +31,8 @@ function Monomial{V,M}(
 end
 
 function MP.monomial(vars::Vector{Variable{V,M}}, z::Vector{Int}) where {V,M}
-    @assert issorted(vars, rev = true)
+    # TODO need a sanity check for the noncommutative case as well
+    @assert !iscomm(V) || issorted(vars, rev = true)
     return Monomial{V,M}(vars, z)
 end
 
