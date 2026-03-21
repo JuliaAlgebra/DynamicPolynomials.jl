@@ -129,7 +129,7 @@ struct Commutative{O<:AbstractVariableOrdering} <: AbstractVariableOrdering
     order::O
 end
 
-iscomm(::Type{<:Commutative}) = false
+iscomm(::Type{<:Commutative}) = true
 function instantiate(::Type{Commutative{O}}) where {O}
     return Commutative(instantiate(O))
 end
