@@ -136,7 +136,7 @@ import MultivariatePolynomials as MP
         m = DynamicPolynomials.Monomial([x, y, y, x], [2, 1, 0, 0]) * z
         @test variables(m) == [x, y, y, z, x]
         @test m.z == [2, 1, 0, 1, 0]
-        m = DynamicPolynomials.Monomial([x, y, x, y], [2, 1, 0, 0]) * z
+        m = MP.monomial([x, y, x, y], [2, 1, 0, 0]) * z
         @test variables(m) == [x, y, z, x, y]
         @test m.z == [2, 1, 1, 0, 0]
     end
