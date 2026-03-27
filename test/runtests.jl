@@ -78,6 +78,7 @@ include("mono.jl")
 include("poly.jl")
 include("comp.jl")
 include("mutable_arithmetics.jl")
+include("additional_tests.jl")
 
 module newmodule
 using Test
