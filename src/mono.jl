@@ -36,7 +36,7 @@ function MP.monomial(vars::Vector{Variable{V,M}}, z::Vector{Int}) where {V,M}
     return Monomial{V,M}(vars, z)
 end
 
-iscomm(::Type{<:Monomial{V}}) where {V} = iscomm(V)
+MP.is_commutative(::Type{<:Monomial{V}}) where {V} = iscomm(V)
 Monomial{V,M}() where {V,M} = Monomial{V,M}(Variable{V,M}[], Int[])
 function Monomial(vars::TupOrVec{Variable{V,M}}, z::Vector{Int}) where {V,M}
     return Monomial{V,M}(vars, z)
