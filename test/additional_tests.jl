@@ -597,6 +597,78 @@ end
         @test variables(m) == [x, y, x]
         @test exponents(m) == [1, 2, 1]
     end
+
+    # Tests for PR #189: Fix multiplication of noncommutative variables
+    # The fix ensures trailing zero-exponent variables are stripped from
+    # the result of Monomial * Monomial multiplication.
+    @testset "NC Monomial * Monomial trailing zeros (PR #189)" begin
+        @ncpolyvar a b c
+
+        # Multiplying monomials that have trailing zero exponents should
+        # not carry those zeros into the result.
+        m1 = DynamicPolynomials.Monomial([a, b], [1, 0])  # effectively just `a`, with trailing zero for `b`
+        m2 = DynamicPolynomials.Monomial([a, b], [0, 1])  # effectively just `b`, with leading zero for `a`
+        result = m1 * m2
+        # Should be a*b without extra zero-exponent entries
+        @test result == a * b
+        @test all(!iszero, exponents(result))
+
+        # Same variable at boundary: trailing zeros stripped when merging
+        m3 = DynamicPolynomials.Monomial([a, b, c], [2, 0, 0])  # a^2 with trailing zeros
+        m4 = DynamicPolynomials.Monomial([a, b, c], [0, 0, 3])  # c^3 with leading zeros
+        result2 = m3 * m4
+        @test result2 == a^2 * c^3
+        @test all(!iszero, exponents(result2))
+
+        # When last var of x matches first var of y (merge case)
+        m5 = DynamicPolynomials.Monomial([a, b, c], [1, 1, 0])  # a*b with trailing zero
+        m6 = DynamicPolynomials.Monomial([a, b, c], [0, 1, 1])  # b*c with leading zero
+        result3 = m5 * m6
+        @test result3 == a * b^2 * c
+        @test all(!iszero, exponents(result3))
+
+        # Multiplying by zero monomial (all zeros) returns the other
+        m_zero = DynamicPolynomials.Monomial([a, b], [0, 0])
+        m_val = DynamicPolynomials.Monomial([a, b], [1, 1])
+        @test m_zero * m_val == a * b
+        @test m_val * m_zero == a * b
+
+        # Both sides have trailing zeros, different vars at boundary
+        m7 = DynamicPolynomials.Monomial([a, b, c], [1, 0, 0])
+        m8 = DynamicPolynomials.Monomial([a, b, c], [0, 0, 2])
+        result4 = m7 * m8
+        @test result4 == a * c^2
+        @test all(!iszero, exponents(result4))
+
+        # Verify the result works correctly in polynomial arithmetic
+        p = result4 + a * b
+        @test length(terms(p)) == 2
+    end
+
+    @testset "NC Monomial * Monomial with matching boundary variable" begin
+        @ncpolyvar a b c
+        # When the last nonzero var of x equals the first nonzero var of y,
+        # exponents should be summed and trailing zeros dropped
+        m1 = DynamicPolynomials.Monomial([a, b, c], [0, 2, 0])  # b^2 with zeros on both sides
+        m2 = DynamicPolynomials.Monomial([a, b, c], [0, 3, 0])  # b^3 with zeros on both sides
+        result = m1 * m2
+        @test result == b^5
+        @test variables(result) == [b]
+        @test exponents(result) == [5]
+    end
+
+    @testset "NC Monomial * Monomial complex patterns" begin
+        @ncpolyvar a b c
+        # Multi-variable with internal structure and trailing zeros
+        m1 = DynamicPolynomials.Monomial([a, b, a, b, c], [1, 2, 1, 0, 0])  # a*b^2*a with trailing zeros
+        m2 = DynamicPolynomials.Monomial([a, b, c], [0, 0, 1])  # c with leading zeros
+        result = m1 * m2
+        @test all(!iszero, exponents(result))
+
+        # Ensure result multiplied further still works
+        result2 = result * a
+        @test !iszero(result2)
+    end
 end
 
 @testset "mergevars" begin
