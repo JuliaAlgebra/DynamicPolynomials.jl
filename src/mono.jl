@@ -85,6 +85,14 @@ MP.exponents(m::Monomial) = m.z
 # /!\ vars not copied, do not mess with vars
 MP.variables(m::Union{Monomial}) = m.vars
 
+function MP.exponents(mono::Monomial{<:NonCommutative}, vars::AbstractVector)
+    allvars, maps = mergevars([MP.variables(mono), vars])
+    @assert allvars == vars
+    z = zeros(Int, length(allvars))
+    z[maps[1]] = MP.exponents(mono)
+    return z
+end
+
 # Does m1 divides m2 ?
 #function MP.divides(m1::Monomial, m2::Monomial)
 #    i = j = 1
