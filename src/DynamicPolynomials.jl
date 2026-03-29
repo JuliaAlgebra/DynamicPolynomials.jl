@@ -7,6 +7,7 @@ using Reexport
 import MultivariatePolynomials as MP
 
 import MutableArithmetics as MA
+import StarAlgebras as SA
 
 include("var.jl")
 #const CommutativeVariable{O,M} = Variable{Commutative{O},M}
