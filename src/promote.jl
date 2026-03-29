@@ -32,15 +32,6 @@ function SA.promote_with_map(
 end
 
 function SA.promote_with_map(
-    t::_Term{V,M,T},
-    all_vars::Vector{Variable{V,M}},
-    map::MP.ExponentMap,
-) where {V,M,T}
-    new_mono = Monomial{V,M}(copy(all_vars), map(MP.monomial(t).z))
-    return MP.term(MP.coefficient(t), new_mono), map
-end
-
-function SA.promote_with_map(
     p::Polynomial{V,M,T},
     all_vars::Vector{Variable{V,M}},
     map::MP.ExponentMap,
