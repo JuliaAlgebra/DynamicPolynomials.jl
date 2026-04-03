@@ -1,7 +1,12 @@
+@info "Julia version: $(VERSION)"
+@info "depwarn setting: $(Base.JLOptions().depwarn)"
 using DynamicPolynomials
+@info "DynamicPolynomials loaded"
 using MultivariatePolynomials
+@info "MultivariatePolynomials loaded"
 using Test
 using LinearAlgebra
+@info "All packages loaded, starting tests"
 
 function alloc_test_lt(f, n)
     f() # compile
