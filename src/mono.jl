@@ -112,7 +112,7 @@ function __add_variables!(
     allvars::Vector{Variable{V,M}},
     map,
 ) where {V,M}
-    Future.copy!(mono.vars, allvars)
+    copy!(mono.vars, allvars)
     tmp = copy(mono.z)
     resize!(mono.z, length(allvars))
     fill!(mono.z, 0)

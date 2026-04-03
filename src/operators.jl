@@ -85,7 +85,7 @@ function MA.operate_to!(
     end
     varsvec = [MP.variables(p), MP.variables(q)]
     allvars, maps = mergevars(varsvec)
-    Future.copy!(output.x.vars, allvars)
+    copy!(output.x.vars, allvars)
     empty!(output.a)
     empty!(output.x.Z)
     _plusorminus_to!(output.a, output.x.Z, op, p, q, maps, length(allvars))
