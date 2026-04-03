@@ -40,12 +40,27 @@ jobs:
           depwarn: error
       - name: Run tests (pre, verbose)
         if: matrix.version == 'pre'
+        id: pre_test
         run: |
           julia --depwarn=error --project -e 'using Pkg; Pkg.test()' 2>&1 | tee /tmp/test-output.txt || true
           echo '```' >> $GITHUB_STEP_SUMMARY
           tail -100 /tmp/test-output.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           grep -q "Testing DynamicPolynomials tests passed" /tmp/test-output.txt
+      - name: Post test output as PR comment
+        if: failure() && matrix.version == 'pre' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const output = fs.readFileSync('/tmp/test-output.txt', 'utf8');
+            const last200 = output.split('\n').slice(-200).join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `### Julia pre test failure\n\`\`\`\n${last200}\n\`\`\``
+            });
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v4
         with:
