@@ -1,7 +1,5 @@
 module DynamicPolynomials
 
-import Future # For `copy!`
-
 using Reexport
 @reexport using MultivariatePolynomials
 import MultivariatePolynomials as MP

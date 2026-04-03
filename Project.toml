@@ -4,7 +4,6 @@ repo = "https://github.com/JuliaAlgebra/DynamicPolynomials.jl.git"
 version = "0.6.4"
 
 [deps]
-Future = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MultivariatePolynomials = "102ac46a-7ee4-5c85-9060-abc95bfdeaa3"
 MutableArithmetics = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
