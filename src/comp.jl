@@ -83,9 +83,9 @@ Base.isequal(p::Polynomial{V, M}, q::Polynomial{V, M}) where {V, M} = _compare(p
 function Base.isapprox(
     p::Polynomial{V,M,S},
     q::Polynomial{V,M,T};
-    rtol::Real = Base.rtoldefault(S, T, 0),
+    rtol::Real = Base.rtoldefault(real(promote_type(S, T))),
     atol::Real = 0,
-    ztol::Real = iszero(atol) ? Base.rtoldefault(S, T, 0) : atol,
+    ztol::Real = iszero(atol) ? Base.rtoldefault(real(promote_type(S, T))) : atol,
 ) where {V,M,S,T}
     i = j = 1
     while i <= length(p.x) || j <= length(q.x)
