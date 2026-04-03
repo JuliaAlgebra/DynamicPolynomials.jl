@@ -128,7 +128,7 @@ function Polynomial{V,M,T}(f::Function, x::AbstractVector) where {V,M,T}
     return Polynomial{V,M,T}(a, X)
 end
 function Polynomial{V,M}(f::Function, x) where {V,M}
-    return Polynomial{V,M,Base.promote_op(f, Int)}(f, x)
+    return Polynomial{V,M,typeof(f(0))}(f, x)
 end
 
 #Base.convert(::Type{PolyType{V,M}}, p::TermContainer{V,M}) where {V,M} = p
@@ -275,7 +275,7 @@ function trimap(i, j, n)
     return div(n * (n + 1), 2) - div((n - i + 1) * (n - i + 2), 2) + j - i + 1
 end
 function MP.polynomial(Q::AbstractMatrix{T}, mv::MonomialVector) where {T}
-    return MP.polynomial(Q, mv, Base.promote_op(+, T, T))
+    return MP.polynomial(Q, mv, MA.promote_operation(+, T, T))
 end
 function MP.polynomial(
     Q::AbstractMatrix,
