@@ -35,8 +35,12 @@ jobs:
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
+        if: matrix.version != 'pre'
         with:
           depwarn: error
+      - name: Run tests (pre, verbose)
+        if: matrix.version == 'pre'
+        run: julia --depwarn=error --project -e 'using Pkg; Pkg.test()'
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v4
         with:
