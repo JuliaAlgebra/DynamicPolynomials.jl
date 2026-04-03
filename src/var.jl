@@ -209,16 +209,17 @@ end
 
 MP.monomial(v::Variable) = Monomial(v)
 MP.variables(v::Variable) = [v]
-MP.exponents(v::Variable) = [1]
+MP.exponents(::Variable) = [1]
 MP.ordering(v::Variable) = MP.ordering(typeof(v))
 MP.ordering(::Type{Variable{V,M}}) where {V,M} = M
 
-iscomm(::Type{Variable{C}}) where {C} = C
+MP.is_commutative(::Type{Variable{V}}) where {V} = iscomm(V)
+MP.is_commutative(::Type{<:Vector{<:Variable{V}}}) where {V} = iscomm(V)
 
-Base.isreal(x::Variable{C}) where {C} = x.kind != COMPLEX && x.kind != CONJ
-MP.isrealpart(x::Variable{C}) where {C} = x.kind == REAL_PART
-MP.isimagpart(x::Variable{C}) where {C} = x.kind == IMAG_PART
-MP.isconj(x::Variable{C}) where {C} = x.kind == CONJ
+Base.isreal(x::Variable) = x.kind != COMPLEX && x.kind != CONJ
+MP.isrealpart(x::Variable) = x.kind == REAL_PART
+MP.isimagpart(x::Variable) = x.kind == IMAG_PART
+MP.isconj(x::Variable) = x.kind == CONJ
 function MP.ordinary_variable(x::Variable)
     return x.kind == REAL || x.kind == COMPLEX ? x : Variable(x, COMPLEX)
 end

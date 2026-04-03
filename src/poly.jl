@@ -26,7 +26,7 @@ function Polynomial{V,M,T}(terms::AbstractVector{<:_Term{V,M}}) where {V,M,T}
     return Polynomial{V,M,T}(a, x)
 end
 
-iscomm(::Type{Polynomial{V,M,T}}) where {V,M,T} = V, M
+MP.is_commutative(::Type{Polynomial{V,M,T}}) where {V,M,T} = iscomm(V)
 
 function _zero_with_variables(
     ::Type{Polynomial{V,M,T}},
