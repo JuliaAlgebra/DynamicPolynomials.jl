@@ -15,33 +15,31 @@ end
 # as part of SA.promote_bases_with_maps (defined in MultivariatePolynomials.jl).
 # Guarded by isdefined since ExponentMap is not yet in released MultivariatePolynomials.
 
-if isdefined(MP, :ExponentMap)
-    function SA.promote_with_map(
-        v::Variable{V,M},
-        all_vars::Vector{Variable{V,M}},
-        map::MP.ExponentMap,
-    ) where {V,M}
-        new_z = map([1])
-        return Monomial{V,M}(copy(all_vars), new_z), map
-    end
+function SA.promote_with_map(
+    v::Variable{V,M},
+    all_vars::Vector{Variable{V,M}},
+    map::MP.ExponentMap,
+) where {V,M}
+    new_z = map([1])
+    return Monomial{V,M}(copy(all_vars), new_z), map
+end
 
-    function SA.promote_with_map(
-        m::Monomial{V,M},
-        all_vars::Vector{Variable{V,M}},
-        map::MP.ExponentMap,
-    ) where {V,M}
-        return Monomial{V,M}(copy(all_vars), map(m.z)), map
-    end
+function SA.promote_with_map(
+    m::Monomial{V,M},
+    all_vars::Vector{Variable{V,M}},
+    map::MP.ExponentMap,
+) where {V,M}
+    return Monomial{V,M}(copy(all_vars), map(m.z)), map
+end
 
-    function SA.promote_with_map(
-        p::Polynomial{V,M,T},
-        all_vars::Vector{Variable{V,M}},
-        map::MP.ExponentMap,
-    ) where {V,M,T}
-        new_Z = [map(z) for z in p.x.Z]
-        new_x = MonomialVector{V,M}(copy(all_vars), new_Z)
-        return Polynomial{V,M,T}(copy(p.a), new_x), map
-    end
+function SA.promote_with_map(
+    p::Polynomial{V,M,T},
+    all_vars::Vector{Variable{V,M}},
+    map::MP.ExponentMap,
+) where {V,M,T}
+    new_Z = [map(z) for z in p.x.Z]
+    new_x = MonomialVector{V,M}(copy(all_vars), new_Z)
+    return Polynomial{V,M,T}(copy(p.a), new_x), map
 end
 
 function MP.promote_rule_constant(
