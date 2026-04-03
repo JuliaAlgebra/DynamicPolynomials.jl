@@ -40,7 +40,12 @@ jobs:
           depwarn: error
       - name: Run tests (pre, verbose)
         if: matrix.version == 'pre'
-        run: julia --depwarn=error --project -e 'using Pkg; Pkg.test()'
+        run: |
+          julia --depwarn=error --project -e 'using Pkg; Pkg.test()' 2>&1 | tee /tmp/test-output.txt || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tail -100 /tmp/test-output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          grep -q "Testing DynamicPolynomials tests passed" /tmp/test-output.txt
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v4
         with:
