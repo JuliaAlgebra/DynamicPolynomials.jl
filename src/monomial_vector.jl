@@ -396,11 +396,11 @@ function __add_variables!(
     allvars::Vector{Variable{V,M}},
     map,
 ) where {V,M}
-    Future.copy!(monos.vars, allvars)
+    copy!(monos.vars, allvars)
     if !isempty(monos.Z)
         tmp = similar(first(monos.Z))
         for z in monos.Z
-            Future.copy!(tmp, z)
+            copy!(tmp, z)
             resize!(z, length(allvars))
             fill!(z, 0)
             z[map] = tmp

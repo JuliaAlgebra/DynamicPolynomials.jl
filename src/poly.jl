@@ -252,7 +252,7 @@ function polynomialclean_to!(
     adup::Vector{T},
     Zdup::Vector{Vector{Int}},
 ) where {V,M,T}
-    Future.copy!(p.x.vars, vars)
+    copy!(p.x.vars, vars)
     empty!(p.a)
     empty!(p.x.Z)
     removedups_to!(p.a, p.x.Z, adup, Zdup, M)
@@ -374,7 +374,7 @@ function MP.map_coefficients_to!(
 )
     resize!(output.a, length(p.a))
     map!(f, output.a, p.a)
-    Future.copy!(output.x.vars, p.x.vars)
+    copy!(output.x.vars, p.x.vars)
     # TODO reuse the part of `Z` that is already in `output`.
     resize!(output.x.Z, length(p.x.Z))
     for i in eachindex(p.x.Z)
