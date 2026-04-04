@@ -213,7 +213,7 @@ MP.exponents(::Variable) = [1]
 MP.ordering(v::Variable) = MP.ordering(typeof(v))
 MP.ordering(::Type{Variable{V,M}}) where {V,M} = M
 
-MP.is_commutative(::Type{Variable{V}}) where {V} = iscomm(V)
+MP.is_commutative(::Type{<:Variable{V}}) where {V} = iscomm(V)
 MP.is_commutative(::Type{<:Vector{<:Variable{V}}}) where {V} = iscomm(V)
 
 Base.isreal(x::Variable) = x.kind != COMPLEX && x.kind != CONJ
