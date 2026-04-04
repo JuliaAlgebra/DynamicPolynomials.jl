@@ -60,8 +60,8 @@ function MP.promote_rule_constant(
 ) where {S,V,M,T}
     return Polynomial{V,M,promote_type(S, T)}
 end
-MP.promote_rule_constant(::Type, ::Type{_Term{V,M}}) where {V,M} = Any
-MP.promote_rule_constant(::Type, ::Type{Polynomial{V,M}}) where {V,M} = Any
+MP.promote_rule_constant(::Type, ::Type{_Term{V,M}}) where {V,M} = Union{}
+MP.promote_rule_constant(::Type, ::Type{Polynomial{V,M}}) where {V,M} = Union{}
 function Base.promote_rule(
     ::Type{_Term{V,M}},
     ::Type{_Term{V,M,T}},
