@@ -13,8 +13,9 @@ const DMonomialLike{V,M} = Union{Monomial{V,M},Variable{V,M}}
 MA.mutability(::Type{<:Monomial{<:Commutative}}) = MA.IsMutable()
 MA.mutability(::Type{<:Monomial{<:NonCommutative}}) = MA.IsNotMutable()
 
-# Term type comes from MP (SA.Term)
-const _Term{V,M,T} = MP.Term{T,Monomial{V,M}}
+# Term type comes from SA — SA.Term{T,A,I} where A is the polynomial algebra
+# _Term is now just a convenient alias used internally
+const _Term{V,M,T} = SA.Term{T}
 
 include("monomial_vector.jl")
 
