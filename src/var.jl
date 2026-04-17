@@ -207,7 +207,7 @@ function MP.name_base_indices(v::Variable)
     end
 end
 
-MP.monomial(v::Variable) = Monomial(v)
+MP.monomial(v::Variable) = MP.Polynomial{MP.Monomial}(v)
 MP.variables(v::Variable) = [v]
 MP.exponents(::Variable) = [1]
 MP.ordering(v::Variable) = MP.ordering(typeof(v))
@@ -245,7 +245,7 @@ function Base.imag(x::Variable{V,M}) where {V,M}
     if x.kind == COMPLEX
         return Variable(x, IMAG_PART)
     elseif x.kind == CONJ
-        return _Term{V,M,Int}(-1, Monomial(Variable(x, IMAG_PART)))
+        return SA.Term(-1, MP.monomial(Variable(x, IMAG_PART)))
     else
         return MA.Zero()
     end
