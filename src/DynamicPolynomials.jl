@@ -8,101 +8,87 @@ import MutableArithmetics as MA
 import StarAlgebras as SA
 
 include("var.jl")
-include("mono.jl")
-const DMonomialLike{V,M} = Union{Monomial{V,M},Variable{V,M}}
-MA.mutability(::Type{<:Monomial{<:Commutative}}) = MA.IsMutable()
-MA.mutability(::Type{<:Monomial{<:NonCommutative}}) = MA.IsNotMutable()
 
-# Term type comes from SA — SA.Term{T,A,I} where A is the polynomial algebra
-# _Term is now just a convenient alias used internally
-const _Term{V,M,T} = SA.Term{T}
+# Monomials are now MP.Polynomial{MP.Monomial, V, E}
+# No separate Monomial struct — variables and exponents live in the basis element.
 
-include("monomial_vector.jl")
+# The monomial type for DP variables
+const DMonomialLike{V} = Union{MP.Polynomial{MP.Monomial,V},Variable{V}}
+# Convenience alias for the specific monomial type with DP variables
+const DPMonomial{V,M} = MP.Polynomial{MP.Monomial,Vector{Variable{V,M}},Vector{Int}}
 
 function MP.variable_union_type(
-    ::Union{DMonomialLike{V,M},Type{<:DMonomialLike{V,M}}},
+    ::Union{Variable{V,M},Type{<:Variable{V,M}}},
 ) where {V,M}
     return Variable{V,M}
 end
 function MP.variable_union_type(
-    ::Union{_Term{V,M},Type{<:_Term{V,M}}},
+    ::Union{DPMonomial{V,M},Type{<:DPMonomial{V,M}}},
 ) where {V,M}
     return Variable{V,M}
 end
-MP.constant_monomial(::Type{<:DMonomialLike{V,M}}) where {V,M} = Monomial{V,M}()
-function MP.constant_monomial(p::DMonomialLike)
-    return Monomial(copy(MP.variables(p)), zeros(Int, nvariables(p)))
-end
-MP.monomial_type(::Type{<:DMonomialLike{V,M}}) where {V,M} = Monomial{V,M}
-MP.monomial_type(::DMonomialLike{V,M}) where {V,M} = Monomial{V,M}
-MP.monomial_type(::Type{<:_Term{V,M}}) where {V,M} = Monomial{V,M}
-MP.monomial_type(::_Term{V,M}) where {V,M} = Monomial{V,M}
-MP.ordering(p::DMonomialLike) = MP.ordering(MP.variable_union_type(p))
+
+MP.constant_monomial(::Type{DPMonomial{V,M}}) where {V,M} = MP.Polynomial(
+    MP.Variables{MP.Monomial}(Variable{V,M}[]),
+    Int[],
+)
+MP.monomial_type(::Type{<:DPMonomial{V,M}}) where {V,M} = DPMonomial{V,M}
+MP.monomial_type(::DPMonomial{V,M}) where {V,M} = DPMonomial{V,M}
+MP.monomial_type(::Type{<:Variable{V,M}}) where {V,M} = DPMonomial{V,M}
+MP.monomial_type(::Variable{V,M}) where {V,M} = DPMonomial{V,M}
+# MP.ordering for Variable is in var.jl
 
 function MP.term_type(
-    ::Union{DMonomialLike{V,M},Type{<:DMonomialLike{V,M}}},
+    ::Union{Variable{V,M},Type{<:Variable{V,M}}},
     ::Type{T},
 ) where {V,M,T}
-    return _Term{V,M,T}
+    # Create a term via the convenience constructor
+    # term_type needs to return a constructible type...
+    # For now just return SA.Term{T} since concrete type depends on algebra
+    return SA.Term{T}
 end
 
-# polynomial_type returns AlgebraElement type
-# We compute the FullBasis type directly to avoid recursion through _polynomial_type
-function _dp_full_basis_type(::Type{Monomial{V,M}}) where {V,M}
-    Vars = Vector{Variable{V,M}}
-    E = Vector{Int}
-    P = MP.Polynomial{MP.Monomial,Vars,E}
-    O = MP.ordering(Variable{V,M})
-    return SA.MappedBasis{
-        P, E,
-        MP.ExponentsIterator{O,Nothing,E},
-        MP.Variables{MP.Monomial,Vars},
-        typeof(MP.exponents),
-    }
-end
-
-function MP.polynomial_type(
-    ::Union{DMonomialLike{V,M},Type{<:DMonomialLike{V,M}}},
-    ::Type{T},
-) where {V,M,T}
-    return MP.algebra_element_type(Vector{T}, _dp_full_basis_type(Monomial{V,M}))
-end
-function MP.polynomial_type(::Type{_Term{V,M,T}}) where {V,M,T}
-    return MP.algebra_element_type(Vector{T}, _dp_full_basis_type(Monomial{V,M}))
-end
-function MP.polynomial_type(::Type{_Term{V,M}}) where {V,M}
-    return MP.algebra_element_type(Vector{Any}, _dp_full_basis_type(Monomial{V,M}))
-end
-
-MP.variables(p::AbstractArray{<:DMonomialLike}) = mergevars(MP.variables.(p))[1]
-function MP.nvariables(
-    p::Union{DMonomialLike,MonomialVector,AbstractArray{<:DMonomialLike}},
-)
+MP.variables(p::AbstractArray{<:Variable}) = mergevars(MP.variables.(p))[1]
+function MP.nvariables(p::Union{Variable,AbstractArray{<:Variable}})
     return length(MP.variables(p))
 end
 function MP.similar_variable(
-    P::Union{DMonomialLike{V,M},Type{<:DMonomialLike{V,M}}},
+    P::Union{Variable{V,M},Type{<:Variable{V,M}}},
     ::Type{Val{S}},
 ) where {V,M,S}
     return MP.similar_variable(P, S)
 end
-function MP.similar_variable(p::DMonomialLike{V,M}, s::Symbol) where {V,M}
+function MP.similar_variable(p::Variable{V,M}, s::Symbol) where {V,M}
     return Variable(string(s), V, M, isreal(p) ? REAL : COMPLEX)
 end
-function MP.similar_variable(::Type{<:DMonomialLike{V,M}}, s::Symbol) where {V,M}
+function MP.similar_variable(::Type{<:Variable{V,M}}, s::Symbol) where {V,M}
     return Variable(string(s), V, M, REAL)
 end
 
-include("promote.jl")
+# Create monomial from variable: Variable → Polynomial{Monomial,...}
+function Base.convert(::Type{DPMonomial{V,M}}, x::Variable{V,M}) where {V,M}
+    return MP.Polynomial{MP.Monomial}(x)
+end
 
-# Monomial multiplication (cmult.jl and ncmult.jl)
-include("mult.jl")
+# monomial(vars, exps) constructs a Polynomial{Monomial,...}
+function MP.monomial(vars::Vector{Variable{V,M}}, z::Vector{Int}) where {V,M}
+    @assert !iscomm(V) || issorted(vars, rev = true)
+    return MP.Polynomial(MP.Variables{MP.Monomial}(vars), z)
+end
+
+# exponents for variables is in var.jl
 
 include("comp.jl")
+include("promote.jl")
 
-include("diff.jl")
-include("subs.jl")
+# Variable power → monomial
+Base.:(^)(x::Variable{V,M}, i::Int) where {V,M} = MP.Polynomial(
+    MP.Variables{MP.Monomial}([x]),
+    [i],
+)
 
-include("div.jl")
+# Variable + Variable → uses term + term → AlgebraElement
+Base.:(+)(x::Variable, y::Variable) = MP.term(x) + MP.term(y)
+Base.:(-)(x::Variable, y::Variable) = MP.term(x) - MP.term(y)
 
 end # module
