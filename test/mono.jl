@@ -136,7 +136,7 @@ import MultivariatePolynomials as MP
         m = DynamicPolynomials.Monomial([x, y, y, x], [2, 1, 0, 0]) * z
         @test variables(m) == [x, y, y, z, x]
         @test m.z == [2, 1, 0, 1, 0]
-        m = DynamicPolynomials.Monomial([x, y, x, y], [2, 1, 0, 0]) * z
+        m = MP.monomial([x, y, x, y], [2, 1, 0, 0]) * z
         @test variables(m) == [x, y, z, x, y]
         @test m.z == [2, 1, 1, 0, 0]
     end
@@ -187,6 +187,34 @@ import MultivariatePolynomials as MP
         X = monomials([x, y], 0:1)
         @test filter(mono -> degree(mono) == 1, X) == monomial_vector([x, y])
         @test filter(mono -> degree(mono) == 0, X) == monomial_vector([x^0])
+    end
+    @testset "NC exponents with variables" begin
+        @ncpolyvar x y z
+        # Monomial with subset of variables, exponents mapped to full variable list
+        m = DynamicPolynomials.Monomial([x, z], [2, 3])
+        e = MP.exponents(m, [x, y, z])
+        @test e == [2, 0, 3]
+        @test length(e) == 3
+
+        # Single variable monomial mapped to larger variable set
+        m = DynamicPolynomials.Monomial([y], [4])
+        e = MP.exponents(m, [x, y, z])
+        @test e == [0, 4, 0]
+
+        # Monomial using all variables
+        m = DynamicPolynomials.Monomial([x, y, z], [1, 2, 3])
+        e = MP.exponents(m, [x, y, z])
+        @test e == [1, 2, 3]
+
+        # Constant monomial (no variables)
+        m = DynamicPolynomials.Monomial(typeof(x)[], Int[])
+        e = MP.exponents(m, [x, y, z])
+        @test e == [0, 0, 0]
+
+        # Noncommutative monomial with repeated variables
+        m = DynamicPolynomials.Monomial([x, y, x], [1, 2, 3])
+        e = MP.exponents(m, [x, y, x])
+        @test e == [1, 2, 3]
     end
     @testset "Noncommutative div" begin
         @ncpolyvar x y

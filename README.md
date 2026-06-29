@@ -100,7 +100,7 @@ Indeed, the ordering between the `Variable` is not alphabetical but rather by or
 which can be undeterministic with parallel computing.
 Therefore, this order cannot be used for substitution, even as a default (see [here](https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/3) for a discussion about this).
 
-[build-img]: https://github.com/JuliaAlgebra/DynamicPolynomials.jl/workflows/CI/badge.svg?branch=master
+[build-img]: https://github.com/JuliaAlgebra/DynamicPolynomials.jl/actions/workflows/ci.yml/badge.svg?branch=master
 [build-url]: https://github.com/JuliaAlgebra/DynamicPolynomials.jl/actions?query=workflow%3ACI
 [codecov-img]: http://codecov.io/github/JuliaAlgebra/DynamicPolynomials.jl/coverage.svg?branch=master
 [codecov-url]: http://codecov.io/github/JuliaAlgebra/DynamicPolynomials.jl?branch=master

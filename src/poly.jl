@@ -26,7 +26,7 @@ function Polynomial{V,M,T}(terms::AbstractVector{<:_Term{V,M}}) where {V,M,T}
     return Polynomial{V,M,T}(a, x)
 end
 
-iscomm(::Type{Polynomial{V,M,T}}) where {V,M,T} = V, M
+MP.is_commutative(::Type{Polynomial{V,M,T}}) where {V,M,T} = iscomm(V)
 
 function _zero_with_variables(
     ::Type{Polynomial{V,M,T}},
@@ -219,7 +219,7 @@ function removedups_to!(
     ::Type{M},
 ) where {T,M}
     _isless = let M = M
-        (a, b) -> MP.compare(a, b, M) < 0
+        (a, b) -> cmp(M(), a, b) < 0
     end
     σ = sortperm(Zdup, lt = _isless)
     i = 0
@@ -252,7 +252,7 @@ function polynomialclean_to!(
     adup::Vector{T},
     Zdup::Vector{Vector{Int}},
 ) where {V,M,T}
-    Future.copy!(p.x.vars, vars)
+    copy!(p.x.vars, vars)
     empty!(p.a)
     empty!(p.x.Z)
     removedups_to!(p.a, p.x.Z, adup, Zdup, M)
@@ -374,7 +374,7 @@ function MP.map_coefficients_to!(
 )
     resize!(output.a, length(p.a))
     map!(f, output.a, p.a)
-    Future.copy!(output.x.vars, p.x.vars)
+    copy!(output.x.vars, p.x.vars)
     # TODO reuse the part of `Z` that is already in `output`.
     resize!(output.x.Z, length(p.x.Z))
     for i in eachindex(p.x.Z)

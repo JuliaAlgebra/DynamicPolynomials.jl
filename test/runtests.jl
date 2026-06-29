@@ -9,6 +9,15 @@ function alloc_test_lt(f, n)
 end
 
 # TODO move to MP
+@testset "monomial" begin
+    @polyvar x
+    @test monomial(x) == monomial(variables(x), exponents(x))
+    @polyvar y
+    @test monomial([x, y], [2, 3]) == x^2 * y^3
+    @test_throws AssertionError monomial([y, x], [2, 3]) == x^2 * y^3
+end
+
+# TODO move to MP
 @testset "See https://github.com/jump-dev/SumOfSquares.jl/issues/388" begin
     @polyvar x[1:3]
     p = sum(x)

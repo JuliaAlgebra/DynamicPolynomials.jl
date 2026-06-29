@@ -109,20 +109,21 @@ function Base.:(*)(
     x::Monomial{V,M},
     y::Monomial{V,M},
 ) where {V<:NonCommutative,M}
-    i = findlast(z -> z > 0, x.z)
-    if i === nothing || i == 0
+    xj = findlast(!iszero, x.z)
+    if xj === nothing || xj == 0
         return y
     end
-    j = findfirst(z -> z > 0, y.z)
-    if j === nothing || j == 0
+    yi = findfirst(!iszero, y.z)
+    if yi === nothing || yi == 0
         return x
     end
-    if x.vars[i] == y.vars[j]
-        w = [x.vars[1:i]; y.vars[j+1:end]]
-        z = [x.z[1:i-1]; x.z[i] + y.z[j]; y.z[j+1:end]]
+    yj = findlast(!iszero, y.z)
+    if x.vars[xj] == y.vars[yi]
+        w = [x.vars[1:xj]; y.vars[yi+1:yj]]
+        z = [x.z[1:xj-1]; x.z[xj] + y.z[yi]; y.z[yi+1:yj]]
     else
-        w = [x.vars[1:i]; y.vars[j:end]]
-        z = [x.z[1:i]; y.z[j:end]]
+        w = [x.vars[1:xj]; y.vars[yi:yj]]
+        z = [x.z[1:xj]; y.z[yi:yj]]
     end
     return Monomial(w, z)
 end

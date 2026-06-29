@@ -30,7 +30,13 @@ function Monomial{V,M}(
     return Monomial{V,M}([vars...], z)
 end
 
-iscomm(::Type{<:Monomial{V}}) where {V} = iscomm(V)
+function MP.monomial(vars::Vector{Variable{V,M}}, z::Vector{Int}) where {V,M}
+    # TODO need a sanity check for the noncommutative case as well
+    @assert !iscomm(V) || issorted(vars, rev = true)
+    return Monomial{V,M}(vars, z)
+end
+
+MP.is_commutative(::Type{<:Monomial{V}}) where {V} = iscomm(V)
 Monomial{V,M}() where {V,M} = Monomial{V,M}(Variable{V,M}[], Int[])
 function Monomial(vars::TupOrVec{Variable{V,M}}, z::Vector{Int}) where {V,M}
     return Monomial{V,M}(vars, z)
@@ -79,7 +85,14 @@ MP.exponents(m::Monomial) = m.z
 # /!\ vars not copied, do not mess with vars
 MP.variables(m::Union{Monomial}) = m.vars
 
-MP.monomial(m::Monomial) = m
+function MP.exponents(mono::Monomial{<:NonCommutative}, vars::AbstractVector)
+    allvars, maps = mergevars([MP.variables(mono), vars])
+    @assert allvars == vars
+    z = zeros(Int, length(allvars))
+    z[maps[1]] = MP.exponents(mono)
+    return z
+end
+
 # Does m1 divides m2 ?
 #function MP.divides(m1::Monomial, m2::Monomial)
 #    i = j = 1
@@ -107,7 +120,7 @@ function __add_variables!(
     allvars::Vector{Variable{V,M}},
     map,
 ) where {V,M}
-    Future.copy!(mono.vars, allvars)
+    copy!(mono.vars, allvars)
     tmp = copy(mono.z)
     resize!(mono.z, length(allvars))
     fill!(mono.z, 0)

@@ -145,9 +145,9 @@ function MA.operate_to!(
         MP.mul_to_terms!(ts, q1, q2)
         # TODO do better than create tmp
         tmp = polynomial!(ts)
-        Future.copy!(p.a, tmp.a)
-        Future.copy!(p.x.vars, tmp.x.vars)
-        Future.copy!(p.x.Z, tmp.x.Z)
+        copy!(p.a, tmp.a)
+        copy!(p.x.vars, tmp.x.vars)
+        copy!(p.x.Z, tmp.x.Z)
         return p
     end
 end

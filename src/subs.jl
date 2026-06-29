@@ -101,7 +101,7 @@ function _subsmap(
     # Some variable may not be replaced
     vals =
         Vector{promote_type(_substype(s), Variable{V,M})}(undef, length(vars))
-    Future.copy!(vals, vars)
+    copy!(vals, vars)
     fillmap!(vals, vars, s...)
     return vals
 end
