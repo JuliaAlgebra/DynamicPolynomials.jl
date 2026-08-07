@@ -33,12 +33,62 @@ MP.constant_monomial(::Type{<:PolyType{V,M}}) where {V,M} = Monomial{V,M}()
 function MP.constant_monomial(p::PolyType)
     return Monomial(copy(MP.variables(p)), zeros(Int, nvariables(p)))
 end
+<<<<<<< Updated upstream
 MP.monomial_type(::Type{<:PolyType{V,M}}) where {V,M} = Monomial{V,M}
 MP.monomial_type(::PolyType{V,M}) where {V,M} = Monomial{V,M}
 MP.ordering(p::PolyType) = MP.ordering(MP.variable_union_type(p))
 #function MP.constant_monomial(::Type{Monomial{V,M}}, vars=Variable{V,M}[]) where {V,M}
 #    return Monomial{V,M}(vars, zeros(Int, length(vars)))
 #end
+=======
+
+MP.constant_monomial(::Type{DPMonomial{V,M}}) where {V,M} = MP.Polynomial(
+    MP.Variables{MP.Monomial}(Variable{V,M}[]),
+    Int[],
+)
+# constant_monomial for a Variable instance
+function MP.constant_monomial(v::Variable{V,M}) where {V,M}
+    return MP.Polynomial(
+        MP.Variables{MP.Monomial}([v]),
+        [0],
+    )
+end
+function MP.constant_monomial(::Type{Variable{V,M}}) where {V,M}
+    return MP.Polynomial(
+        MP.Variables{MP.Monomial}(Variable{V,M}[]),
+        Int[],
+    )
+end
+MP.monomial_type(::Type{<:DPMonomial{V,M}}) where {V,M} = DPMonomial{V,M}
+MP.monomial_type(::DPMonomial{V,M}) where {V,M} = DPMonomial{V,M}
+MP.monomial_type(::Type{<:Variable{V,M}}) where {V,M} = DPMonomial{V,M}
+MP.monomial_type(::Variable{V,M}) where {V,M} = DPMonomial{V,M}
+# MP.ordering for Variable is in var.jl
+
+# Compute fully-parametrized SA.Term{T,A,I} type for DP variables/monomials
+# We manually construct the full basis type to avoid going through
+# MA.promote_operation(variables, ...) which would recurse.
+function _dp_full_basis_type(::Type{Variable{V,M}}) where {V,M}
+    Vars = Vector{Variable{V,M}}
+    E = Vector{Int}
+    P = MP.Polynomial{MP.Monomial,Vars,E}
+    O = M  # monomial ordering
+    return SA.MappedBasis{
+        P,E,
+        MP.ExponentsIterator{O,Nothing,E},
+        MP.Variables{MP.Monomial,Vars},
+        typeof(MP.exponents),
+    }
+end
+
+function _dp_term_type(::Type{Variable{V,M}}, ::Type{T}) where {V,M,T}
+    BT = _dp_full_basis_type(Variable{V,M})
+    A = MA.promote_operation(MP.algebra, BT)
+    I = Vector{Int}
+    return SA.Term{T,A,I}
+end
+
+>>>>>>> Stashed changes
 function MP.term_type(
     ::Union{TermPoly{V,M,T},Type{<:TermPoly{V,M,T}}},
 ) where {V,M,T}
@@ -48,6 +98,7 @@ function MP.term_type(
     ::Union{PolyType{V,M},Type{<:PolyType{V,M}}},
     ::Type{T},
 ) where {V,M,T}
+<<<<<<< Updated upstream
     return _Term{V,M,T}
 end
 MP.term_type(::Type{Polynomial{V,M}}) where {V,M} = _Term{V,M}
@@ -63,6 +114,22 @@ MP.variables(p::AbstractArray{<:PolyType}) = mergevars(MP.variables.(p))[1]
 function MP.nvariables(
     p::Union{PolyType,MonomialVector,AbstractArray{<:PolyType}},
 )
+=======
+    return _dp_term_type(Variable{V,M}, T)
+end
+
+# term_type for Polynomial{Monomial,...} basis element (same as Variable)
+function MP.term_type(::Type{<:DPMonomial{V,M}}, ::Type{T}) where {V,M,T}
+    return _dp_term_type(Variable{V,M}, T)
+end
+
+# 1-arg term_type: default coefficient type Int
+MP.term_type(::Type{<:DPMonomial{V,M}}) where {V,M} = _dp_term_type(Variable{V,M}, Int)
+MP.term_type(::Type{<:Variable{V,M}}) where {V,M} = _dp_term_type(Variable{V,M}, Int)
+
+MP.variables(p::AbstractArray{<:Variable}) = mergevars(MP.variables.(p))[1]
+function MP.nvariables(p::Union{Variable,AbstractArray{<:Variable}})
+>>>>>>> Stashed changes
     return length(MP.variables(p))
 end
 function MP.similar_variable(
