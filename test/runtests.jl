@@ -39,6 +39,17 @@ end
     @test p(x0 => y0, x1 => y1) == y1 * y0 * y1
 end
 
+@testset "Right multiplication of a noncommutative polynomial" begin
+    @ncpolyvar x y z
+    @test (x + y) * z == x * z + y * z
+    @test (2x + 3y) * z == 2x * z + 3y * z
+
+    Δ = x^2 + y^2 + z^2
+    product = Δ * x
+    @test coefficients(product) == [1, 1, 1]
+    @test string.(monomials(product)) == ["z^2*x", "y^2*x", "x^3"]
+end
+
 # https://github.com/JuliaAlgebra/DynamicPolynomials.jl/issues/141
 @testset "Issue #141" begin
     @polyvar x
