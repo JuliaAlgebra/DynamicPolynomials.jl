@@ -58,6 +58,12 @@ function Base.:(*)(x::DMonomialLike{<:NonCommutative}, p::Polynomial)
         monomial_vector(MA.mutable_copy(p.a), [x * m for m in p.x])...,
     )
 end
+function Base.:(*)(p::Polynomial, x::DMonomialLike{<:NonCommutative})
+    # Order may change, so sort the monomials together with their coefficients.
+    return Polynomial(
+        monomial_vector(MA.mutable_copy(p.a), [m * x for m in p.x])...,
+    )
+end
 
 function _term_poly_mult(
     t::_Term{V,M,S},
