@@ -47,6 +47,15 @@ end
     @test variables(q) !== variables(m)
 end
 
+@testset "Issue #206" begin
+    @ncpolyvar x y z
+    p = x + y
+    @test 2z * p == 2 * (z * p)
+    @test -z * p == -(z * p)
+    @test p * 2z == 2 * (x * z + y * z)
+    @test p * -z == -(x * z + y * z)
+end
+
 @testset "Issue #79, Issue #80 and Issue #92" begin
     @polyvar x[1:2]
     p1 = x[1] * 0.0 + x[2] * 0
