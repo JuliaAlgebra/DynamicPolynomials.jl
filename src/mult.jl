@@ -88,6 +88,28 @@ function _term_poly_mult(
 end
 Base.:(*)(p::Polynomial, t::_Term) = _term_poly_mult(t, p, (α, β) -> β * α)
 Base.:(*)(t::_Term, p::Polynomial) = _term_poly_mult(t, p, *)
+function Base.:(*)(
+    t::_Term{V,M,S},
+    p::Polynomial{V,M,T},
+) where {V<:NonCommutative,M,S,T}
+    return Polynomial(
+        monomial_vector(
+            coefficient(t) .* p.a,
+            [monomial(t) * m for m in p.x],
+        )...,
+    )
+end
+function Base.:(*)(
+    p::Polynomial{V,M,T},
+    t::_Term{V,M,S},
+) where {V<:NonCommutative,M,S,T}
+    return Polynomial(
+        monomial_vector(
+            p.a .* coefficient(t),
+            [m * monomial(t) for m in p.x],
+        )...,
+    )
+end
 _sumprod(a, b) = a * b + a * b
 function _mul(
     ::Type{T},
