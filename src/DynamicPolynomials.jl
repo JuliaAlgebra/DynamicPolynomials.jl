@@ -12,8 +12,6 @@ include("var.jl")
 # Monomials are now MP.Polynomial{MP.Monomial, V, E}
 # No separate Monomial struct — variables and exponents live in the basis element.
 
-# The monomial type for DP variables
-const DMonomialLike{V} = Union{MP.Polynomial{MP.Monomial,V},Variable{V}}
 # Convenience alias for the specific monomial type with DP variables
 const DPMonomial{V,M} = MP.Polynomial{MP.Monomial,Vector{Variable{V,M}},Vector{Int}}
 
@@ -32,21 +30,9 @@ MP.constant_monomial(::Type{DPMonomial{V,M}}) where {V,M} = MP.Polynomial(
     MP.Variables{MP.Monomial}(Variable{V,M}[]),
     Int[],
 )
-MP.monomial_type(::Type{<:DPMonomial{V,M}}) where {V,M} = DPMonomial{V,M}
-MP.monomial_type(::DPMonomial{V,M}) where {V,M} = DPMonomial{V,M}
 MP.monomial_type(::Type{<:Variable{V,M}}) where {V,M} = DPMonomial{V,M}
 MP.monomial_type(::Variable{V,M}) where {V,M} = DPMonomial{V,M}
 # MP.ordering for Variable is in var.jl
-
-function MP.term_type(
-    ::Union{Variable{V,M},Type{<:Variable{V,M}}},
-    ::Type{T},
-) where {V,M,T}
-    # Create a term via the convenience constructor
-    # term_type needs to return a constructible type...
-    # For now just return SA.Term{T} since concrete type depends on algebra
-    return SA.Term{T}
-end
 
 MP.variables(p::AbstractArray{<:Variable}) = mergevars(MP.variables.(p))[1]
 function MP.nvariables(p::Union{Variable,AbstractArray{<:Variable}})
@@ -90,5 +76,35 @@ Base.:(^)(x::Variable{V,M}, i::Int) where {V,M} = MP.Polynomial(
 # Variable + Variable → uses term + term → AlgebraElement
 Base.:(+)(x::Variable, y::Variable) = MP.term(x) + MP.term(y)
 Base.:(-)(x::Variable, y::Variable) = MP.term(x) - MP.term(y)
+
+# Short names for the default commutative algebra and coefficient storage.
+const _DefaultVariable =
+    Variable{Commutative{CreationOrder},MP.Graded{MP.LexOrder}}
+const _DefaultAlgebra =
+    typeof(MP.algebra(MP.FullBasis{MP.Monomial}(_DefaultVariable[])))
+const Polynomial{T} = SA.AlgebraElement{
+    T,
+    _DefaultAlgebra,
+    SA.SparseCoefficients{
+        Vector{Int},
+        T,
+        Vector{Vector{Int}},
+        Vector{T},
+        MP.Graded{MP.LexOrder},
+    },
+}
+const Term{T} = SA.Term{T,_DefaultAlgebra,Vector{Int}}
+
+# Julia searches for type aliases only in the outer type's defining module.
+function Base.show(io::IO, ::Type{Polynomial{T}}) where {T}
+    print(io, "DynamicPolynomials.Polynomial{")
+    show(io, T)
+    return print(io, "}")
+end
+function Base.show(io::IO, ::Type{Term{T}}) where {T}
+    print(io, "DynamicPolynomials.Term{")
+    show(io, T)
+    return print(io, "}")
+end
 
 end # module

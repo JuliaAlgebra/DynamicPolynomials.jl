@@ -1,19 +1,5 @@
 import Base.==
 
-# Comparison of Variable vectors
-function Base.:(==)(x::Vector{Variable{V,M}}, y::Vector{Variable{V,M}}) where {V,M}
-    if length(x) != length(y)
-        false
-    else
-        for i in 1:length(x)
-            if x[i] != y[i]
-                return false
-            end
-        end
-        true
-    end
-end
-
 # Comparison of Variable
 const AnyCommutative{O} = Union{Commutative{O},NonCommutative{O}}
 
