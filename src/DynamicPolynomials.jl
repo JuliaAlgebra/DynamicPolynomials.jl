@@ -67,6 +67,7 @@ end
 include("comp.jl")
 include("promote.jl")
 include("div.jl")
+include("noncommutative.jl")
 
 # Variable power → monomial
 Base.:(^)(x::Variable{V,M}, i::Int) where {V,M} = MP.Polynomial(
