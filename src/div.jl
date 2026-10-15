@@ -4,7 +4,10 @@ function MP.divides(
 )
     return error("Not implemented yet")
 end
-function MP.divides(m1::DPMonomial{<:Commutative}, m2::DPMonomial{<:Commutative})
+function MP.divides(
+    m1::DPMonomial{<:Commutative},
+    m2::DPMonomial{<:Commutative},
+)
     e1 = exponents(m1)
     v1 = variables(m1)
     e2 = exponents(m2)

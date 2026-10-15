@@ -1,10 +1,11 @@
 using Test
+using DynamicPolynomials
 import MultivariatePolynomials as MP
 
 @testset "Variable and Monomial tests" begin
     @testset "Variable macro index set" begin
         n = 3
-        @polyvar x[1:n] y z[1:n-1] u[1:n, 1:n-1]
+        @polyvar x[1:n] y z[1:(n-1)] u[1:n, 1:(n-1)]
         VT = typeof(y)
         @test x isa Vector{VT}
         @test y isa VT
@@ -55,7 +56,7 @@ import MultivariatePolynomials as MP
         YT = typeof(y)
         @test one(YT) == 1
         @polyvar x
-        @test zero_term(x) isa MP.Term{Int,monomial_type(XT)}
+        @test zero_term(x) isa term_type(XT)
         @test zero(x) isa polynomial_type(XT)
         @test one(x) isa monomial_type(XT)
     end
@@ -67,82 +68,86 @@ import MultivariatePolynomials as MP
         @polyvar cp
         XT = typeof(cp)
         @test one(XT) == 1
-        @test_throws ErrorException DynamicPolynomials.Monomial(2)
-        @test (@inferred DynamicPolynomials.Monomial(1)) isa monomial_type(XT)
-        @test DynamicPolynomials.Monomial(1) == 1
-        @test_throws ErrorException convert(monomial_type(XT), 2)
-        @test (@inferred convert(monomial_type(XT), 1)) isa monomial_type(XT)
-        @test convert(monomial_type(XT), 1) == 1
-        @test_throws ErrorException convert(monomial_type(YT), 2)
-        @test (@inferred convert(monomial_type(YT), 1)) isa monomial_type(YT)
-        @test convert(monomial_type(YT), 1) == 1
+        for VT in (XT, YT)
+            MT = monomial_type(VT)
+            @test (@inferred constant_monomial(VT)) isa MT
+            @test one(MT) == 1
+            @test_throws InexactError convert(MT, 2)
+            @test (@inferred convert(MT, 1)) isa MT
+            @test convert(MT, 1) == 1
+        end
         @polyvar x
-        @test_throws ArgumentError monomial_type(XT)([x], [1, 0])
-        @test zero_term(x^2) isa MP.Term{Int,monomial_type(x)}
+        @test_throws ArgumentError monomial([x], [1, 0])
+        @test zero_term(x^2) isa term_type(x)
         @test zero(x^2) isa polynomial_type(XT)
         @test one(x^2) isa monomial_type(XT)
 
         @polyvar y
-        @test DynamicPolynomials.Monomial([x, y], [1, 0]) == x
-        @test x != DynamicPolynomials.Monomial([x, y], [0, 1])
+        @test monomial([x, y], [1, 0]) == x
+        @test x != monomial([x, y], [0, 1])
     end
     @testset "MonomialVector" begin
         @polyvar x y
-        @test_throws AssertionError monomial_vector_type(x)([x], [[1], [1, 0]])
-        X = MonomialVector([x, 1, x * y])
+        @test_throws ArgumentError monomial_vector([
+            monomial([x], e) for e in ([1], [1, 0])
+        ])
+        X = monomial_vector([x, 1, x * y])
         @test variables(X) == [x, y]
-        @test X.Z == [[0, 0], [1, 0], [1, 1]]
+        @test [exponents(m, [x, y]) for m in X] == [[0, 0], [1, 0], [1, 1]]
         @test monomial_vector_type(x)([1]) isa monomial_vector_type(x)
         @ncpolyvar nc
         @test monomial_vector_type(nc)([1]) isa monomial_vector_type(nc)
         a = [1, 5, 3]
         b, Y = monomial_vector(a, X)
-        @test b === a
-        @test Y === X
+        @test b == a
+        @test Y == X
         σ, Y = sort_monomial_vector(X)
         @test σ == 1:length(X)
-        @test Y === X
+        @test Y == X
         XX = @inferred merge_monomial_vectors([X, X])
         @test XX isa monomial_vector_type(x)
         @test X == XX
 
-        @test 2 != MonomialVector([x, y], 1)
-        @test x != MonomialVector([x, y], 1)
-        @test MonomialVector([x, y], [[0, 0], [1, 0]]) ==
-              MonomialVector([x], [[0], [1]])
+        @test 2 != monomials([x, y], 1)
+        @test x != monomials([x, y], 1)
+        @test monomial_vector([
+            monomial([x, y], e) for e in ([0, 0], [1, 0])
+        ]) == monomial_vector([monomial([x], e) for e in ([0], [1])])
     end
     @testset "Non-commutative" begin
         @ncpolyvar x
-        @test_throws ArgumentError monomial_type(x)([x], [1, 0])
-        @test_throws AssertionError monomial_vector_type(x)([x], [[1], [1, 0]])
+        @test_throws ArgumentError monomial([x], [1, 0])
+        @test_throws ArgumentError monomial_vector([
+            monomial([x], e) for e in ([1], [1, 0])
+        ])
     end
     @testset "NC Variable * Monomial" begin
         @ncpolyvar x y z
-        m = y * DynamicPolynomials.Monomial([y, z, x, z], [0, 0, 2, 1])
-        @test variables(m) == [y, z, x, z]
-        @test m.z == [1, 0, 2, 1]
-        m = x * DynamicPolynomials.Monomial([z, y, y, z], [0, 0, 2, 1])
-        @test variables(m) == [z, x, y, y, z]
-        @test m.z == [0, 1, 0, 2, 1]
-        m = x * DynamicPolynomials.Monomial([y, z, y, z], [0, 0, 2, 1])
-        @test variables(m) == [y, z, x, y, z]
-        @test m.z == [0, 0, 1, 2, 1]
+        m = y * monomial([y, z, x, z], [0, 0, 2, 1])
+        @test variables(m) == [y, x, z]
+        @test exponents(m) == [1, 2, 1]
+        m = x * monomial([z, y, y, z], [0, 0, 2, 1])
+        @test variables(m) == [x, y, z]
+        @test exponents(m) == [1, 2, 1]
+        m = x * monomial([y, z, y, z], [0, 0, 2, 1])
+        @test variables(m) == [x, y, z]
+        @test exponents(m) == [1, 2, 1]
     end
     @testset "NC Monomial * Variable" begin
         @ncpolyvar x y z
-        m = DynamicPolynomials.Monomial([x, z, x, y], [2, 1, 0, 0]) * y
-        @test variables(m) == [x, z, x, y]
-        @test m.z == [2, 1, 0, 1]
-        m = DynamicPolynomials.Monomial([x, y, y, x], [2, 1, 0, 0]) * z
-        @test variables(m) == [x, y, y, z, x]
-        @test m.z == [2, 1, 0, 1, 0]
+        m = monomial([x, z, x, y], [2, 1, 0, 0]) * y
+        @test variables(m) == [x, z, y]
+        @test exponents(m) == [2, 1, 1]
+        m = monomial([x, y, y, x], [2, 1, 0, 0]) * z
+        @test variables(m) == [x, y, z]
+        @test exponents(m) == [2, 1, 1]
         m = MP.monomial([x, y, x, y], [2, 1, 0, 0]) * z
-        @test variables(m) == [x, y, z, x, y]
-        @test m.z == [2, 1, 1, 0, 0]
+        @test variables(m) == [x, y, z]
+        @test exponents(m) == [2, 1, 1]
     end
 
     @testset "Antidifferentiation" begin
-	      @ncpolyvar x y z
+        @ncpolyvar x y z
 
         m = x
         mi = DynamicPolynomials.MP.antidifferentiate(m, y)
@@ -157,7 +162,7 @@ import MultivariatePolynomials as MP
         @test mi == (x^4 / 4)
         @test MP.coefficient_type(mi) == Rational{Int}
 
-        m = DynamicPolynomials.Monomial([x, y, z], [1, 2, 3])
+        m = monomial([x, y, z], [1, 2, 3])
         mi = DynamicPolynomials.MP.antidifferentiate(m, z)
         @test mi == (x*y^2*z^4) / 4
         @test MP.coefficient_type(mi) == Rational{Int}
@@ -173,8 +178,9 @@ import MultivariatePolynomials as MP
     end
     @testset "TODO remove when added to MP" begin
         @polyvar x y
-        @test x == DynamicPolynomials.MP.map_exponents!(div, x^1, x * y^2)
-        for z in [x * y, x^2, y^2]
+        @test x == DynamicPolynomials.MP.map_exponents!(div, x * y^0, x * y^2)
+        @test_throws ArgumentError MP.map_exponents!(div, x^1, x * y^2)
+        for z in [x * y, x^2 * y^0, x^0 * y^2]
             @test y ==
                   DynamicPolynomials.MP.map_exponents_to!(z, -, x * y^2, x * y)
         end
@@ -191,34 +197,34 @@ import MultivariatePolynomials as MP
     @testset "NC exponents with variables" begin
         @ncpolyvar x y z
         # Monomial with subset of variables, exponents mapped to full variable list
-        m = DynamicPolynomials.Monomial([x, z], [2, 3])
+        m = monomial([x, z], [2, 3])
         e = MP.exponents(m, [x, y, z])
         @test e == [2, 0, 3]
         @test length(e) == 3
 
         # Single variable monomial mapped to larger variable set
-        m = DynamicPolynomials.Monomial([y], [4])
+        m = monomial([y], [4])
         e = MP.exponents(m, [x, y, z])
         @test e == [0, 4, 0]
 
         # Monomial using all variables
-        m = DynamicPolynomials.Monomial([x, y, z], [1, 2, 3])
+        m = monomial([x, y, z], [1, 2, 3])
         e = MP.exponents(m, [x, y, z])
         @test e == [1, 2, 3]
 
         # Constant monomial (no variables)
-        m = DynamicPolynomials.Monomial(typeof(x)[], Int[])
+        m = monomial(typeof(x)[], Int[])
         e = MP.exponents(m, [x, y, z])
         @test e == [0, 0, 0]
 
         # Noncommutative monomial with repeated variables
-        m = DynamicPolynomials.Monomial([x, y, x], [1, 2, 3])
+        m = monomial([x, y, x], [1, 2, 3])
         e = MP.exponents(m, [x, y, x])
         @test e == [1, 2, 3]
     end
     @testset "Noncommutative div" begin
         @ncpolyvar x y
-	err = ErrorException("Not implemented yet")
-	@test_throws err div(x, x * y)
+        err = ErrorException("Not implemented yet")
+        @test_throws err div(x, x * y)
     end
 end

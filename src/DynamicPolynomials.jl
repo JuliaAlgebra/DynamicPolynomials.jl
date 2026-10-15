@@ -13,7 +13,8 @@ include("var.jl")
 # No separate Monomial struct — variables and exponents live in the basis element.
 
 # Convenience alias for the specific monomial type with DP variables
-const DPMonomial{V,M} = MP.Polynomial{MP.Monomial,Vector{Variable{V,M}},Vector{Int}}
+const DPMonomial{V,M} =
+    MP.Polynomial{MP.Monomial,Vector{Variable{V,M}},Vector{Int}}
 
 function MP.variable_union_type(
     ::Union{Variable{V,M},Type{<:Variable{V,M}}},
@@ -26,18 +27,13 @@ function MP.variable_union_type(
     return Variable{V,M}
 end
 
-MP.constant_monomial(::Type{DPMonomial{V,M}}) where {V,M} = MP.Polynomial(
-    MP.Variables{MP.Monomial}(Variable{V,M}[]),
-    Int[],
-)
+function MP.constant_monomial(::Type{DPMonomial{V,M}}) where {V,M}
+    return MP.Polynomial(MP.Variables{MP.Monomial}(Variable{V,M}[]), Int[])
+end
 MP.monomial_type(::Type{<:Variable{V,M}}) where {V,M} = DPMonomial{V,M}
 MP.monomial_type(::Variable{V,M}) where {V,M} = DPMonomial{V,M}
 # MP.ordering for Variable is in var.jl
 
-MP.variables(p::AbstractArray{<:Variable}) = mergevars(MP.variables.(p))[1]
-function MP.nvariables(p::Union{Variable,AbstractArray{<:Variable}})
-    return length(MP.variables(p))
-end
 function MP.similar_variable(
     P::Union{Variable{V,M},Type{<:Variable{V,M}}},
     ::Type{Val{S}},
@@ -58,6 +54,8 @@ end
 
 # monomial(vars, exps) constructs a Polynomial{Monomial,...}
 function MP.monomial(vars::Vector{Variable{V,M}}, z::Vector{Int}) where {V,M}
+    length(vars) == length(z) ||
+        throw(ArgumentError("There should be as many exponents as variables"))
     @assert !iscomm(V) || issorted(vars, rev = true)
     return MP.Polynomial(MP.Variables{MP.Monomial}(vars), z)
 end
@@ -70,10 +68,9 @@ include("div.jl")
 include("noncommutative.jl")
 
 # Variable power → monomial
-Base.:(^)(x::Variable{V,M}, i::Int) where {V,M} = MP.Polynomial(
-    MP.Variables{MP.Monomial}([x]),
-    [i],
-)
+function Base.:(^)(x::Variable{V,M}, i::Int) where {V,M}
+    return MP.Polynomial(MP.Variables{MP.Monomial}([x]), [i])
+end
 
 # Variable + Variable → uses term + term → AlgebraElement
 Base.:(+)(x::Variable, y::Variable) = MP.term(x) + MP.term(y)

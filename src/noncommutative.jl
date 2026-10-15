@@ -1,7 +1,6 @@
 # Noncommutative monomials retain the ordered variable/exponent representation:
 # x^2 * y * x has variables [x, y, x] and exponents [2, 1, 1].
-# Algebra elements still use a fixed ordered sequence; products requiring a
-# longer sequence are unsupported.
+# Algebra elements use these complete monomials as coefficient keys.
 function MP.promote_variables_with_maps(
     a::Vector{Variable{V,M}},
     b::Vector{Variable{V,M}},
@@ -27,8 +26,8 @@ function Base.:*(
     yfirst === nothing && return x
     ylast = findlast(!iszero, ye)
     if xv[xlast] == yv[yfirst]
-        vars = [xv[1:xlast]; yv[yfirst+1:ylast]]
-        exps = [xe[1:xlast-1]; xe[xlast] + ye[yfirst]; ye[yfirst+1:ylast]]
+        vars = [xv[1:xlast]; yv[(yfirst+1):ylast]]
+        exps = [xe[1:(xlast-1)]; xe[xlast] + ye[yfirst]; ye[(yfirst+1):ylast]]
     else
         vars = [xv[1:xlast]; yv[yfirst:ylast]]
         exps = [xe[1:xlast]; ye[yfirst:ylast]]

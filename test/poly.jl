@@ -1,3 +1,6 @@
+using Test, DynamicPolynomials
+import MultivariatePolynomials as MP
+
 @testset "Term and Polynomial tests" begin
     @testset "Term" begin
         @polyvar x
@@ -17,10 +20,10 @@
         @test typeof(convert(Any, 1x)) == TT
         @test typeof(one(1x)) == TT
         @test typeof(zero_term(1x)) == TT
-        @test typeof(zero(1x)) == PT
+        @test typeof(zero(1x)) == TT
         @test typeof(one(1.0x)) == TTF
         @test typeof(zero_term(1.0x)) == TTF
-        @test typeof(zero(1.0x)) == PTF
+        @test typeof(zero(1.0x)) == TTF
 
         @test typeof(constant_term(1, x)) == TT
         @inferred constant_term(1, x)
@@ -32,9 +35,9 @@
         @polyvar x
         TT = term_type(x)
         PT = polynomial_type(x)
-        @test_throws ArgumentError PT([1, 2], [x])
-        @test_throws ArgumentError PT([1, 2], MonomialVector([x]))
-        @test_throws InexactError PT([1.5], [x])
+        @test_throws ArgumentError polynomial([1, 2], [x])
+        @test_throws ArgumentError polynomial([1, 2], monomial_vector([x]))
+        @test_throws InexactError convert(PT, polynomial([1.5], [x]))
         @test polynomial(1 + x) == 1 + x
         @test typeof(one(1 + x)) == PT
         @test typeof(zero_term(1 + x)) == TT
@@ -45,42 +48,35 @@
         @test typeof(zero_term(1.0 + x)) == TTF
         @test typeof(zero(1.0 + x)) == PTF
 
-        pf = DynamicPolynomials.Polynomial(i -> 1.0, [x * x, x, x * x])
+        pf = polynomial(i -> 1.0, [x * x, x, x * x])
         @test coefficients(pf) == [1.0, 2.0]
         @test monomials(pf) == monomial_vector([x^2, x])
 
         p = polynomial([4, 9], [x, x * x])
-        p.a == [9, 4]
-        p.x[1] == x^2
-        p.x[2] == x
+        @test coefficients(p) == [4, 9]
+        @test monomials(p) == [x, x^2]
 
-        @inferred DynamicPolynomials.Polynomial(i -> float(i), [x, x * x])
-        @inferred DynamicPolynomials.Polynomial(
-            i -> float(i),
-            MonomialVector([x * x, x]),
-        )
+        @inferred polynomial(i -> float(i), [x, x * x])
+        @inferred polynomial(i -> float(i), monomial_vector([x * x, x]))
         for p in (
-            DynamicPolynomials.Polynomial(i -> float(i), [x, x * x]),
-            DynamicPolynomials.Polynomial(
-                i -> float(i),
-                MonomialVector([x * x, x]),
-            ),
+            polynomial(i -> float(i), [x, x * x]),
+            polynomial(i -> float(i), monomial_vector([x * x, x])),
         )
             @test typeof(p) == PTF
-            @test p.a == [1.0, 2.0]
-            @test p.x == MonomialVector([x^2, x])
+            @test coefficients(p) == [1.0, 2.0]
+            @test monomials(p) == monomial_vector([x^2, x])
         end
 
         @ncpolyvar ncpolyvar u v
         NCPT = polynomial_type(u)
-        @inferred DynamicPolynomials.Polynomial(i -> i, [u, u * u, 1])
-        p = DynamicPolynomials.Polynomial(i -> i, [u, u * u, 1])
+        @inferred polynomial(i -> i, [u, u * u, one(u)])
+        p = polynomial(i -> i, [u, u * u, one(u)])
         @test typeof(p) == NCPT
-        @test p.a == [3, 1, 2]
-        @test p.x == MonomialVector([u^2, u, 1])
+        @test coefficients(p) == [3, 1, 2]
+        @test monomials(p) == monomial_vector([u^2, u, 1])
 
         @test u + v * u + 1 != v * u + u
-        @test remove_monomials(u + v * u + 1, [1, u * v]) == v * u + u
+        @test remove_monomials(u + v * u + 1, [one(u), u * v]) == v * u + u
         @test remove_monomials(u + u * v + 1, [u * v]) == 1 + u
 
         @inferred polynomial(2u)
@@ -112,7 +108,6 @@
         p = x^2
         pi = DynamicPolynomials.antidifferentiate(p, y)
         @test pi == x^2 * y
-
     end
 
     @testset "Evaluation" begin
@@ -124,25 +119,19 @@
         @test (2x^2 * y)((3, 2)) == 36
         @test (2x^2 * y)([3, 2]) == 36
         @test (2x^2)(3) == 18
-        err = ArgumentError(
-            "Variable `y` was not assigned a value. Use `subs` to substitute only a subset of the variables.",
-        )
+        err = ArgumentError("No value provided for variable y")
         t = 2x^2 * y
         @test_throws err t(x => 1)
         p = 2x^2 + y
         @test_throws err p(x => 1)
-        err = ArgumentError(
-            "Variable `x` was not assigned a value. Use `subs` to substitute only a subset of the variables.",
-        )
+        err = ArgumentError("No value provided for variable x")
         @test_throws err t(y => 1)
         @test_throws err p(y => 1)
 
         @complex_polyvar z
         pc = z^3 + 2real(z) - 7imag(z^4)
         @test pc(z => 2 + 3im) == 798 + 9im
-        err = ArgumentError(
-            "Substitution with complex variables requires the ordinary_variable in the substitution specification"
-        )
+        err = ArgumentError("No value provided for variable z")
         @test_throws err pc(conj(z) => 2 - 3im)
         @test_throws err pc(real(z) => 2)
         @test_throws err pc(imag(z) => 3)
