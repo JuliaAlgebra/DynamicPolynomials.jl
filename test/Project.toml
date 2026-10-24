@@ -13,5 +13,5 @@ MutableArithmetics = "1.9"
 
 [sources]
 DynamicPolynomials = {path = ".."}
-MultivariatePolynomials = {url = "https://github.com/JuliaAlgebra/MultivariatePolynomials.jl", rev = "bl/sa_poly"}
-StarAlgebras = {url = "https://github.com/JuliaAlgebra/StarAlgebras.jl", rev = "bl/term"}
+MultivariatePolynomials = {url = "https://github.com/JuliaAlgebra/MultivariatePolynomials.jl", rev = "main"}
+StarAlgebras = {url = "https://github.com/JuliaAlgebra/StarAlgebras.jl", rev = "main"}
