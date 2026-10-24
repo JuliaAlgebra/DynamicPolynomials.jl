@@ -41,7 +41,8 @@ end
 @testset "InverseLexOrder" begin
     order = Graded{InverseLexOrder}
     @polyvar x[1:2] monomial_order = order
-    @test ordering(x[1]) == order
+    @test (@inferred ordering(x[1])) === order()
+    @test (@inferred ordering(typeof(x[1]))) === order()
     @test issorted(monomials(x[1], 0:2))
 end
 
