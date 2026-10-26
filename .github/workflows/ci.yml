@@ -40,7 +40,6 @@ jobs:
           using Pkg
           Pkg.add([
               PackageSpec(name="MultivariatePolynomials", rev="main"),
-              PackageSpec(name="StarAlgebras", rev="main"),
           ])
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
