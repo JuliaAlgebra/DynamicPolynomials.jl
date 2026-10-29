@@ -207,7 +207,7 @@ function MP.name_base_indices(v::Variable)
     end
 end
 
-MP.monomial(v::Variable) = Monomial(v)
+MP.monomial(v::Variable) = MP.Polynomial{MP.Monomial}(v)
 MP.variables(v::Variable) = [v]
 MP.exponents(::Variable) = [1]
 MP.ordering(v::Variable) = MP.ordering(typeof(v))
@@ -245,7 +245,7 @@ function Base.imag(x::Variable{V,M}) where {V,M}
     if x.kind == COMPLEX
         return Variable(x, IMAG_PART)
     elseif x.kind == CONJ
-        return _Term{V,M,Int}(-1, Monomial(Variable(x, IMAG_PART)))
+        return SA.Term(-1, MP.monomial(Variable(x, IMAG_PART)))
     else
         return MA.Zero()
     end
@@ -286,10 +286,4 @@ function mergevars(varsvec::Vector{Vector{PV}}) where {PV<:Variable}
     vars = PV[]
     maps = mergevars_to!(vars, varsvec)
     return vars, maps
-end
-function mergevars_of(::Type{Variable{V,M}}, polys::AbstractVector) where {V,M}
-    varsvec =
-        Vector{Variable{V,M}}[variables(p) for p in polys if p isa PolyType]
-    # TODO avoid computing `maps`
-    return mergevars(varsvec)
 end

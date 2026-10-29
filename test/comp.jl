@@ -51,9 +51,16 @@ function _test_less(a, b)
 end
 
 function _test_monomials(vars, degs, exp)
-    # Without `collect`, `exp` is promoted to a `MonomialVector`
-    # which sorts it so it doesn't test the order
-    @test collect(monomials(vars, degs)) == exp
+    monos = @inferred monomials(vars, degs)
+    @test monos == exp
+    @test issorted(monos)
+end
+
+@testset "Noncommutative enumeration" begin
+    @ncpolyvar x y
+    _test_monomials((x, y), 0:2, [x^0, y, x, y * x, y^2, x * y, x^2])
+    @ncpolyvar x y monomial_order = LexOrder
+    @test_throws ArgumentError monomials((x, y), 2)
 end
 
 @testset "LexOrder" begin

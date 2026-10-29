@@ -27,7 +27,9 @@ end
     alloc_test_lt(() -> p(x => v), 300)
     alloc_test_lt(() -> substitute(Eval(), p, v), 0)
     alloc_test_lt(() -> p(v), 0)
-    err = ErrorException("Cannot evaluate a polynomial of `3` variables with only `2` values.")
+    err = ArgumentError(
+        "Cannot evaluate a polynomial of 3 variables with 2 values",
+    )
     @test_throws err p([1, 2])
 end
 
@@ -55,7 +57,11 @@ end
     @polyvar x
     m = x^2
     q = m^2
-    @test variables(q) !== variables(m)
+    # Variable lists are shared and read-only; mutable exponents are separate.
+    @test variables(q) === variables(m)
+    map_exponents!(+, q, x)
+    @test q == x^5
+    @test m == x^2
 end
 
 @testset "Issue #206" begin

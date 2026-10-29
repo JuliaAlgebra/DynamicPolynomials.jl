@@ -38,17 +38,17 @@ using DynamicPolynomials
 end
 
 @testset "Fast path cases: $ord" for ord in [
-        InverseLexOrder,
-        LexOrder,
-        Graded{InverseLexOrder},
-        Graded{LexOrder},
-        Reverse{InverseLexOrder},
-        Reverse{LexOrder},
-        Graded{Reverse{InverseLexOrder}},
-        Graded{Reverse{LexOrder}},
-        Reverse{Graded{InverseLexOrder}},
-        Reverse{Graded{LexOrder}},
-    ]
+    InverseLexOrder,
+    LexOrder,
+    Graded{InverseLexOrder},
+    Graded{LexOrder},
+    Reverse{InverseLexOrder},
+    Reverse{LexOrder},
+    Graded{Reverse{InverseLexOrder}},
+    Graded{Reverse{LexOrder}},
+    Reverse{Graded{InverseLexOrder}},
+    Reverse{Graded{LexOrder}},
+]
     @polyvar x y z monomial_order=ord
 
     # allocation tests vary between Julia versions, so they're upper bounds
