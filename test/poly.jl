@@ -4,7 +4,7 @@ import MultivariatePolynomials as MP
 @testset "Term and Polynomial tests" begin
     @testset "Term" begin
         @polyvar x
-        TT = term_type(x)
+        TT = term_type(x, Int)
         TTF = term_type(x, Float64)
         PT = polynomial_type(TT)
         PTF = polynomial_type(TTF)
@@ -33,8 +33,8 @@ import MultivariatePolynomials as MP
     @testset "Polynomial" begin
         #@test eltype(polynomial{true, Int}) == Int
         @polyvar x
-        TT = term_type(x)
-        PT = polynomial_type(x)
+        TT = term_type(x, Int)
+        PT = polynomial_type(x, Int)
         @test_throws ArgumentError polynomial([1, 2], [x])
         @test_throws ArgumentError polynomial([1, 2], monomial_vector([x]))
         @test_throws InexactError convert(PT, polynomial([1.5], [x]))
@@ -68,7 +68,7 @@ import MultivariatePolynomials as MP
         end
 
         @ncpolyvar ncpolyvar u v
-        NCPT = polynomial_type(u)
+        NCPT = polynomial_type(u, Int)
         @inferred polynomial(i -> i, [u, u * u, one(u)])
         p = polynomial(i -> i, [u, u * u, one(u)])
         @test typeof(p) == NCPT

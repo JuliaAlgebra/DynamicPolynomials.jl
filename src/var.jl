@@ -211,7 +211,7 @@ MP.monomial(v::Variable) = MP.Polynomial{MP.Monomial}(v)
 MP.variables(v::Variable) = [v]
 MP.exponents(::Variable) = [1]
 MP.ordering(v::Variable) = MP.ordering(typeof(v))
-MP.ordering(::Type{Variable{V,M}}) where {V,M} = M
+MP.ordering(::Type{Variable{V,M}}) where {V,M} = M()
 
 MP.is_commutative(::Type{<:Variable{V}}) where {V} = iscomm(V)
 MP.is_commutative(::Type{<:Vector{<:Variable{V}}}) where {V} = iscomm(V)

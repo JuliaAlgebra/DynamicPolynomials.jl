@@ -153,8 +153,8 @@ import MultivariatePolynomials as MP
         mi = DynamicPolynomials.MP.antidifferentiate(m, y)
         @test mi == x * y
 
-        # Antidifferentiation is product => Integral coefficients
-        @test MP.coefficient_type(mi) == Int
+        # The product is a monomial with an implicit unit coefficient.
+        @test MP.coefficient_type(mi) == Bool
 
         # General antidifferentiation => Rational coefficients
         m = x^3
