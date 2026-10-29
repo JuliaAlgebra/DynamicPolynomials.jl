@@ -20,7 +20,8 @@ julia = "1.10"
 [extras]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
+Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["ChainRulesCore", "Combinatorics", "Test"]
+test = ["ChainRulesCore", "Combinatorics", "Latexify", "Test"]

@@ -1,3 +1,4 @@
+using DynamicPolynomials
 import MultivariatePolynomials
 const mvp_test =
     joinpath(dirname(pathof(MultivariatePolynomials)), "..", "test")
