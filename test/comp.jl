@@ -1,5 +1,6 @@
 using Test
 using DynamicPolynomials
+import MultivariatePolynomials as MP
 import DynamicPolynomials: Commutative, CreationOrder # to test hygiene
 @testset "Variable order" begin
     @polyvar x
@@ -118,4 +119,93 @@ end
     @test (@allocated isequal(poly1, poly2)) == 0
     @test isequal(poly1, poly1)
     @test (@allocated isequal(poly1, poly1)) == 0
+end
+
+function _padded_noncommutative_word(m, vars)
+    padded_vars = eltype(vars)[]
+    padded_exps = Int[]
+    for (v, e) in powers(m)
+        push!(padded_vars, vars[end])
+        push!(padded_exps, 0)
+        if e >= 2
+            append!(padded_vars, (v, vars[1], v))
+            append!(padded_exps, (1, 0, e - 1))
+        else
+            push!(padded_vars, v)
+            push!(padded_exps, e)
+        end
+    end
+    push!(padded_vars, vars[1])
+    push!(padded_exps, 0)
+    return monomial(padded_vars, padded_exps)
+end
+
+@testset "Noncommutative word identity (DynamicPolynomials#131)" begin
+    @ncpolyvar x[1:3]
+    enumerated = monomials(x, 0:4)
+    words = [[v for (v, e) in powers(m) for _ in 1:e] for m in enumerated]
+    direct = [prod(word; init = one(x[1])) for word in words]
+    padded = [_padded_noncommutative_word(m, x) for m in direct]
+
+    @test issorted(enumerated)
+    for i in eachindex(direct)
+        a = direct[i]
+        for b in (enumerated[i], padded[i])
+            @test (@inferred a == b)
+            @test (@inferred b == a)
+            @test (@inferred isequal(a, b))
+            @test iszero(@inferred cmp(a, b))
+            @test iszero(@inferred cmp(b, a))
+            for seed in (UInt(0), UInt(1), typemax(UInt))
+                @test (@inferred hash(a, seed)) == hash(b, seed)
+            end
+            @test length(Set([a, b])) == 1
+            @test Dict(a => 42)[b] == 42
+        end
+    end
+
+    # The enumerated monomials share a padded variable sequence. Comparing
+    # their exponent vectors gives an independent reference for the order.
+    for i in eachindex(direct), j in eachindex(direct)
+        a, b = direct[i], enumerated[j]
+        expected = words[i] == words[j]
+        @test (a == b) == expected
+        @test isequal(a, b) == expected
+        @test iszero(cmp(a, b)) == expected
+        order = sign(cmp(ordering(a), exponents(enumerated[i]), exponents(b)))
+        @test sign(cmp(a, b)) == order
+        @test sign(cmp(padded[i], b)) == order
+    end
+
+    a = x[2] * x[1]
+    b = monomial([x[1], x[2], x[3], x[1], x[2]], [0, 1, 0, 1, 0])
+    p = 2a + 3b
+    @test nterms(p) == 1
+    @test coefficient(p, a) == coefficient(p, b) == 5
+    @test iszero(p - 5a)
+
+    a = x[1]^1000000 * x[2]
+    b = monomial([x[3], x[1], x[2]], [0, 1000000, 1])
+    @test (@inferred a == b)
+    @test iszero(@inferred cmp(a, b))
+    @test (@inferred hash(a)) == hash(b)
+    @test collect(DynamicPolynomials._NoncommutativePowers(b)) ==
+          [(x[1], 1000000), (x[2], 1)]
+    @test isempty(collect(DynamicPolynomials._NoncommutativePowers(one(x[1]))))
+    for m in (monomial([x[2]], [1]), monomial(x[1]))
+        @test hash(m) == hash(variable(m))
+    end
+    @test hash(monomial([x[1], x[2], x[1]], [0, 1, 0])) == hash(x[2])
+    @test hash(monomial([x[1], x[2]], [0, 0])) == hash(1)
+
+    @ncpolyvar u v monomial_order = LexOrder
+    a = u * v
+    b = monomial([v, u, v, u], [0, 1, 1, 0])
+    @test a == b
+    @test iszero(cmp(a, b))
+    @test cmp(u^1, v^2) > 0
+
+    @ncpolyvar r s monomial_order = InverseLexOrder
+    @test cmp(r * s, r^2) == cmp(InverseLexOrder(), [1, 1], [2, 0])
+    @test cmp(r^2, r * s) < 0
 end
