@@ -5,5 +5,6 @@ function SA.promote_with_map(
     map::MP.ExponentMap,
 ) where {V,M}
     new_z = map([1])
-    return MP.Polynomial(MP.Variables{MP.Monomial}(copy(all_vars)), new_z), map
+    return MP.BasisElement(MP.Variables{MP.Monomial}(copy(all_vars)), new_z),
+    map
 end
