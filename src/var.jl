@@ -207,7 +207,7 @@ function MP.name_base_indices(v::Variable)
     end
 end
 
-MP.monomial(v::Variable) = MP.Polynomial{MP.Monomial}(v)
+MP.monomial(v::Variable) = MP.BasisElement{MP.Monomial}(v)
 MP.variables(v::Variable) = [v]
 MP.exponents(::Variable) = [1]
 MP.ordering(v::Variable) = MP.ordering(typeof(v))

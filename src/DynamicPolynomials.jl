@@ -9,12 +9,12 @@ import StarAlgebras as SA
 
 include("var.jl")
 
-# Monomials are now MP.Polynomial{MP.Monomial, V, E}
+# Monomials are now MP.BasisElement{MP.Monomial, V, E}
 # No separate Monomial struct — variables and exponents live in the basis element.
 
 # Convenience alias for the specific monomial type with DP variables
 const DPMonomial{V,M} =
-    MP.Polynomial{MP.Monomial,Vector{Variable{V,M}},Vector{Int}}
+    MP.BasisElement{MP.Monomial,Vector{Variable{V,M}},Vector{Int}}
 
 function MP.variable_union_type(
     ::Union{Variable{V,M},Type{<:Variable{V,M}}},
@@ -28,7 +28,7 @@ function MP.variable_union_type(
 end
 
 function MP.constant_monomial(::Type{DPMonomial{V,M}}) where {V,M}
-    return MP.Polynomial(MP.Variables{MP.Monomial}(Variable{V,M}[]), Int[])
+    return MP.BasisElement(MP.Variables{MP.Monomial}(Variable{V,M}[]), Int[])
 end
 MP.monomial_type(::Type{<:Variable{V,M}}) where {V,M} = DPMonomial{V,M}
 MP.monomial_type(::Variable{V,M}) where {V,M} = DPMonomial{V,M}
@@ -47,17 +47,17 @@ function MP.similar_variable(::Type{<:Variable{V,M}}, s::Symbol) where {V,M}
     return Variable(string(s), V, M, REAL)
 end
 
-# Create monomial from variable: Variable → Polynomial{Monomial,...}
+# Create monomial from variable: Variable → BasisElement{Monomial,...}
 function Base.convert(::Type{DPMonomial{V,M}}, x::Variable{V,M}) where {V,M}
-    return MP.Polynomial{MP.Monomial}(x)
+    return MP.BasisElement{MP.Monomial}(x)
 end
 
-# monomial(vars, exps) constructs a Polynomial{Monomial,...}
+# monomial(vars, exps) constructs a BasisElement{Monomial,...}
 function MP.monomial(vars::Vector{Variable{V,M}}, z::Vector{Int}) where {V,M}
     length(vars) == length(z) ||
         throw(ArgumentError("There should be as many exponents as variables"))
     @assert !iscomm(V) || issorted(vars, rev = true)
-    return MP.Polynomial(MP.Variables{MP.Monomial}(vars), z)
+    return MP.BasisElement(MP.Variables{MP.Monomial}(vars), z)
 end
 
 # exponents for variables is in var.jl
@@ -69,7 +69,7 @@ include("noncommutative.jl")
 
 # Variable power → monomial
 function Base.:(^)(x::Variable{V,M}, i::Int) where {V,M}
-    return MP.Polynomial(MP.Variables{MP.Monomial}([x]), [i])
+    return MP.BasisElement(MP.Variables{MP.Monomial}([x]), [i])
 end
 
 # Variable + Variable → uses term + term → AlgebraElement
