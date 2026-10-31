@@ -146,18 +146,64 @@ macro complex_polyvar(args...)
     $(Expr(:tuple, esc.(vars)...)))
 end
 
+"""
+    AbstractVariableOrdering
+
+Supertype for the data that determines variable identity and ordering.
+The `variable_order` keyword accepts `Commutative{O}` or `NonCommutative{O}`,
+where `O` is a policy such as [`CreationOrder`](@ref) or [`NameOrder`](@ref).
+
+For a custom policy `O`, define [`instantiate`](@ref) for `Type{O}` and
+`Base.cmp` and `Base.hash` for the corresponding `Variable` type. Variable
+equality is defined by `iszero(cmp(x, y))`; equal variables must have equal
+hashes. The default hash assumes a creation identifier, so a policy using
+names for identity must provide its own hash method.
+
+The `monomial_order` keyword independently controls the ordering of products.
+"""
 abstract type AbstractVariableOrdering end
 
+"""
+    CreationOrder
+
+The default variable-order policy. Each variable construction gets a fresh
+identifier, so redeclaring a name creates a distinct variable. Earlier
+creations compare greater than later ones.
+"""
 struct CreationOrder <: AbstractVariableOrdering
     id::Int
 end
 
+"""
+    NameOrder
+
+Identify variables by name and complex kind, independently of creation order.
+Earlier names in lexicographic order compare greater, so `x > y` even if `y`
+was created first. A complex variable, its conjugate, real part, and imaginary
+part remain distinct.
+
+Use `variable_order = DynamicPolynomials.Commutative{NameOrder}` with `@polyvar`
+or `@complex_polyvar`, or `DynamicPolynomials.NonCommutative{NameOrder}` with
+`@ncpolyvar`. Repeated declarations of the same name create equal variables.
+"""
+struct NameOrder <: AbstractVariableOrdering end
+
+"""
+    instantiate(::Type{O})
+
+Return the ordering data of type `O` for a new variable. Custom subtypes of
+[`AbstractVariableOrdering`](@ref) must implement this method. The
+`Commutative` and `NonCommutative` wrappers initialize their inner policy
+through this function.
+"""
 function instantiate(::Type{CreationOrder})
     # gensym returns something like Symbol("##42")
     # we first remove "##" and then parse it into an Int
     id = parse(Int, string(gensym())[3:end])
     return CreationOrder(id)
 end
+
+instantiate(::Type{NameOrder}) = NameOrder()
 
 struct Commutative{O<:AbstractVariableOrdering} <: AbstractVariableOrdering
     order::O
