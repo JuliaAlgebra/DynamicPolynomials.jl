@@ -14,4 +14,15 @@ function Base.cmp(
     end
 end
 
+function Base.cmp(
+    x::Variable{<:AnyCommutative{NameOrder}},
+    y::Variable{<:AnyCommutative{NameOrder}},
+)
+    return cmp((name(y), y.kind), (name(x), x.kind))
+end
+
+function Base.hash(x::Variable{<:AnyCommutative{NameOrder}}, h::UInt)
+    return hash((name(x), x.kind), h)
+end
+
 Base.:(==)(x::Variable, y::Variable) = iszero(cmp(x, y))
