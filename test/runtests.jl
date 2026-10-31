@@ -103,6 +103,7 @@ end
 include("var.jl")
 include("mono.jl")
 include("poly.jl")
+include("type_display.jl")
 include("comp.jl")
 include("mutable_arithmetics.jl")
 

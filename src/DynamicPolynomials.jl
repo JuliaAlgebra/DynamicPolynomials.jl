@@ -92,18 +92,52 @@ const Polynomial{T} = SA.AlgebraElement{
         MP.Graded{MP.LexOrder},
     },
 }
+const SingleTermPolynomial{T} = SA.AlgebraElement{
+    T,
+    _DefaultAlgebra,
+    SA.SparseCoefficients{
+        Vector{Int},
+        T,
+        Tuple{Vector{Int}},
+        Tuple{T},
+        MP.Graded{MP.LexOrder},
+    },
+}
+export SingleTermPolynomial
+
 const Term{T} = SA.Term{T,_DefaultAlgebra,Vector{Int}}
 
+# `const ...` is not enough, we need to overload `show` as well.
+# This is even useful for performance reasons, see
+# https://github.com/jump-dev/Dualization.jl/pull/242
 # Julia searches for type aliases only in the outer type's defining module.
-function Base.show(io::IO, ::Type{Polynomial{T}}) where {T}
-    print(io, "DynamicPolynomials.Polynomial{")
-    show(io, T)
+function _show_polynomial_type(io::IO, name, type)
+    if type isa Union
+        return invoke(show, Tuple{IO,Type}, io, type)
+    end
+    T = Base.unwrap_unionall(type).parameters[1]
+    print(io, "DynamicPolynomials.", name)
+    if T isa TypeVar
+        if T.ub === Any
+            return
+        end
+        print(io, "{<:")
+        show(io, T.ub)
+    else
+        print(io, "{")
+        show(io, T)
+    end
     return print(io, "}")
 end
-function Base.show(io::IO, ::Type{Term{T}}) where {T}
-    print(io, "DynamicPolynomials.Term{")
-    show(io, T)
-    return print(io, "}")
+
+function Base.show(io::IO, type::Type{<:Polynomial})
+    return _show_polynomial_type(io, "Polynomial", type)
+end
+function Base.show(io::IO, type::Type{<:SingleTermPolynomial})
+    return _show_polynomial_type(io, "SingleTermPolynomial", type)
+end
+function Base.show(io::IO, type::Type{<:Term})
+    return _show_polynomial_type(io, "Term", type)
 end
 
 end # module
