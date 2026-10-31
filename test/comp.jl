@@ -121,6 +121,30 @@ end
     @test (@allocated isequal(poly1, poly1)) == 0
 end
 
+@testset "Noncommutative zero powers (DynamicPolynomials#118)" begin
+    @ncpolyvar a x
+    for (v, w) in ((a, x), (x, a))
+        for p in (
+            w^0 * v,
+            v * w^0,
+            (w * v)^0 * v,
+            v * (w * v)^0,
+            monomial([w, v, w], [0, 1, 0]),
+        )
+            @test (@inferred p == v)
+            @test (@inferred v == p)
+            @test (@inferred isequal(p, v))
+            @test (@inferred isequal(v, p))
+            @test p != w
+            @test w != p
+            @test hash(p) == hash(v)
+            @test length(Set{Any}((p, v))) == 1
+            @test Dict{Any,Int}(p => 1)[v] == 1
+            @test Dict{Any,Int}(v => 1)[p] == 1
+        end
+    end
+end
+
 function _padded_noncommutative_word(m, vars)
     padded_vars = eltype(vars)[]
     padded_exps = Int[]
