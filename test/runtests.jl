@@ -100,6 +100,7 @@ end
     @test variables(subs(p4, x[1] => 1)) == [x[2]]
 end
 
+include("var.jl")
 include("mono.jl")
 include("poly.jl")
 include("comp.jl")
