@@ -79,6 +79,51 @@ every binding created by the macro. The macro still returns a tuple of the
 created bindings. `constant` must be a literal `true` or `false` and defaults to
 `false`.
 
+## Variable identity and ordering
+
+By default, `@polyvar` uses
+`variable_order = DynamicPolynomials.Commutative{DynamicPolynomials.CreationOrder}`.
+Each declaration creates a fresh variable, even when its name is reused:
+
+```julia
+@polyvar x
+old_x = x
+@polyvar x
+old_x == x # false
+```
+
+Use `NameOrder` to identify variables by name, independently of creation order.
+Earlier names in lexicographic order have higher priority (`x > y`):
+
+```julia
+using DynamicPolynomials
+import DynamicPolynomials as DP
+
+@polyvar y x variable_order = DP.Commutative{DP.NameOrder}
+old_x = x
+@polyvar x variable_order = DP.Commutative{DP.NameOrder}
+@assert old_x == x
+@assert old_x + x == 2x
+@assert x > y
+@assert Dict(old_x => 1)[x] == 1
+```
+
+For noncommutative variables, use
+`@ncpolyvar x variable_order = DP.NonCommutative{DP.NameOrder}`.
+Complex variables, their conjugates, and their real and imaginary parts remain
+distinct. Use the same variable-order policy for variables combined in a
+polynomial.
+
+Custom policies can subtype `DynamicPolynomials.AbstractVariableOrdering` and
+define `DynamicPolynomials.instantiate`, `Base.cmp`, and a matching `Base.hash`
+method. Variables compare equal when `cmp` returns zero, so equal variables must
+have equal hashes.
+
+`variable_order` controls the variables; `monomial_order` independently controls
+how products of those variables are ordered.
+
+## Monomial ordering
+
 The terms of a polynomial are ordered in increasing monomial order. The default
 ordering is the graded lex order but it can be modified using the
 `monomial_order` keyword argument of the `@polyvar` macro.
@@ -108,8 +153,8 @@ julia> p(x, y, z)
 ```
 
 Note that, when doing substitution, it is required to give the `Variable` ordering that is meant.
-Indeed, the ordering between the `Variable` is not alphabetical but rather by order of creation
-which can be undeterministic with parallel computing.
+The default ordering between variables follows their creation order,
+which can be nondeterministic with parallel computing.
 Therefore, this order cannot be used for substitution, even as a default (see [here](https://github.com/JuliaAlgebra/MultivariatePolynomials.jl/issues/3) for a discussion about this).
 
 [build-img]: https://github.com/JuliaAlgebra/DynamicPolynomials.jl/actions/workflows/ci.yml/badge.svg?branch=master

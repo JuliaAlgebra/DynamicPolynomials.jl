@@ -11,6 +11,76 @@ import DynamicPolynomials: Commutative, CreationOrder # to test hygiene
     @polyvar x variable_order = order
     @test z != x
 end
+module TestVariableOrdering
+using Test, DynamicPolynomials
+import DynamicPolynomials as DP
+
+@testset "Name-based variable identity (DynamicPolynomials#20)" begin
+    @polyvar y x variable_order = DP.Commutative{DP.NameOrder}
+    old_x = x
+    @polyvar x variable_order = DP.Commutative{DP.NameOrder}
+    @test (@inferred old_x == x)
+    @test (@inferred isequal(old_x, x))
+    @test (@inferred cmp(old_x, x)) == 0
+    @test x > y
+    @test sort([x, y]) == [y, x]
+    @test old_x + x == 2x
+    @test old_x * y == y * x
+    @test coefficient(old_x + x + y, x) == 2
+    for seed in (UInt(0), UInt(1), typemax(UInt))
+        @test (@inferred hash(old_x, seed)) == hash(x, seed)
+    end
+    @test Dict(old_x => 1)[x] == 1
+    @test length(Set([old_x, x])) == 1
+
+    @polyvar u[1:3] variable_order = DP.Commutative{DP.NameOrder}
+    old_u = u
+    @polyvar u[1:3] variable_order = DP.Commutative{DP.NameOrder}
+    @test old_u == u
+    @test sum(old_u) == sum(u)
+
+    @complex_polyvar z variable_order = DP.Commutative{DP.NameOrder}
+    old_z = z
+    @complex_polyvar z variable_order = DP.Commutative{DP.NameOrder}
+    for f in (identity, conj, real, imag)
+        @test f(old_z) == f(z)
+        @test Dict(f(old_z) => 1)[f(z)] == 1
+    end
+    @test length(Set([z, conj(z), real(z), imag(z)])) == 4
+    @test issorted([z, conj(z), real(z), imag(z)]; rev = true)
+    @polyvar z variable_order = DP.Commutative{DP.NameOrder}
+    @test old_z != z
+
+    @polyvar y x variable_order = DP.Commutative{DP.NameOrder} monomial_order =
+        LexOrder
+    old_x = x
+    @polyvar x variable_order = DP.Commutative{DP.NameOrder} monomial_order =
+        LexOrder
+    @test old_x == x
+    @test x > y
+    @test old_x + x == 2x
+    @test x * y > y^2
+end
+
+@testset "Noncommutative name order" begin
+    @ncpolyvar y x variable_order = DP.NonCommutative{DP.NameOrder}
+    old_x = x
+    @ncpolyvar x variable_order = DP.NonCommutative{DP.NameOrder}
+    @test (@inferred old_x == x)
+    @test (@inferred isequal(old_x, x))
+    @test (@inferred cmp(old_x, x)) == 0
+    @test x > y
+    @test old_x + x == 2x
+    @test old_x * x == x^2
+    @test old_x * y * x == x * y * x
+    @test x * y != y * x
+    @test hash(old_x) == hash(x)
+    @test Dict(old_x => 1)[x] == 1
+    @test Dict(old_x * y * x => 1)[x*y*x] == 1
+    @test length(Set([old_x, x])) == 1
+end
+end
+
 function _less(a, b)
     @test a < b
     @test b > a
