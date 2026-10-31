@@ -67,6 +67,18 @@ julia> p(x => A * vec(x))  # corresponds to dot(A*x, A*x), need vec to convert t
 194x₃² + 244x₂x₃ + 77x₂² + 100x₁x₃ + 64x₁x₂ + 14x₁²
 ```
 
+To declare the created bindings as constants, use `constant = true` at global
+scope:
+
+```julia
+@polyvar x[1:10] constant = true
+```
+
+This option also works with `@ncpolyvar` and `@complex_polyvar`, and applies to
+every binding created by the macro. The macro still returns a tuple of the
+created bindings. `constant` must be a literal `true` or `false` and defaults to
+`false`.
+
 The terms of a polynomial are ordered in increasing monomial order. The default
 ordering is the graded lex order but it can be modified using the
 `monomial_order` keyword argument of the `@polyvar` macro.
